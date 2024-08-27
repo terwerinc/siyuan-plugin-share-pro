@@ -1,0 +1,44 @@
+{
+  "name": "share-pro",
+  "version": "0.0.1",
+  "description": "share your notes from siyuan-note with one click",
+  "type": "module",
+  "repository": "terwer/share-pro",
+  "homepage": "https://github.com/terwer/share-pro",
+  "author": "terwer",
+  "license": "MIT",
+  "scripts": {
+    "serve": "vite",
+    "dev": "vite build --watch",
+    "build": "vite build",
+    "start": "vite preview",
+    "test": "vitest --watch",
+    "syncVersion": "python scripts/version.py",
+    "parseChangelog": "python scripts/parse_changelog.py",
+    "prepareRelease": "pnpm syncVersion && pnpm parseChangelog",
+    "package": "python scripts/package.py"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^3.1.1",
+    "@terwer/eslint-config-custom": "^1.3.6",
+    "@tsconfig/svelte": "^5.0.4",
+    "@types/minimist": "1.2.5",
+    "fast-glob": "^3.3.2",
+    "jsdom": "^24.1.0",
+    "minimist": "^1.2.8",
+    "rollup-plugin-livereload": "^2.0.5",
+    "siyuan": "^1.0.2",
+    "stylus": "^0.63.0",
+    "svelte": "^4.2.18",
+    "typescript": "^5.5.2",
+    "vite": "^5.3.1",
+    "vite-plugin-dts": "^3.9.1",
+    "vite-plugin-node-polyfills": "^0.22.0",
+    "vite-plugin-static-copy": "^1.0.5",
+    "vite-tsconfig-paths": "^4.3.2",
+    "vitest": "^1.6.0"
+  },
+  "dependencies": {
+    "zhi-lib-base": "^0.8.0"
+  }
+}

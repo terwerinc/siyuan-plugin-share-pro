@@ -1,0 +1,27 @@
+{
+  "name": "siyuan-share-pro",
+  "author": "terwer",
+  "url": "https://github.com/terwer/siyuan-share-pro",
+  "version": "0.0.1",
+  "displayName": {
+    "default": "Share pro",
+    "zh_CN": "在线分享专业版"
+  },
+  "description": {
+    "default": "share your notes from siyuan-note with one click",
+    "zh_CN": "一键分享您的思源笔记"
+  },
+  "readme": {
+    "default": "README.md",
+    "zh_CN": "README_zh_CN.md"
+  },
+  "i18n": [
+    "en_US",
+    "zh_CN"
+  ],
+  "funding": {
+    "custom": [
+      "https://afdian.net/a/terwer"
+    ]
+  }
+}
