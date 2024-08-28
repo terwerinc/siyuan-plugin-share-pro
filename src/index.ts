@@ -12,17 +12,22 @@ import { ILogger, simpleLogger } from "zhi-lib-base"
 
 import "../index.styl"
 import { isDev } from "./Constants"
+import { Topbar } from "./topbar"
 
 export default class ShareProPlugin extends Plugin {
   private logger: ILogger
+  private topbar: Topbar
 
   constructor(options: { app: App; id: string; name: string; i18n: IObject }) {
     super(options)
 
     this.logger = simpleLogger("index", "share-pro", isDev)
+    this.topbar = new Topbar(this)
   }
 
   onload() {
+    // 初始化菜单
+    this.topbar.initTopbar()
     this.logger.info("Share pro loaded")
   }
 
