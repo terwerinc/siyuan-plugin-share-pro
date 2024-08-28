@@ -59,11 +59,13 @@ export default class ShareProPlugin extends Plugin {
   }
 
   private async initCfg() {
-    const defaultCfg = new ShareProConfig()
-    defaultCfg.serviceApiConfig = {
+    const cfg = await this.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
+    const latestApiUrl = isDev ? SHARE_SERVICE_ENDPOINT_DEV : SHARE_SERVICE_ENDPOINT_PROD
+    cfg.serviceApiConfig = {
       apiUrl: isDev ? SHARE_SERVICE_ENDPOINT_DEV : SHARE_SERVICE_ENDPOINT_PROD,
       token: "",
     }
-    await this.saveData(SHARE_PRO_STORE_NAME, defaultCfg)
+    await this.saveData(SHARE_PRO_STORE_NAME, cfg)
+    this.logger.info("Share pro config inited")
   }
 }
