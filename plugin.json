@@ -1,7 +1,7 @@
 {
-  "name": "siyuan-share-pro",
+  "name": "share-pro",
   "author": "terwer",
-  "url": "https://github.com/terwer/siyuan-share-pro",
+  "url": "https://github.com/terwerinc/share-pro",
   "version": "0.0.1",
   "displayName": {
     "default": "Share pro",
@@ -21,7 +21,7 @@
   ],
   "funding": {
     "custom": [
-      "https://afdian.net/a/terwer"
+      "https://afdian.com/a/terwer"
     ]
   }
 }
