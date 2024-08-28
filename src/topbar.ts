@@ -11,7 +11,8 @@ import ShareProPlugin from "./index"
 import { ILogger, simpleLogger } from "zhi-lib-base"
 import { isDev } from "./Constants"
 import { icons } from "./utils/svg"
-import { confirm } from "siyuan"
+import { confirm, Menu } from "siyuan"
+import { ShareServiceApi } from "./api/share-service-api"
 
 /**
  * 顶部按钮
@@ -19,10 +20,12 @@ import { confirm } from "siyuan"
 export class Topbar {
   private logger: ILogger
   private pluginInstance: ShareProPlugin
+  private shreApi: ShareServiceApi
 
   constructor(pluginInstance: ShareProPlugin) {
     this.logger = simpleLogger("topbar", "share-pro", isDev)
     this.pluginInstance = pluginInstance
+    this.shreApi = new ShareServiceApi(pluginInstance)
   }
 
   public initTopbar() {
@@ -33,7 +36,45 @@ export class Topbar {
       callback: () => {},
     })
     topBarElement.addEventListener("click", async () => {
-      confirm("在线分享专业版", "确认分享该文章吗?")
+      // 初始化菜单
+      this.addMenu(topBarElement.getBoundingClientRect())
     })
+  }
+
+  private addMenu(rect: DOMRect) {
+    const menu = new Menu("shareProMenu")
+    menu.addItem({
+      icon: `iconTransform`,
+      label: this.pluginInstance.i18n.startShare,
+      click: async () => {
+        await this.shreApi.createShare()
+      },
+    })
+    menu.addSeparator()
+    menu.addItem({
+      icon: `iconEye`,
+      label: this.pluginInstance.i18n.viewArticle,
+      click: () => {
+        // showMessage("请先在 设置->发布设置配置平台并启用", 7000, "error")
+      },
+    })
+    menu.addSeparator()
+    menu.addItem({
+      icon: `iconSettings`,
+      label: this.pluginInstance.i18n.shareSetting,
+      click: () => {
+        // showMessage("请先在 设置->发布设置配置平台并启用", 7000, "error")
+      },
+    })
+
+    if (this.pluginInstance.isMobile) {
+      menu.fullscreen()
+    } else {
+      menu.open({
+        x: rect.right,
+        y: rect.bottom,
+        isLeft: true,
+      })
+    }
   }
 }

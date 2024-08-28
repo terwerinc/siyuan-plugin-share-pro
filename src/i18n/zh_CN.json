@@ -1,3 +1,7 @@
 {
-  "sharePro": "在线分享专业版"
+  "sharePro": "在线分享专业版",
+  "startShare": "分享文档",
+  "viewArticle": "查看文档",
+  "cancelShare": "取消分享",
+  "shareSetting": "分享设置"
 }
