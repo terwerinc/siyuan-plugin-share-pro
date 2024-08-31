@@ -6,5 +6,8 @@
   "tipTitle": "Show tips",
   "getLicense": "Get license",
   "openLicensePage": "Open license page?",
-  "unknownError": "Unknown error"
+  "unknownError": "Unknown error",
+  "cancel": "Cancel",
+  "save": "Save",
+  "settingConfigSaveSuccess": "The configuration is saved successfully"
 }

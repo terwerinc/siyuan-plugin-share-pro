@@ -7,5 +7,8 @@
   "tipTitle": "温馨提示",
   "getLicense": "获取授权码",
   "openLicensePage": "是否打开授权码购买页面？",
-  "unknownError": "未知错误"
+  "unknownError": "未知错误",
+  "cancel": "取消",
+  "save": "保存",
+  "settingConfigSaveSuccess": "配置保存成功"
 }

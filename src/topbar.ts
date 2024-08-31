@@ -11,9 +11,10 @@ import ShareProPlugin from "./index"
 import { ILogger, simpleLogger } from "zhi-lib-base"
 import { isDev, SHARE_PRO_STORE_NAME } from "./Constants"
 import { icons } from "./utils/svg"
-import { confirm, Menu, showMessage } from "siyuan"
+import { confirm, Dialog, Menu, showMessage } from "siyuan"
 import { ShareServiceApi } from "./api/share-service-api"
 import { ShareProConfig } from "./models/ShareProConfig"
+import ShareSetting from "./libs/ShareSetting.svelte"
 
 /**
  * 顶部按钮
@@ -38,7 +39,11 @@ export class Topbar {
     })
     topBarElement.addEventListener("click", async () => {
       // 初始化菜单
-      await this.addMenu(topBarElement.getBoundingClientRect())
+      try {
+        await this.addMenu(topBarElement.getBoundingClientRect())
+      } catch (e) {
+        showMessage("分享服务异常，请联系 youweics@163.com：" + e, 7000, "error")
+      }
     })
   }
 
@@ -73,7 +78,7 @@ export class Topbar {
         label: this.pluginInstance.i18n.getLicense,
         click: () => {
           const vipTip = vipInfo.msg ?? this.pluginInstance.i18n.unknownError
-          confirm(this.pluginInstance.i18n.tipTitle, vipTip + this.pluginInstance.i18n.openLicensePage, () => {
+          confirm(this.pluginInstance.i18n.tipTitle, vipTip + "，" + this.pluginInstance.i18n.openLicensePage, () => {
             window.open("https://store.terwer.space/products/share-pro")
           })
         },
@@ -84,7 +89,22 @@ export class Topbar {
     menu.addItem({
       icon: `iconSettings`,
       label: this.pluginInstance.i18n.shareSetting,
-      click: () => {},
+      click: () => {
+        const settingId = "share-pro-setting"
+        const d = new Dialog({
+          title: `${this.pluginInstance.i18n.shareSetting} - ${this.pluginInstance.i18n.sharePro}`,
+          content: `<div id="${settingId}"></div>`,
+          width: this.pluginInstance.isMobile ? "92vw" : "720px",
+        })
+        new ShareSetting({
+          target: document.getElementById(settingId) as HTMLElement,
+          props: {
+            pluginInstance: this.pluginInstance,
+            dialog: d,
+            vipInfo: vipInfo,
+          },
+        })
+      },
     })
 
     if (this.pluginInstance.isMobile) {

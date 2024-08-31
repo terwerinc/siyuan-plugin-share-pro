@@ -10,7 +10,7 @@
 import { IServiceApiConfig } from "./cfg"
 
 class ShareProConfig {
-  serviceApiConfig: IServiceApiConfig
+  serviceApiConfig?: IServiceApiConfig
 }
 
 export { ShareProConfig }
