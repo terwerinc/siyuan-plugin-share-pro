@@ -28,17 +28,36 @@ class ShareServiceApi {
       html: '[{"tag":"p","children":["简单分享测试啊240627。Hello, world!"]}]',
       docAttrs: "{}",
     }
-    const res = await this.shareServiceRequest("/api/share/create", shareBody)
+    const res = await this.shareServiceRequest(ServiceApiKeys.API_SHARE_CREATE, shareBody)
     this.logger.info("share created =>", res)
+    return res
   }
+
+  public async getVipInfo(token: string) {
+    const headers = {
+      Authorization: `${token}`,
+    }
+    const res = await this.shareServiceRequest(ServiceApiKeys.API_LICENSE_VIP_INFO, {}, headers)
+    this.logger.info("vip info =>", res)
+    return res
+  }
+
+  // ================
+  // private function
+  // ================
 
   /**
    * 向思源请求数据
    *
    * @param url - url
    * @param data - 数据
+   * @param headers - 头部信息
    */
-  private async shareServiceRequest(url: string, data: object): Promise<any> {
+  private async shareServiceRequest(
+    url: string,
+    data: object,
+    headers?: Record<string, any>
+  ): Promise<ServiceResponse> {
     const cfg = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
     const shareApiEndPoint = cfg?.serviceApiConfig?.apiUrl ?? ""
     if (shareApiEndPoint.trim() == "") {
@@ -48,6 +67,10 @@ class ShareServiceApi {
     const reqUrl = `${shareApiEndPoint}${url}`
 
     const fetchOps = {
+      headers: {
+        "Content-Type": "application/json",
+        ...headers,
+      },
       body: JSON.stringify(data),
       method: "POST",
     }
@@ -60,17 +83,28 @@ class ShareServiceApi {
     }
 
     if (isDev) {
-      this.logger.info("开始向分享服务请求数据，reqUrl=>", reqUrl)
-      this.logger.info("开始向分享服务请求数据，fetchOps=>", fetchOps)
+      this.logger.debug("开始向分享服务请求数据，reqUrl=>", reqUrl)
+      this.logger.debug("开始向分享服务请求数据，fetchOps=>", fetchOps)
     }
 
     const response = await fetch(reqUrl, fetchOps)
     const resJson = await response.json()
     if (isDev) {
-      this.logger.info("分享服务请求数据返回，resJson=>", resJson)
+      this.logger.debug("分享服务请求数据返回，resJson=>", resJson)
     }
     return resJson
   }
 }
 
-export { ShareServiceApi }
+enum ServiceApiKeys {
+  API_SHARE_CREATE = "/api/share/create",
+  API_LICENSE_VIP_INFO = "/api/license/vipInfo",
+}
+
+class ServiceResponse {
+  code: number
+  msg: string
+  data: any
+}
+
+export { ShareServiceApi, ServiceResponse }

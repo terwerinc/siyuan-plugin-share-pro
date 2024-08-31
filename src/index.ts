@@ -49,7 +49,12 @@ export default class ShareProPlugin extends Plugin {
    * @param storeName 存储 key
    */
   public async safeLoad<T>(storeName: string) {
-    let storeConfig = await this.loadData(storeName)
+    let storeConfig = {}
+    try {
+      storeConfig = await this.loadData(storeName)
+    } catch (e) {
+      this.logger.error("Share pro config load error", e)
+    }
 
     if (typeof storeConfig !== "object") {
       storeConfig = {} as T
@@ -61,11 +66,13 @@ export default class ShareProPlugin extends Plugin {
   private async initCfg() {
     const cfg = await this.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
     const latestApiUrl = isDev ? SHARE_SERVICE_ENDPOINT_DEV : SHARE_SERVICE_ENDPOINT_PROD
-    cfg.serviceApiConfig = {
-      apiUrl: isDev ? SHARE_SERVICE_ENDPOINT_DEV : SHARE_SERVICE_ENDPOINT_PROD,
-      token: "",
+    if (cfg?.serviceApiConfig?.apiUrl !== latestApiUrl) {
+      cfg.serviceApiConfig = {
+        apiUrl: latestApiUrl,
+        token: "",
+      }
+      await this.saveData(SHARE_PRO_STORE_NAME, cfg)
+      this.logger.info("Share pro config inited")
     }
-    await this.saveData(SHARE_PRO_STORE_NAME, cfg)
-    this.logger.info("Share pro config inited")
   }
 }

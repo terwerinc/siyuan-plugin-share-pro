@@ -3,5 +3,9 @@
   "startShare": "分享文档",
   "viewArticle": "查看文档",
   "cancelShare": "取消分享",
-  "shareSetting": "分享设置"
+  "shareSetting": "分享设置",
+  "tipTitle": "温馨提示",
+  "getLicense": "获取授权码",
+  "openLicensePage": "是否打开授权码购买页面？",
+  "unknownError": "未知错误"
 }

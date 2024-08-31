@@ -2,5 +2,9 @@
   "sharePro": "Share pro",
   "startShare": "Start share",
   "cancelShare": "Cancel share",
-  "shareSetting": "Share setting"
+  "shareSetting": "Share setting",
+  "tipTitle": "Show tips",
+  "getLicense": "Get license",
+  "openLicensePage": "Open license page?",
+  "unknownError": "Unknown error"
 }

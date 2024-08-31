@@ -6,4 +6,4 @@
 
 ## 注册码
 
-http://store.terwer.space/products/share-pro
+https://store.terwer.space/products/share-pro

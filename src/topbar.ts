@@ -9,10 +9,11 @@
 
 import ShareProPlugin from "./index"
 import { ILogger, simpleLogger } from "zhi-lib-base"
-import { isDev } from "./Constants"
+import { isDev, SHARE_PRO_STORE_NAME } from "./Constants"
 import { icons } from "./utils/svg"
-import { confirm, Menu } from "siyuan"
+import { confirm, Menu, showMessage } from "siyuan"
 import { ShareServiceApi } from "./api/share-service-api"
+import { ShareProConfig } from "./models/ShareProConfig"
 
 /**
  * 顶部按钮
@@ -20,12 +21,12 @@ import { ShareServiceApi } from "./api/share-service-api"
 export class Topbar {
   private logger: ILogger
   private pluginInstance: ShareProPlugin
-  private shreApi: ShareServiceApi
+  private shareApi: ShareServiceApi
 
   constructor(pluginInstance: ShareProPlugin) {
     this.logger = simpleLogger("topbar", "share-pro", isDev)
     this.pluginInstance = pluginInstance
-    this.shreApi = new ShareServiceApi(pluginInstance)
+    this.shareApi = new ShareServiceApi(pluginInstance)
   }
 
   public initTopbar() {
@@ -37,34 +38,53 @@ export class Topbar {
     })
     topBarElement.addEventListener("click", async () => {
       // 初始化菜单
-      this.addMenu(topBarElement.getBoundingClientRect())
+      await this.addMenu(topBarElement.getBoundingClientRect())
     })
   }
 
-  private addMenu(rect: DOMRect) {
+  private async addMenu(rect: DOMRect) {
     const menu = new Menu("shareProMenu")
-    menu.addItem({
-      icon: `iconTransform`,
-      label: this.pluginInstance.i18n.startShare,
-      click: async () => {
-        await this.shreApi.createShare()
-      },
-    })
-    menu.addSeparator()
-    menu.addItem({
-      icon: `iconEye`,
-      label: this.pluginInstance.i18n.viewArticle,
-      click: () => {
-        // showMessage("请先在 设置->发布设置配置平台并启用", 7000, "error")
-      },
-    })
-    menu.addSeparator()
+
+    const cfg = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
+    const vipInfo = await this.shareApi.getVipInfo(cfg?.serviceApiConfig?.token ?? "")
+    if (vipInfo.code === 0) {
+      menu.addItem({
+        icon: `iconTransform`,
+        label: this.pluginInstance.i18n.startShare,
+        click: async () => {
+          await this.shareApi.createShare()
+        },
+      })
+      menu.addSeparator()
+      menu.addItem({
+        icon: `iconEye`,
+        label: this.pluginInstance.i18n.viewArticle,
+        click: () => {
+          const isShared = false
+          if (!isShared) {
+            showMessage("文档未分享，无法查看", 7000, "error")
+          }
+        },
+      })
+      menu.addSeparator()
+    } else {
+      menu.addItem({
+        icon: `iconKey`,
+        label: this.pluginInstance.i18n.getLicense,
+        click: () => {
+          const vipTip = vipInfo.msg ?? this.pluginInstance.i18n.unknownError
+          confirm(this.pluginInstance.i18n.tipTitle, vipTip + this.pluginInstance.i18n.openLicensePage, () => {
+            window.open("https://store.terwer.space/products/share-pro")
+          })
+        },
+      })
+      menu.addSeparator()
+    }
+
     menu.addItem({
       icon: `iconSettings`,
       label: this.pluginInstance.i18n.shareSetting,
-      click: () => {
-        // showMessage("请先在 设置->发布设置配置平台并启用", 7000, "error")
-      },
+      click: () => {},
     })
 
     if (this.pluginInstance.isMobile) {
