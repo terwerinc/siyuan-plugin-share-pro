@@ -11,7 +11,15 @@ import { App, getFrontend, IObject, Plugin } from "siyuan"
 import { ILogger, simpleLogger } from "zhi-lib-base"
 
 import "../index.styl"
-import { isDev, SHARE_PRO_STORE_NAME, SHARE_SERVICE_ENDPOINT_DEV, SHARE_SERVICE_ENDPOINT_PROD } from "./Constants"
+import {
+  DEFAULT_SIYUAN_API_URL,
+  DEFAULT_SIYUAN_AUTH_TOKEN,
+  DEFAULT_SIYUAN_COOKIE,
+  isDev,
+  SHARE_PRO_STORE_NAME,
+  SHARE_SERVICE_ENDPOINT_DEV,
+  SHARE_SERVICE_ENDPOINT_PROD,
+} from "./Constants"
 import { Topbar } from "./topbar"
 import { ShareProConfig } from "./models/ShareProConfig"
 
@@ -44,12 +52,31 @@ export default class ShareProPlugin extends Plugin {
   // private function
   // ================
   /**
+   * 默认配置
+   */
+  public getDefaultCfg() {
+    const latestServiceApiUrl = isDev ? SHARE_SERVICE_ENDPOINT_DEV : SHARE_SERVICE_ENDPOINT_PROD
+    return {
+      siyuanConfig: {
+        apiUrl: DEFAULT_SIYUAN_API_URL,
+        token: DEFAULT_SIYUAN_AUTH_TOKEN,
+        cookie: DEFAULT_SIYUAN_COOKIE,
+      },
+      serviceApiConfig: {
+        apiUrl: latestServiceApiUrl,
+        token: "",
+      },
+    } as any as ShareProConfig
+  }
+
+  /**
    * 安全的加载配置
    *
    * @param storeName 存储 key
    */
   public async safeLoad<T>(storeName: string) {
-    let storeConfig = {}
+    const defaultCfg = this.getDefaultCfg() as T
+    let storeConfig = defaultCfg
     try {
       storeConfig = await this.loadData(storeName)
     } catch (e) {
@@ -57,7 +84,7 @@ export default class ShareProPlugin extends Plugin {
     }
 
     if (typeof storeConfig !== "object") {
-      storeConfig = {} as T
+      storeConfig = defaultCfg as T
     }
 
     return storeConfig as T
@@ -65,12 +92,8 @@ export default class ShareProPlugin extends Plugin {
 
   private async initCfg() {
     const cfg = await this.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
-    const latestApiUrl = isDev ? SHARE_SERVICE_ENDPOINT_DEV : SHARE_SERVICE_ENDPOINT_PROD
-    if (cfg?.serviceApiConfig?.apiUrl !== latestApiUrl) {
-      cfg.serviceApiConfig = {
-        apiUrl: latestApiUrl,
-        token: "",
-      }
+    if (!cfg.inited) {
+      cfg.inited = true
       await this.saveData(SHARE_PRO_STORE_NAME, cfg)
       this.logger.info("Share pro config inited")
     }

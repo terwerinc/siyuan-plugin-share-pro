@@ -10,7 +10,13 @@
 import { IServiceApiConfig } from "./cfg"
 
 class ShareProConfig {
+  siyuanConfig?: {
+    apiUrl: ""
+    token: ""
+    cookie: ""
+  }
   serviceApiConfig?: IServiceApiConfig
+  inited: boolean
 }
 
 export { ShareProConfig }

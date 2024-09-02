@@ -12,9 +12,11 @@ import { ILogger, simpleLogger } from "zhi-lib-base"
 import { isDev, SHARE_PRO_STORE_NAME } from "./Constants"
 import { icons } from "./utils/svg"
 import { confirm, Dialog, Menu, showMessage } from "siyuan"
-import { ShareServiceApi } from "./api/share-service-api"
+import { ShareApi } from "./api/share-api"
 import { ShareProConfig } from "./models/ShareProConfig"
 import ShareSetting from "./libs/ShareSetting.svelte"
+import { ShareService } from "./service/ShareService"
+import PageUtil from "./utils/pageUtil"
 
 /**
  * 顶部按钮
@@ -22,12 +24,12 @@ import ShareSetting from "./libs/ShareSetting.svelte"
 export class Topbar {
   private logger: ILogger
   private pluginInstance: ShareProPlugin
-  private shareApi: ShareServiceApi
+  private shareService: ShareService
 
   constructor(pluginInstance: ShareProPlugin) {
     this.logger = simpleLogger("topbar", "share-pro", isDev)
     this.pluginInstance = pluginInstance
-    this.shareApi = new ShareServiceApi(pluginInstance)
+    this.shareService = new ShareService(pluginInstance)
   }
 
   public initTopbar() {
@@ -48,27 +50,35 @@ export class Topbar {
   }
 
   private async addMenu(rect: DOMRect) {
+    const docId = PageUtil.getPageId()
+    if (docId.trim() == "") {
+      showMessage("未找到当前文档，无法分享", 7000, "error")
+      return
+    }
+
     const menu = new Menu("shareProMenu")
 
     const cfg = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
-    const vipInfo = await this.shareApi.getVipInfo(cfg?.serviceApiConfig?.token ?? "")
+    const vipInfo = await this.shareService.getVipInfo(cfg?.serviceApiConfig?.token ?? "")
     if (vipInfo.code === 0) {
       menu.addItem({
         icon: `iconTransform`,
         label: this.pluginInstance.i18n.startShare,
         click: async () => {
-          await this.shareApi.createShare()
+          await this.shareService.createShare(docId)
         },
       })
       menu.addSeparator()
       menu.addItem({
         icon: `iconEye`,
         label: this.pluginInstance.i18n.viewArticle,
-        click: () => {
+        click: async () => {
+          const docInfo = await this.shareService.getSharedDocInfo(docId)
           const isShared = false
           if (!isShared) {
             showMessage("文档未分享，无法查看", 7000, "error")
           }
+          await this.shareService.createShare(docId)
         },
       })
       menu.addSeparator()

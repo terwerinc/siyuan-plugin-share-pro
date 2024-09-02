@@ -13,21 +13,16 @@ import { ShareProConfig } from "../models/ShareProConfig"
 import { ILogger, simpleLogger } from "zhi-lib-base"
 import { showMessage } from "siyuan"
 
-class ShareServiceApi {
+class ShareApi {
   private logger: ILogger
   private pluginInstance: ShareProPlugin
 
   constructor(pluginInstance: ShareProPlugin) {
     this.pluginInstance = pluginInstance
-    this.logger = simpleLogger("share-service-api", "custom-slug", isDev)
+    this.logger = simpleLogger("share-service-api", "share-pro", isDev)
   }
 
-  public async createShare() {
-    const shareBody = {
-      docId: "20220924223854-qygzxps",
-      html: '[{"tag":"p","children":["简单分享测试啊240627。Hello, world!"]}]',
-      docAttrs: "{}",
-    }
+  public async createShare(shareBody: any) {
     const res = await this.shareServiceRequest(ServiceApiKeys.API_SHARE_CREATE, shareBody)
     this.logger.info("share created =>", res)
     return res
@@ -107,4 +102,4 @@ class ServiceResponse {
   data: any
 }
 
-export { ShareServiceApi, ServiceResponse }
+export { ShareApi, ServiceResponse }
