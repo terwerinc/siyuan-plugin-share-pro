@@ -44,15 +44,15 @@ class ShareService {
       this.logger.debug("get post", post)
       const shareBody = {
         docId: post.postid,
-        html: JSON.stringify({
+        html: {
+          attrs: post.attrs,
           title: post.title,
           editorDom: post.editorDom,
           date: new Date(),
           tags: post.mt_keywords,
           categories: post.categories,
           shortDesc: post.shortDesc,
-        }),
-        docAttrs: post.attrs,
+        },
       }
       const resp = await this.shareApi.createShare(JSON.stringify(shareBody))
       if (resp.code !== 0) {
@@ -69,7 +69,7 @@ class ShareService {
   }
 
   async getSharedDocInfo(docId: string) {
-    alert(docId)
+    return await this.shareApi.getDoc(docId)
   }
 
   // ================

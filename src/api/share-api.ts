@@ -22,6 +22,15 @@ class ShareApi {
     this.logger = simpleLogger("share-service-api", "share-pro", isDev)
   }
 
+  public async getDoc(docId: string) {
+    const body = {
+      fdId: docId,
+    }
+    const res = await this.shareServiceRequest(ServiceApiKeys.API_SHARE_GET_DOC, body)
+    this.logger.info("get doc info =>", res)
+    return res
+  }
+
   public async createShare(shareBody: any) {
     const res = await this.shareServiceRequest(ServiceApiKeys.API_SHARE_CREATE, shareBody)
     this.logger.info("share created =>", res)
@@ -70,11 +79,7 @@ class ShareApi {
       method: "POST",
     }
     if (cfg.serviceApiConfig.token !== "") {
-      Object.assign(fetchOps, {
-        headers: {
-          Authorization: `${cfg.serviceApiConfig.token}`,
-        },
-      })
+      fetchOps.headers["Authorization"] = `${cfg.serviceApiConfig.token}`
     }
 
     if (isDev) {
@@ -92,6 +97,7 @@ class ShareApi {
 }
 
 enum ServiceApiKeys {
+  API_SHARE_GET_DOC = "/api/share/getDoc",
   API_SHARE_CREATE = "/api/share/create",
   API_LICENSE_VIP_INFO = "/api/license/vipInfo",
 }

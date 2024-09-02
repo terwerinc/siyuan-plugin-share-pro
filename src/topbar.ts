@@ -61,27 +61,34 @@ export class Topbar {
     const cfg = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
     const vipInfo = await this.shareService.getVipInfo(cfg?.serviceApiConfig?.token ?? "")
     if (vipInfo.code === 0) {
+      const docInfo = await this.shareService.getSharedDocInfo(docId)
+      const isShared = docInfo.code === 0
+
       menu.addItem({
         icon: `iconTransform`,
-        label: this.pluginInstance.i18n.startShare,
+        label: isShared ? this.pluginInstance.i18n.cancelShare : this.pluginInstance.i18n.startShare,
         click: async () => {
-          await this.shareService.createShare(docId)
-        },
-      })
-      menu.addSeparator()
-      menu.addItem({
-        icon: `iconEye`,
-        label: this.pluginInstance.i18n.viewArticle,
-        click: async () => {
-          const docInfo = await this.shareService.getSharedDocInfo(docId)
-          const isShared = false
-          if (!isShared) {
-            showMessage("文档未分享，无法查看", 7000, "error")
+          if (isShared) {
+          } else {
+            await this.shareService.createShare(docId)
           }
-          await this.shareService.createShare(docId)
         },
       })
       menu.addSeparator()
+
+      if (isShared) {
+        menu.addSeparator()
+        menu.addItem({
+          icon: `iconEye`,
+          label: this.pluginInstance.i18n.viewArticle,
+          click: async () => {
+            if (!isShared) {
+              showMessage("文档未分享，无法查看=>" + docInfo.msg, 7000, "error")
+            }
+            await this.shareService.createShare(docId)
+          },
+        })
+      }
     } else {
       menu.addItem({
         icon: `iconKey`,
