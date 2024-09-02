@@ -9,5 +9,6 @@
   "unknownError": "Unknown error",
   "cancel": "Cancel",
   "save": "Save",
-  "settingConfigSaveSuccess": "The configuration is saved successfully"
+  "settingConfigSaveSuccess": "The configuration is saved successfully",
+  "confirmDelete": "Are you sure to stop share this doc？"
 }

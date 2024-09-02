@@ -89,9 +89,11 @@
     <div class="fn__block form-item">
       注册码
       <div class="b3-label__text form-item-tip">
-        完整的注册码，可
+        <!--
         <a class="fn__code" href="https://store.terwer.space/products/share-pro">点击这里</a>
-        自助获取，或者发邮件到 youweics@163.com 申请试用
+        自助获取注册码，或者
+        -->
+        发邮件到 youweics@163.com 申请试用
       </div>
       <span class="fn__hr" />
       <textarea

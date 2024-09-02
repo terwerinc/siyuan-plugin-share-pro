@@ -15,6 +15,7 @@ import { ServiceResponse, ShareApi } from "../api/share-api"
 import { useSiyuanApi } from "../composables/useSiyuanApi"
 import { ShareProConfig } from "../models/ShareProConfig"
 import { showMessage } from "siyuan"
+import { Post } from "zhi-blog-api"
 
 /**
  * 分享服务
@@ -42,19 +43,20 @@ class ShareService {
       const blogApi = await this.getSiyuanApi()
       const post = await blogApi.getPost(docId)
       this.logger.debug("get post", post)
+      const sPost = new Post()
+      sPost.attrs = post.attrs
+      sPost.title = post.title
+      sPost.editorDom = post.editorDom
+      sPost.dateUpdated = new Date()
+      sPost.mt_keywords = post.mt_keywords
+      sPost.categories = post.categories
+      sPost.shortDesc = post.shortDesc
       const shareBody = {
         docId: post.postid,
-        html: {
-          attrs: post.attrs,
-          title: post.title,
-          editorDom: post.editorDom,
-          date: new Date(),
-          tags: post.mt_keywords,
-          categories: post.categories,
-          shortDesc: post.shortDesc,
-        },
+        slug: post.wp_slug.trim().length == 0 ? post.postid : post.wp_slug,
+        html: JSON.stringify(sPost),
       }
-      const resp = await this.shareApi.createShare(JSON.stringify(shareBody))
+      const resp = await this.shareApi.createShare(shareBody)
       if (resp.code !== 0) {
         this.logger.error("文档" + docId + "分享失败：" + resp.msg)
         showMessage("分享失败：" + resp.msg, 7000, "error")
@@ -70,6 +72,10 @@ class ShareService {
 
   async getSharedDocInfo(docId: string) {
     return await this.shareApi.getDoc(docId)
+  }
+
+  async deleteDoc(docId: string) {
+    return await this.shareApi.deleteDoc(docId)
   }
 
   // ================

@@ -10,5 +10,6 @@
   "unknownError": "未知错误",
   "cancel": "取消",
   "save": "保存",
-  "settingConfigSaveSuccess": "配置保存成功"
+  "settingConfigSaveSuccess": "配置保存成功",
+  "confirmDelete": "确认取消分享该文档吗？"
 }

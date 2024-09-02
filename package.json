@@ -41,6 +41,7 @@
     "vitest": "^1.6.0"
   },
   "dependencies": {
+    "zhi-blog-api": "^1.66.0",
     "zhi-lib-base": "^0.8.0",
     "zhi-siyuan-api": "^2.21.0"
   },

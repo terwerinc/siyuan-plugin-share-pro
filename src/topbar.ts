@@ -69,6 +69,14 @@ export class Topbar {
         label: isShared ? this.pluginInstance.i18n.cancelShare : this.pluginInstance.i18n.startShare,
         click: async () => {
           if (isShared) {
+            confirm(this.pluginInstance.i18n.tipTitle, this.pluginInstance.i18n.confirmDelete, async () => {
+              const ret = await this.shareService.deleteDoc(docId)
+              if (ret.code === 0) {
+                showMessage("文档已取消分享", 3000, "info")
+              } else {
+                showMessage("取消分享失败=>" + ret.msg, 7000, "error")
+              }
+            })
           } else {
             await this.shareService.createShare(docId)
           }
@@ -85,7 +93,8 @@ export class Topbar {
             if (!isShared) {
               showMessage("文档未分享，无法查看=>" + docInfo.msg, 7000, "error")
             }
-            await this.shareService.createShare(docId)
+            const shareData = JSON.parse(docInfo.data)
+            window.open(shareData.viewUrl)
           },
         })
       }

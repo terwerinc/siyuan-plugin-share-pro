@@ -31,6 +31,15 @@ class ShareApi {
     return res
   }
 
+  async deleteDoc(docId: string) {
+    const body = {
+      fdId: docId,
+    }
+    const res = await this.shareServiceRequest(ServiceApiKeys.API_SHARE_DELETE_DOC, body)
+    this.logger.info("delete doc =>", res)
+    return res
+  }
+
   public async createShare(shareBody: any) {
     const res = await this.shareServiceRequest(ServiceApiKeys.API_SHARE_CREATE, shareBody)
     this.logger.info("share created =>", res)
@@ -98,6 +107,7 @@ class ShareApi {
 
 enum ServiceApiKeys {
   API_SHARE_GET_DOC = "/api/share/getDoc",
+  API_SHARE_DELETE_DOC = "/api/share/delete",
   API_SHARE_CREATE = "/api/share/create",
   API_LICENSE_VIP_INFO = "/api/license/vipInfo",
 }
