@@ -53,7 +53,9 @@ class ShareService {
       sPost.shortDesc = post.shortDesc
       const shareBody = {
         docId: post.postid,
-        slug: post.wp_slug.trim().length == 0 ? post.postid : post.wp_slug,
+        // slug: post.wp_slug.trim().length == 0 ? post.postid : post.wp_slug,
+        // 暂时不支持别名，后续在职
+        slug: post.postid,
         html: JSON.stringify(sPost),
       }
       const resp = await this.shareApi.createShare(shareBody)
