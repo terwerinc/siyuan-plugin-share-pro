@@ -1,17 +1,14 @@
 # Changelog
 
+## [0.3.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v0.2.2...share-pro-v0.3.0) (2024-09-04)
+### Features
+* add 7day free license ([a39f93c](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/a39f93cce49afe6589cf40fdf3bf4eb332a468f4))
 ## [0.2.2](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v0.2.1...share-pro-v0.2.2) (2024-09-04)
-
-
 ### Bug Fixes
-
 * check share state ([c9e16d6](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/c9e16d606c67fc93a6c406240494e728a6b2c81d))
-
 ## [0.2.1](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v0.2.0...share-pro-v0.2.1) (2024-09-04)
-### Bug Fixes
 * update preview ([9ba0194](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/9ba0194ce1d756a1625aff046451c71e83884d1d))
 ## [0.2.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v0.1.0...share-pro-v0.2.0) (2024-09-04)
-### Features
 * add license ([eb1760a](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/eb1760a55684543a0857c285acbd138c331b885d))
 * add license checker and setting ([0d89cda](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/0d89cdaefc307e51a57c746086217cf515f62f50))
 * add share service ([f39f24b](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/f39f24bbc7112c71bea28117524473b0ee92bf54))
