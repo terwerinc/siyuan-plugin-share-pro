@@ -96,6 +96,18 @@ export default class ShareProPlugin extends Plugin {
       cfg.inited = true
       await this.saveData(SHARE_PRO_STORE_NAME, cfg)
       this.logger.info("Share pro config inited")
+    } else {
+      // 开发阶段
+      if (isDev && cfg.serviceApiConfig.apiUrl !== SHARE_SERVICE_ENDPOINT_DEV) {
+        cfg.serviceApiConfig = {
+          apiUrl: DEFAULT_SIYUAN_API_URL,
+          token: DEFAULT_SIYUAN_AUTH_TOKEN,
+          cookie: DEFAULT_SIYUAN_COOKIE,
+        } as any
+        cfg.serviceApiConfig.apiUrl = SHARE_SERVICE_ENDPOINT_DEV
+        await this.saveData(SHARE_PRO_STORE_NAME, cfg)
+        this.logger.info("Share pro updated for dev mode")
+      }
     }
   }
 }

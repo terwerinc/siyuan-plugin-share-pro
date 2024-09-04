@@ -55,6 +55,12 @@ class ShareApi {
     return res
   }
 
+  public async uploadMedia(shareBody: any) {
+    const res = await this.shareServiceRequest(ServiceApiKeys.API_UPLOAD_MEDIA, shareBody)
+    this.logger.info("media uploaded =>", res)
+    return res
+  }
+
   // ================
   // private function
   // ================
@@ -110,6 +116,7 @@ enum ServiceApiKeys {
   API_SHARE_DELETE_DOC = "/api/share/delete",
   API_SHARE_CREATE = "/api/share/create",
   API_LICENSE_VIP_INFO = "/api/license/vipInfo",
+  API_UPLOAD_MEDIA = "/api/asset/upload",
 }
 
 class ServiceResponse {
