@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v0.3.0...share-pro-v0.4.0) (2024-09-04)
+
+
+### Features
+
+* add 7day free license ([6c9f343](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/6c9f343800b88efccbaf6078fa5fdaf0cf533ab6))
+* add 7day free license ([0dd0d94](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/0dd0d94d039eae56dd7f2d4dab293fc5485e1917))
+
 ## [0.3.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v0.2.2...share-pro-v0.3.0) (2024-09-04)
 ### Features
 * add 7day free license ([a39f93c](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/a39f93cce49afe6589cf40fdf3bf4eb332a468f4))
