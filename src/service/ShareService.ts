@@ -67,7 +67,7 @@ class ShareService {
       this.logger.info("文档『" + post.title + "[" + docId + "]』分享成功")
       showMessage("分享成功", 3000, "info")
 
-      // 处理图谱
+      // 处理图片
       const data = resp.data
       const media = data.media
       if (media && media.length > 0) {
