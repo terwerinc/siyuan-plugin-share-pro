@@ -12,7 +12,6 @@ import { ILogger, simpleLogger } from "zhi-lib-base"
 import { isDev, SHARE_PRO_STORE_NAME } from "./Constants"
 import { icons } from "./utils/svg"
 import { confirm, Dialog, Menu, showMessage } from "siyuan"
-import { ShareApi } from "./api/share-api"
 import { ShareProConfig } from "./models/ShareProConfig"
 import ShareSetting from "./libs/ShareSetting.svelte"
 import { ShareService } from "./service/ShareService"
@@ -64,6 +63,14 @@ export class Topbar {
       const docInfo = await this.shareService.getSharedDocInfo(docId)
       const isShared = docInfo.code === 0
 
+      const shareData = docInfo?.data ? JSON.parse(docInfo.data) : null
+      if (shareData) {
+        this.logger.info("get shared data =>", shareData)
+        if (shareData.shareStatus !== "COMPLETED") {
+          alert("图片仍在后台处理中，文档分享尚未完成，此时查看文档可能无法显示图片，请知悉")
+        }
+      }
+
       menu.addItem({
         icon: `iconTransform`,
         label: isShared ? this.pluginInstance.i18n.cancelShare : this.pluginInstance.i18n.startShare,
@@ -90,10 +97,9 @@ export class Topbar {
           icon: `iconEye`,
           label: this.pluginInstance.i18n.viewArticle,
           click: async () => {
-            if (!isShared) {
+            if (shareData) {
               showMessage("文档未分享，无法查看=>" + docInfo.msg, 7000, "error")
             }
-            const shareData = JSON.parse(docInfo.data)
             window.open(shareData.viewUrl)
           },
         })

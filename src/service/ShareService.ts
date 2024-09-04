@@ -73,6 +73,7 @@ class ShareService {
       if (media && media.length > 0) {
         // 异步处理图片
         this.logger.info("后台处理图片开始...")
+        // showMessage("检测到文档图片，开始处理图片，可能需要一定时间，请耐心等待...", 3000, "info")
         void this.processShareMedia(docId, media)
         this.logger.info("后台处理图片完毕.")
       }
@@ -147,7 +148,8 @@ class ShareService {
           this.logger.debug("Image base64 response =>", res)
 
           if (res?.status !== 200) {
-            this.logger.error(`Image retrieval error: ${res.msg}`)
+            this.logger.error(`图片信息获取失败: ${res.msg}`)
+            showMessage("图片信息获取失败: " + res.msg, 7000, "error")
             continue
           }
 
@@ -179,6 +181,7 @@ class ShareService {
           this.logger.info(`成功上传媒体`)
         } else {
           this.logger.error(`上传媒体失败`, uploadResult.msg)
+          showMessage("上传媒体失败 =>" + uploadResult.msg, 7000, "error")
         }
       } catch (e) {
         this.logger.error("上传媒体时发生异常 =>", e)
