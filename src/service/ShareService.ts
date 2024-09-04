@@ -73,7 +73,7 @@ class ShareService {
       if (media && media.length > 0) {
         // 异步处理图片
         this.logger.info("后台处理图片开始...")
-        // showMessage("检测到文档图片，开始处理图片，可能需要一定时间，请耐心等待...", 3000, "info")
+        showMessage("检测到文档图片，开始处理图片，为了图片正常完成，请耐心等待，不要进行其他操作...", 7000, "info")
         void this.processShareMedia(docId, media)
         this.logger.info("后台处理图片完毕.")
       }
@@ -180,8 +180,9 @@ class ShareService {
           }
           this.logger.info(`成功上传媒体`)
         } else {
-          this.logger.error(`上传媒体失败`, uploadResult.msg)
-          showMessage("上传媒体失败 =>" + uploadResult.msg, 7000, "error")
+          const errMsg = uploadResult.msg ?? (uploadResult as any).message
+          this.logger.error(`上传媒体失败`, errMsg)
+          showMessage("上传媒体失败 =>" + errMsg, 7000, "error")
         }
       } catch (e) {
         this.logger.error("上传媒体时发生异常 =>", e)

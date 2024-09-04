@@ -67,7 +67,7 @@ export class Topbar {
       if (shareData) {
         this.logger.info("get shared data =>", shareData)
         if (shareData.shareStatus !== "COMPLETED") {
-          alert("图片仍在后台处理中，文档分享尚未完成，此时查看文档可能无法显示图片，请知悉")
+          showMessage("图片仍在后台处理中，文档分享尚未完成，此时查看文档可能无法显示图片，请知悉", 3000, "info")
         }
       }
 
