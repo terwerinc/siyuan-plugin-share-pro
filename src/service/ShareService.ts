@@ -171,7 +171,6 @@ class ShareService {
         }
 
         // 处理上传结果
-
         const uploadResult = await this.shareApi.uploadMedia(reqParams)
         if (uploadResult.code === 0) {
           if (!hasNext) {
