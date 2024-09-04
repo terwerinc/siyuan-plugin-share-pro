@@ -1,12 +1,8 @@
 # Changelog
 
 ## [0.2.1](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v0.2.0...share-pro-v0.2.1) (2024-09-04)
-
-
 ### Bug Fixes
-
 * update preview ([9ba0194](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/9ba0194ce1d756a1625aff046451c71e83884d1d))
-
 ## [0.2.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v0.1.0...share-pro-v0.2.0) (2024-09-04)
 ### Features
 * add license ([eb1760a](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/eb1760a55684543a0857c285acbd138c331b885d))
@@ -16,7 +12,6 @@
 * init share pro ([dd3f2f1](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/dd3f2f127166e7b8c4ce36223499b26d36a416e0))
 * support assets ([f41f0fa](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/f41f0fa79f282d1c1fb71a2860d9443b2cadff37))
 * 版本授权 ([cfb37c1](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/cfb37c1ab0fe877967c8c6ec0651175e31bf1dcc))
-### Bug Fixes
 * build flow ([764787e](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/764787e415bcf1e437329f9786d40b0b6f1723c9))
 * change share service api ([909f13c](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/909f13cba69750cfe5f3501f8a0aef1540708c3b))
 * ci ([4048930](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/4048930d9b2e8726538cf1eb3f2914bd9ccbe193))
