@@ -30,7 +30,7 @@
     "minimist": "^1.2.8",
     "rollup-plugin-livereload": "^2.0.5",
     "siyuan": "^1.0.2",
-    "stylus": "^0.63.0",
+    "stylus": "^0.64.0",
     "svelte": "^4.2.19",
     "typescript": "^5.5.4",
     "vite": "^5.4.3",
