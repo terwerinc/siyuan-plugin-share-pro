@@ -10,6 +10,6 @@ https://store.terwer.space/products/share-pro (store is building, will come soon
 
 **Special Offer**: 
 
-Apply for a 7-day free trial license by emailing youweics@163.com before September 10, 2024.
+Apply for a 7-day free trial license by emailing youweics@163.com.
 
 Please add message to me in the subject line: Try share pro.
