@@ -6,6 +6,6 @@
 
 ## 注册码
 
-https://store.terwer.space/products/share-pro （商店准备中，近期上线，暂时可发邮件到 youweics@163.com 申请）
+https://store.terwer.space/products/share-pro （可直接在线购买，其他事宜可发邮件到 youweics@163.com 或者 issue 留言）
 
-上线福利：截止到2024年9月10之前发邮件到 youweics@163.com， 可免费申请7天体验注册码，请注明：申请试用在线分享专业版。
+可发邮件到 youweics@163.com， 可免费申请7天体验注册码，请注明：申请试用在线分享专业版。
