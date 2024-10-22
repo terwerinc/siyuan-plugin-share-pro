@@ -67,7 +67,7 @@ export class Topbar {
       if (shareData) {
         this.logger.info("get shared data =>", shareData)
         if (shareData.shareStatus !== "COMPLETED") {
-          showMessage("图片仍在后台处理中，文档分享尚未完成，此时查看文档可能无法显示图片，请知悉", 3000, "info")
+          alert("图片未处理完成或者失败，建议等待或者重新分享")
         }
       }
 
@@ -92,6 +92,17 @@ export class Topbar {
       menu.addSeparator()
 
       if (isShared) {
+        // 重新分享
+        menu.addSeparator()
+        menu.addItem({
+          icon: `iconEye`,
+          label: this.pluginInstance.i18n.reShare,
+          click: async () => {
+            await this.shareService.createShare(docId)
+          },
+        })
+
+        // 查看文档
         menu.addSeparator()
         menu.addItem({
           icon: `iconEye`,

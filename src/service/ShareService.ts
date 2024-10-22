@@ -16,6 +16,7 @@ import { useSiyuanApi } from "../composables/useSiyuanApi"
 import { ShareProConfig } from "../models/ShareProConfig"
 import { showMessage } from "siyuan"
 import { Post } from "zhi-blog-api"
+import { updateStatusBar } from "../statusBar"
 
 /**
  * 分享服务
@@ -65,17 +66,18 @@ class ShareService {
         return
       }
       this.logger.info("文档『" + post.title + "[" + docId + "]』分享成功")
-      showMessage("分享成功", 3000, "info")
 
       // 处理图片
       const data = resp.data
       const media = data.media
       if (media && media.length > 0) {
+        showMessage("文本已分享，检测到文档图片，开始处理图片...", 7000, "info")
         // 异步处理图片
-        this.logger.info("后台处理图片开始...")
-        showMessage("检测到文档图片，开始处理图片，为了图片正常完成，请耐心等待，不要进行其他操作...", 7000, "info")
+        this.addLog("后台处理图片开始...", "info")
         void this.processShareMedia(docId, media)
-        this.logger.info("后台处理图片完毕.")
+        this.addLog("后台处理图片完毕.", "info")
+      } else {
+        showMessage("分享成功", 3000, "info")
       }
     } catch (e) {
       this.logger.error("文档" + docId + "分享失败：" + e)
@@ -120,15 +122,21 @@ class ShareService {
       groupedMedia.push(mediaList.slice(i, i + perReq))
     }
 
+    let errorCount = 0
+    let successCount = 0
+    let totalCount = 0
     for (let i = 0; i < groupedMedia.length; i++) {
       const mediaGroup = groupedMedia[i]
       const processedParams = []
-      try {
-        for (const media of mediaGroup) {
+
+      this.addLog(`开始处理第${i + 1}组图片.共${groupedMedia.length}组，每组${perReq}个图片`, "info")
+      for (const media of mediaGroup) {
+        try {
           if (media.type !== "IMAGE") {
             this.logger.warn("Non-image resource detected, skipping.")
             continue
           }
+          totalCount += 1
 
           const originalUrl = media.originalUrl ?? ""
           let imageUrl = originalUrl
@@ -143,13 +151,12 @@ class ShareService {
             }
           }
 
-          this.logger.info(`Fetching image from ${imageUrl}`)
+          this.addLog(`开始处理第${totalCount}张图片： ${imageUrl} ，请稍候...`, "info")
           const res = await kernelApi.forwardProxy(imageUrl, [], undefined, "GET", undefined, undefined, "base64")
           this.logger.debug("Image base64 response =>", res)
 
           if (res?.status !== 200) {
-            this.logger.error(`图片信息获取失败: ${res.msg}`)
-            showMessage("图片信息获取失败: " + res.msg, 7000, "error")
+            this.addLog(`Image retrieval error: ${res.msg}`, "error")
             continue
           }
 
@@ -163,33 +170,55 @@ class ShareService {
             type: type,
           }
           processedParams.push(params)
+        } catch (e) {
+          this.logger.error("上传媒体时发生异常 =>", e)
+          showMessage("上传媒体时发生异常 =>" + e, 7000, "error")
         }
-
-        const hasNext = mediaGroup.length === perReq
-        const reqParams = {
-          docId: docId,
-          medias: processedParams,
-          hasNext: hasNext,
-        }
-
-        // 处理上传结果
-        const uploadResult = await this.shareApi.uploadMedia(reqParams)
-        if (uploadResult.code === 0) {
-          if (!hasNext) {
-            showMessage("您分享的文档「" + docId + "」已成功更新图片资源", 3000, "info")
-          }
-          this.logger.info(`成功上传媒体`)
-        } else {
-          const errMsg = uploadResult.msg ?? (uploadResult as any).message
-          this.logger.error(`上传媒体失败`, errMsg)
-          showMessage("上传媒体失败 =>" + errMsg, 7000, "error")
-        }
-      } catch (e) {
-        this.logger.error("上传媒体时发生异常 =>", e)
-        showMessage("上传媒体时发生异常 =>" + e, 7000, "error")
-      } finally {
-        this.logger.info(`第${i}组图片处理完毕.共${groupedMedia.length}组，每组${perReq}个图片`)
       }
+      this.addLog(`第${i + 1}组图片处理完毕.共${groupedMedia.length}组，每组${perReq}个图片`, "info")
+
+      const hasNext = mediaGroup.length === perReq
+      const reqParams = {
+        docId: docId,
+        medias: processedParams,
+        hasNext: hasNext,
+      }
+
+      // 处理上传结果
+      this.addLog(`准备批量上传第${i + 1}组图片，请稍候...`, "info")
+      let uploadResult = await this.shareApi.uploadMedia(reqParams)
+      this.addLog("图片批量处理结果=>" + JSON.stringify(uploadResult), "info")
+      if (uploadResult.code === 0) {
+        successCount += processedParams.length
+        if (!hasNext) {
+          showMessage("您分享的文档「" + docId + "」已成功更新图片资源", 3000, "info")
+        }
+        this.addLog(`第${i + 1}组已成功上传媒体`, "info")
+      } else {
+        errorCount += processedParams.length
+        let rtnMsg = uploadResult.msg
+        if (!uploadResult.msg) {
+          rtnMsg = (uploadResult as any).message
+        }
+        const errMsg = `第${i + 1}组媒体上传失败=>` + rtnMsg
+        this.addLog(errMsg, "error")
+        showMessage(errMsg, 7000, "error")
+      }
+    }
+    this.addLog(`图片全部处理完毕，总数(${totalCount})，成功（${successCount}），失败（${errorCount}）`, "info")
+    if (successCount === totalCount) {
+      showMessage("恭喜你，图片全部处理成功", 3000, "info")
+    } else {
+      showMessage(`${errorCount}张图片处理失败，请查看日志`, 7000, "error")
+    }
+  }
+
+  private addLog(msg: string, type: "info" | "error") {
+    updateStatusBar(this.pluginInstance, msg)
+    if (type === "info") {
+      this.logger.info(msg)
+    } else {
+      this.logger.error(msg)
     }
   }
 }
