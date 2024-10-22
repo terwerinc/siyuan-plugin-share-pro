@@ -1,28 +1,17 @@
 # Changelog
 
 ## [1.0.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v0.5.0...share-pro-v1.0.0) (2024-10-22)
-
-
 ### ⚠ BREAKING CHANGES
-
 * prepare for v1.0.0
-
 ### Features
-
 * prepare for v1.0.0 ([dc41494](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/dc41494deb80f440567d994a291dd8303f001213))
-
-
 ### Bug Fixes
-
 * picture process ([39db9a0](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/39db9a0c15d99413e8901a61320ad6ecf16e88cb))
-
 ## [0.5.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v0.4.0...share-pro-v0.5.0) (2024-09-04)
-### Features
 * add 7day free license ([a39f93c](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/a39f93cce49afe6589cf40fdf3bf4eb332a468f4))
 ## [0.4.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v0.3.0...share-pro-v0.4.0) (2024-09-04)
 ## [0.3.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v0.2.2...share-pro-v0.3.0) (2024-09-04)
 ## [0.2.2](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v0.2.1...share-pro-v0.2.2) (2024-09-04)
-### Bug Fixes
 * check share state ([c9e16d6](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/c9e16d606c67fc93a6c406240494e728a6b2c81d))
 ## [0.2.1](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v0.2.0...share-pro-v0.2.1) (2024-09-04)
 * update preview ([9ba0194](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/9ba0194ce1d756a1625aff046451c71e83884d1d))
