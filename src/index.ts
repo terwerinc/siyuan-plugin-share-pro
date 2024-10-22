@@ -22,11 +22,13 @@ import {
 } from "./Constants"
 import { Topbar } from "./topbar"
 import { ShareProConfig } from "./models/ShareProConfig"
+import { initStatusBar } from "./statusBar"
 
 export default class ShareProPlugin extends Plugin {
   private logger: ILogger
   private topbar: Topbar
   public isMobile: boolean
+  public statusBarElement
 
   constructor(options: { app: App; id: string; name: string; i18n: IObject }) {
     super(options)
@@ -40,6 +42,7 @@ export default class ShareProPlugin extends Plugin {
   async onload() {
     // 初始化菜单
     this.topbar.initTopbar()
+    initStatusBar(this)
     await this.initCfg()
     this.logger.info("Share pro loaded")
   }
