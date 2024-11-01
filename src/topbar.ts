@@ -16,6 +16,7 @@ import { ShareProConfig } from "./models/ShareProConfig"
 import ShareSetting from "./libs/ShareSetting.svelte"
 import { ShareService } from "./service/ShareService"
 import PageUtil from "./utils/pageUtil"
+import { WidgetInvoke } from "./invoke/widgetInvoke"
 
 /**
  * 顶部按钮
@@ -24,11 +25,13 @@ export class Topbar {
   private logger: ILogger
   private pluginInstance: ShareProPlugin
   private shareService: ShareService
+  private widgetInvoke: WidgetInvoke
 
   constructor(pluginInstance: ShareProPlugin) {
     this.logger = simpleLogger("topbar", "share-pro", isDev)
     this.pluginInstance = pluginInstance
     this.shareService = new ShareService(pluginInstance)
+    this.widgetInvoke = new WidgetInvoke(pluginInstance)
   }
 
   public initTopbar() {
@@ -48,73 +51,104 @@ export class Topbar {
     })
   }
 
-  private async addMenu(rect: DOMRect) {
+  private checkDocId() {
     const docId = PageUtil.getPageId()
     if (docId.trim() == "") {
-      showMessage("未找到当前文档，无法分享", 7000, "error")
-      return
+      return {
+        flag: false,
+      }
     }
+    return {
+      flag: true,
+      docId: docId,
+    }
+  }
 
+  private async addMenu(rect: DOMRect) {
     const menu = new Menu("shareProMenu")
 
     const cfg = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
     const vipInfo = await this.shareService.getVipInfo(cfg?.serviceApiConfig?.token ?? "")
     if (vipInfo.code === 0) {
-      const docInfo = await this.shareService.getSharedDocInfo(docId)
-      const isShared = docInfo.code === 0
-
-      const shareData = docInfo?.data ? JSON.parse(docInfo.data) : null
-      if (shareData) {
-        this.logger.info("get shared data =>", shareData)
-        if (shareData.shareStatus !== "COMPLETED") {
-          alert("图片未处理完成或者失败，建议等待或者重新分享")
+      const docCheck = this.checkDocId()
+      if (docCheck.flag) {
+        const docInfo = await this.shareService.getSharedDocInfo(docCheck.docId)
+        const isShared = docInfo.code === 0
+        const shareData = docInfo?.data ? JSON.parse(docInfo.data) : null
+        if (shareData) {
+          this.logger.info("get shared data =>", shareData)
+          if (shareData.shareStatus !== "COMPLETED") {
+            alert("图片未处理完成或者失败，建议等待或者重新分享")
+          }
         }
+        menu.addItem({
+          icon: `iconCloseRound`,
+          label: isShared ? this.pluginInstance.i18n.cancelShare : this.pluginInstance.i18n.startShare,
+          click: async () => {
+            if (isShared) {
+              confirm(this.pluginInstance.i18n.tipTitle, this.pluginInstance.i18n.confirmDelete, async () => {
+                if (!docCheck.flag) {
+                  showMessage(this.pluginInstance.i18n.msgNotFoundDoc, 7000, "error")
+                  return
+                }
+                const ret = await this.shareService.deleteDoc(docCheck.docId)
+                if (ret.code === 0) {
+                  showMessage("文档已取消分享", 3000, "info")
+                } else {
+                  showMessage("取消分享失败=>" + ret.msg, 7000, "error")
+                }
+              })
+            } else {
+              if (!docCheck.flag) {
+                showMessage(this.pluginInstance.i18n.msgNotFoundDoc, 7000, "error")
+                return
+              }
+              await this.shareService.createShare(docCheck.docId)
+            }
+          },
+        })
+        menu.addSeparator()
+        if (isShared) {
+          // 重新分享
+          menu.addItem({
+            icon: `iconTransform`,
+            label: this.pluginInstance.i18n.reShare,
+            click: async () => {
+              if (!docCheck.flag) {
+                showMessage(this.pluginInstance.i18n.msgNotFoundDoc, 7000, "error")
+                return
+              }
+              await this.shareService.createShare(docCheck.docId)
+            },
+          })
+          menu.addSeparator()
+
+          // 查看文档
+          menu.addItem({
+            icon: `iconEye`,
+            label: this.pluginInstance.i18n.viewArticle,
+            click: async () => {
+              if (shareData) {
+                showMessage("文档未分享，无法查看=>" + docInfo.msg, 7000, "error")
+              }
+              window.open(shareData.viewUrl)
+            },
+          })
+          menu.addSeparator()
+        }
+      } else {
+        // showMessage(this.pluginInstance.i18n.msgNotFoundDoc, 7000, "error")
       }
 
+      // 分享管理
       menu.addItem({
-        icon: `iconCloseRound`,
-        label: isShared ? this.pluginInstance.i18n.cancelShare : this.pluginInstance.i18n.startShare,
-        click: async () => {
-          if (isShared) {
-            confirm(this.pluginInstance.i18n.tipTitle, this.pluginInstance.i18n.confirmDelete, async () => {
-              const ret = await this.shareService.deleteDoc(docId)
-              if (ret.code === 0) {
-                showMessage("文档已取消分享", 3000, "info")
-              } else {
-                showMessage("取消分享失败=>" + ret.msg, 7000, "error")
-              }
-            })
-          } else {
-            await this.shareService.createShare(docId)
-          }
+        icon: `iconDock`,
+        label: this.pluginInstance.i18n.manageDoc,
+        click: () => {
+          this.widgetInvoke.showShareManageTab(vipInfo.data)
         },
       })
       menu.addSeparator()
-
-      if (isShared) {
-        // 重新分享
-        menu.addItem({
-          icon: `iconTransform`,
-          label: this.pluginInstance.i18n.reShare,
-          click: async () => {
-            await this.shareService.createShare(docId)
-          },
-        })
-        menu.addSeparator()
-
-        // 查看文档
-        menu.addItem({
-          icon: `iconEye`,
-          label: this.pluginInstance.i18n.viewArticle,
-          click: async () => {
-            if (shareData) {
-              showMessage("文档未分享，无法查看=>" + docInfo.msg, 7000, "error")
-            }
-            window.open(shareData.viewUrl)
-          },
-        })
-        menu.addSeparator()
-      }
     } else {
       menu.addItem({
         icon: `iconKey`,

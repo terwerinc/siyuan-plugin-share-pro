@@ -7,7 +7,7 @@
  *  of this license document, but changing it is not allowed.
  */
 
-import { App, getFrontend, IObject, Plugin } from "siyuan"
+import { App, getFrontend, IObject, ITab, Plugin } from "siyuan"
 import { ILogger, simpleLogger } from "zhi-lib-base"
 
 import "../index.styl"
@@ -28,7 +28,8 @@ export default class ShareProPlugin extends Plugin {
   private logger: ILogger
   private topbar: Topbar
   public isMobile: boolean
-  public statusBarElement
+  public statusBarElement: any
+  public tabInstance: ITab
 
   constructor(options: { app: App; id: string; name: string; i18n: IObject }) {
     super(options)
