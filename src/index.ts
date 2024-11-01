@@ -28,7 +28,7 @@ export default class ShareProPlugin extends Plugin {
   private logger: ILogger
   private topbar: Topbar
   public isMobile: boolean
-  public statusBarElement
+  public statusBarElement: any
 
   constructor(options: { app: App; id: string; name: string; i18n: IObject }) {
     super(options)

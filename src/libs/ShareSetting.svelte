@@ -1,6 +1,6 @@
 <script lang="ts">
   import ShareProPlugin from "../index"
-  import { Dialog } from "siyuan"
+  import { Dialog, getFrontend } from "siyuan"
   import { ShareProConfig } from "../models/ShareProConfig"
   import { SHARE_PRO_STORE_NAME } from "../Constants"
   import { onMount } from "svelte"
@@ -16,6 +16,7 @@
   }
 
   let settingConfig: ShareProConfig = pluginInstance.getDefaultCfg()
+  let isPC = getFrontend() == "desktop"
 
   const onSaveSetting = async () => {
     await pluginInstance.saveData(SHARE_PRO_STORE_NAME, settingConfig)
@@ -59,32 +60,34 @@
         placeholder="请输入思源地址"
       />
     </div>
-    <div class="fn__block form-item">
-      思源鉴权token
-      <!--
+    {#if !isPC}
+      <div class="fn__block form-item">
+        思源鉴权token
+        <!--
       <div class="b3-label__text form-item-tip">思源笔记鉴权token，请从设置->关于复制，本地可留空</div>
       -->
-      <span class="fn__hr" />
-      <input
-        class="b3-text-field fn__block"
-        id="siyuanAuthToken"
-        bind:value={settingConfig.siyuanConfig.token}
-        placeholder="请输入思源token，本地可留空"
-      />
-    </div>
-    <div class="fn__block form-item">
-      思源cookie
-      <!--
+        <span class="fn__hr" />
+        <input
+          class="b3-text-field fn__block"
+          id="siyuanAuthToken"
+          bind:value={settingConfig.siyuanConfig.token}
+          placeholder="请输入思源token，本地可留空"
+        />
+      </div>
+      <div class="fn__block form-item">
+        思源cookie
+        <!--
       <div class="b3-label__text form-item-tip">开启了授权码之后必须复制cookie，否则可留空</div>
       -->
-      <span class="fn__hr" />
-      <input
-        class="b3-text-field fn__block"
-        id="siyuanCookie"
-        bind:value={settingConfig.siyuanConfig.cookie}
-        placeholder="请输入思源cookie，未开启授权码可留空"
-      />
-    </div>
+        <span class="fn__hr" />
+        <input
+          class="b3-text-field fn__block"
+          id="siyuanCookie"
+          bind:value={settingConfig.siyuanConfig.cookie}
+          placeholder="请输入思源cookie，未开启授权码可留空"
+        />
+      </div>
+    {/if}
 
     <div class="fn__block form-item">
       注册码

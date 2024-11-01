@@ -10,7 +10,7 @@
 
 import { ILogger, simpleLogger } from "zhi-lib-base"
 import ShareProPlugin from "../index"
-import { isDev, SHARE_PRO_STORE_NAME } from "../Constants"
+import { isDev, SHARE_LIST_PAGE_SIZE, SHARE_PRO_STORE_NAME } from "../Constants"
 import { ServiceResponse, ShareApi } from "../api/share-api"
 import { useSiyuanApi } from "../composables/useSiyuanApi"
 import { ShareProConfig } from "../models/ShareProConfig"
@@ -85,12 +85,23 @@ class ShareService {
     }
   }
 
-  async getSharedDocInfo(docId: string) {
+  public async getSharedDocInfo(docId: string) {
     return await this.shareApi.getDoc(docId)
   }
 
-  async deleteDoc(docId: string) {
+  public async deleteDoc(docId: string) {
     return await this.shareApi.deleteDoc(docId)
+  }
+
+  public async listDoc(pageNum: number, pageSize: number, order: string, direction: string, search: string) {
+    const params = {
+      pageNum: pageNum,
+      pageSize: pageSize,
+      order: order,
+      direction: direction,
+      search: search,
+    }
+    return await this.shareApi.listDoc(params)
   }
 
   // ================

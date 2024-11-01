@@ -11,5 +11,7 @@
   "cancel": "Cancel",
   "save": "Save",
   "settingConfigSaveSuccess": "The configuration is saved successfully",
-  "confirmDelete": "Are you sure to stop share this doc？"
+  "confirmDelete": "Are you sure to stop share this doc？",
+  "manageDoc": "Doc manage",
+  "msgNotFoundDoc": "Doc not found, cannot share"
 }
