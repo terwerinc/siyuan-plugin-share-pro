@@ -6,7 +6,7 @@ share your notes from siyuan-note with one click
 
 ## License
 
-https://store.terwer.space/products/share-pro (store is building, will come soon)
+https://store.terwer.space/products/share-pro
 
 **Special Offer**: 
 
