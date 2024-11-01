@@ -17,6 +17,7 @@ import ShareSetting from "./libs/ShareSetting.svelte"
 import { ShareService } from "./service/ShareService"
 import PageUtil from "./utils/pageUtil"
 import { WidgetInvoke } from "./invoke/widgetInvoke"
+import pkg from "../package.json"
 
 /**
  * 顶部按钮
@@ -169,7 +170,7 @@ export class Topbar {
       click: () => {
         const settingId = "share-pro-setting"
         const d = new Dialog({
-          title: `${this.pluginInstance.i18n.shareSetting} - ${this.pluginInstance.i18n.sharePro}`,
+          title: `${this.pluginInstance.i18n.shareSetting} - ${this.pluginInstance.i18n.sharePro} v${pkg.version}`,
           content: `<div id="${settingId}"></div>`,
           width: this.pluginInstance.isMobile ? "92vw" : "720px",
         })
