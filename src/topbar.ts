@@ -72,7 +72,7 @@ export class Topbar {
       }
 
       menu.addItem({
-        icon: `iconTransform`,
+        icon: `iconCloseRound`,
         label: isShared ? this.pluginInstance.i18n.cancelShare : this.pluginInstance.i18n.startShare,
         click: async () => {
           if (isShared) {
@@ -93,17 +93,16 @@ export class Topbar {
 
       if (isShared) {
         // 重新分享
-        menu.addSeparator()
         menu.addItem({
-          icon: `iconEye`,
+          icon: `iconTransform`,
           label: this.pluginInstance.i18n.reShare,
           click: async () => {
             await this.shareService.createShare(docId)
           },
         })
+        menu.addSeparator()
 
         // 查看文档
-        menu.addSeparator()
         menu.addItem({
           icon: `iconEye`,
           label: this.pluginInstance.i18n.viewArticle,
@@ -114,6 +113,7 @@ export class Topbar {
             window.open(shareData.viewUrl)
           },
         })
+        menu.addSeparator()
       }
     } else {
       menu.addItem({
