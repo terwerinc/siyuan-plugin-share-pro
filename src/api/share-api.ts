@@ -61,6 +61,12 @@ class ShareApi {
     return res
   }
 
+  public async listDoc(params: any) {
+    const res = await this.shareServiceRequest(ServiceApiKeys.API_LIST_DOC, params)
+    this.logger.info("get share list =>", res)
+    return res
+  }
+
   // ================
   // private function
   // ================
@@ -117,6 +123,7 @@ enum ServiceApiKeys {
   API_SHARE_CREATE = "/api/share/create",
   API_LICENSE_VIP_INFO = "/api/license/vipInfo",
   API_UPLOAD_MEDIA = "/api/asset/upload",
+  API_LIST_DOC = "/api/share/listDoc",
 }
 
 class ServiceResponse {

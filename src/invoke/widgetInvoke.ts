@@ -37,13 +37,8 @@ class WidgetInvoke {
   }
 
   private async showTab(title: string) {
-    if (this.pluginInstance.tabInstance) {
-      this.logger.info("页签已存在，重复使用")
-      return this.pluginInstance.tabInstance
-    }
-
     // 自定义tab
-    const tabInstance = await openTab({
+    return await openTab({
       app: this.pluginInstance.app,
       custom: {
         id: "share-manage-tab",
@@ -51,9 +46,8 @@ class WidgetInvoke {
         title: title,
         data: {},
       },
+      removeCurrentTab: true,
     })
-    this.pluginInstance.tabInstance = tabInstance
-    return tabInstance
   }
 }
 
