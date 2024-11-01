@@ -5,4 +5,10 @@ export default {
   // for more information about preprocessors
   preprocess: vitePreprocess(),
   compilerOptions: { customElement: true },
+  onwarn: (warning, handler) => {
+    if (warning.code.startsWith("a11y-")) {
+      return
+    }
+    handler(warning)
+  },
 }

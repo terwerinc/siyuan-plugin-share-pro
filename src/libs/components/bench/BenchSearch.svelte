@@ -1,0 +1,35 @@
+<script>
+
+    export let searchTerm;
+    export let classSearch = 'bench-search';
+    export let searchPlaceholder = 'Type a keyword...';
+
+</script>
+
+<bench-search>
+    <div class="{classSearch}"><input type="search" placeholder="{searchPlaceholder}" aria-label="{searchPlaceholder}" bind:value={searchTerm} on:input></div>
+</bench-search>
+
+<style>
+
+    bench-search {
+        grid-area: bench-search;
+    }
+
+    .bench-search{
+        margin-bottom: 6px;
+    }
+    .bench-search input {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        background-color: #fff;
+        border: 1px solid #d2d6dc;
+        border-radius: 5px;
+        line-height: 1.2rem;
+        outline: none;
+        padding: 0.4rem 1rem;
+        width: 250px;
+    }
+
+</style>

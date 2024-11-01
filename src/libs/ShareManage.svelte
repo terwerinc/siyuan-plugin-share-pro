@@ -11,9 +11,10 @@
   import { KeyInfo } from "../models/KeyInfo"
   import { onMount } from "svelte"
   import { ShareService } from "../service/ShareService"
-  import GenericTablePager from "./components/generic-table-pager/GenericTablePager.svelte"
   import { simpleLogger } from "zhi-lib-base"
-  import { isDev } from "../Constants"
+  import { isDev, SHARE_LIST_PAGE_SIZE } from "../Constants"
+  import Bench from "./components/bench/Bench.svelte"
+  import { confirm, openTab, showMessage } from "siyuan"
 
   const logger = simpleLogger("share-manage", "share-pro", isDev)
   export let pluginInstance: ShareProPlugin
@@ -21,95 +22,151 @@
   const shareService = new ShareService(pluginInstance)
   let docs = []
 
-  function handleDelete(event) {
-    const id = event.detail.id // position in myObjectArray
-    const body = event.detail.body // object to delete
-    console.log(JSON.stringify(event.detail.body))
-    myObjectArray.slice(id, 1)
-  }
+  let tableData,
+    tableLimit = SHARE_LIST_PAGE_SIZE,
+    tableOffset = 0,
+    tableOrder,
+    tableDir,
+    tableSearch
 
-  function handleUpdate(event) {
-    const id = event.detail.id // position in table
-    const body = event.detail.body
-    console.log(JSON.stringify(body))
-    myObjectArray[id] = body
-  }
-
-  function handleCreate(event) {
-    console.log(JSON.stringify(event.detail)) // empty object is passed by now
-    myObjectArray.push({ id: -1, name: "new Element", sthg: "2345", why: "1234" })
-    const copy = myObjectArray
-    myObjectArray = []
-    myObjectArray = copy
-  }
-
-  function handleDetails(event) {
-    const id = event.detail.id // position in table
-    const body = event.detail.body
-    console.log(JSON.stringify(body))
-  }
-
-  function handleSort(e) {
-    console.log(e)
-  }
-
-  let myObjectArray = [
-    { id: 1, name: "A_NAME_1", sthg: "A_STHG_1", why: "because" },
-    { id: 1, name: "A_NAME_12", sthg: "A_STHG_1", why: "because" },
-    { id: 1, name: "A_NAME_13", sthg: "A_STHG_1", why: "because" },
-    { id: 1, name: "A_NAME_14", sthg: "A_STHG_1", why: "because" },
-    { id: 1, name: "A_NAME_15", sthg: "A_STHG_1", why: "because" },
-    { id: 1, name: "A_NAME_16", sthg: "A_STHG_1", why: "because" },
-    { id: 1, name: "A_NAME_17", sthg: "A_STHG_1", why: "because" },
-    { id: 1, name: "A_NAME_18", sthg: "A_STHG_1", why: "because" },
-    { id: 1, name: "A_NAME_19", sthg: "A_STHG_1", why: "because" },
-    { id: 1, name: "A_NAME_1", sthg: "A_STHG_1", why: "because" },
-    { id: 1, name: "A_NAME_12345", sthg: "A_STHG_1", why: "because" },
-    { id: 1, name: "A_NAME_1", sthg: "A_STHG_1", why: "because" },
-    { id: 1, name: "A_NAME_1", sthg: "A_STHG_1", why: "because" },
-    { id: 1, name: "A_NAME_1", sthg: "A_STHG_1", why: "because" },
-    { id: 1, name: "A_NAME_1", sthg: "A_STHG_1", why: "because" },
-    { id: 1, name: "A_NAME_1", sthg: "A_STHG_1", why: "because" },
-    { id: 1, name: "A_NAME_1", sthg: "A_STHG_1", why: "because" },
-    { id: 1, name: "A_NAME_1", sthg: "A_STHG_1", why: "because" },
-    { id: 1, name: "A_NAME_1", sthg: "A_STHG_1", why: "because" },
-    { id: 1, name: "A_NAME_1", sthg: "A_STHG_1", why: "because" },
-    { id: 1, name: "A_NAME_1", sthg: "A_STHG_1", why: "because" },
-    { id: 1, name: "A_NAME_1", sthg: "A_STHG_1", why: "because" },
-    { id: 2, name: "A_NAME_2", sthg: "A_STHG_2", why: "I can" },
+  const tableColumns = [
+    { id: "docId", name: "文档ID", hidden: false },
+    {
+      id: "author",
+      name: "作者",
+      sort: false,
+      onClick: (e) => {},
+    },
+    {
+      id: "title",
+      name: "文档标题",
+      html: true,
+      sort: false,
+      onClick: (e) => {},
+    },
+    {
+      id: "createdAt",
+      name: "分享时间",
+      formatter: (cell) => {
+        return cell
+      },
+    },
+    {
+      id: "media_count",
+      name: "附件数量",
+      sort: false,
+    },
+    {
+      id: "status",
+      name: "分享状态",
+      html: true,
+      formatter: (cell) => {
+        // 根据枚举来
+        // ING("ing")
+        // COMPLETED("completed")
+        // FAILED("failed")
+        const statusMap = {
+          ING: "分享进行中",
+          COMPLETED: "分享完成",
+          FAILED: "分享失败",
+        }
+        return statusMap[cell]
+      },
+      onClick: (e) => {},
+    },
+    {
+      id: "action",
+      name: "操作",
+      html: true,
+      sort: false,
+    },
   ]
 
-  onMount(async () => {
-    const resp = await shareService.listDoc(0)
-    docs = resp.data
+  const updateTable = async function () {
+    console.log("start update table:", {
+      tableOffset,
+      tableLimit,
+      tableOrder,
+      tableDir,
+      tableSearch,
+    })
+    // 需要根据 tableOffset tableLimit计算 pageNum
+    const pageNum = Math.ceil(tableOffset / tableLimit)
+    const resp = await shareService.listDoc(pageNum, tableLimit, tableOrder, tableDir, tableSearch)
+    docs = resp.data.data
+    tableData = {
+      results: docs.map((doc) => {
+        return {
+          docId: doc.docId,
+          author: keyInfo.email,
+          title: doc.data.title,
+          media_count: doc.media.length,
+          createdAt: doc.createdAt,
+          status: doc.status,
+          action: `
+            <a href="javascript:;" onclick="window.cancelShareFromSharePro('${doc.docId}','${doc.data.title}')">取消分享</a>&nbsp;&nbsp;
+            <a href="javascript:;" onclick="window.goToOriginalDocFromSharePro('${doc.docId}')">转到该文档</a>
+            `,
+        }
+      }),
+      recordsTotal: resp.data.total,
+    }
     logger.info(`loaded docs for ${keyInfo.email}`, docs)
+  }
+
+  // @ts-ignore
+  window.cancelShareFromSharePro = async function (docId: string, docTitle) {
+    confirm(pluginInstance.i18n.tipTitle, pluginInstance.i18n.confirmDelete + "【" + docTitle + "】", async () => {
+      const ret = await shareService.deleteDoc(docId)
+      if (ret.code === 0) {
+        showMessage("文档已取消分享", 3000, "info")
+      } else {
+        showMessage("取消分享失败=>" + ret.msg, 7000, "error")
+      }
+    })
+  }
+
+  // @ts-ignore
+  window.goToOriginalDocFromSharePro = function (docId: string) {
+    openTab({
+      app: pluginInstance.app,
+      doc: {
+        id: docId,
+      },
+    })
+  }
+
+  onMount(async () => {
+    await updateTable()
   })
+
+  $: tableLimit, tableOffset, tableOrder, tableDir, tableSearch, updateTable()
 </script>
 
-<div>
-  <GenericTablePager
-    on:delete={handleDelete}
-    on:update={handleUpdate}
-    on:create={handleCreate}
-    on:details={handleDetails}
-    on:sort={handleSort}
-    table_config={{
-      name: "Awesome:",
-      options: ["CREATE", "EDIT", "DELETE", "DETAILS"],
-      columns_setting: [
-        { name: "id", show: false, edit: true, size: "200px" },
-        { name: "name", show: true, edit: true, size: "200px" },
-        { name: "why", show: true, edit: true, size: "200px" },
-        { name: "sthg", show: true, edit: false, size: "200px" },
-      ],
-      details_text: "detail", // replace the standard icon with an text-link
-    }}
-    pager_data={myObjectArray}
-    pager_config={{
-      name: "crud-table-pager",
-      lines: 5,
-      steps: [1, 2, 5, 10, 20, 50],
-      width: "600px",
-    }}
+<div id="share-manage">
+  <Bench
+    data={tableData}
+    columns={tableColumns}
+    bind:order={tableOrder}
+    bind:dir={tableDir}
+    bind:offset={tableOffset}
+    bind:limit={tableLimit}
+    bind:search={tableSearch}
+    classBenchContainer="share-bench-container"
+    searchPlaceholder="请输入关键字..."
+    textPrevious="上一页"
+    textNext="下一页"
+    textShowing="当前数据为索引从"
+    textTo="到"
+    textOf="，共"
+    textEntries="条记录"
+    textFiltered="筛选"
+    textPage="页码"
+    textFirstPage="首页"
   />
 </div>
+
+<style lang="stylus">
+  #share-manage
+    padding 10px
+</style>

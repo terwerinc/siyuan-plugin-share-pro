@@ -93,10 +93,13 @@ class ShareService {
     return await this.shareApi.deleteDoc(docId)
   }
 
-  public async listDoc(pageNum: number, pageSize?: number) {
+  public async listDoc(pageNum: number, pageSize: number, order: string, direction: string, search: string) {
     const params = {
       pageNum: pageNum,
-      pageSize: SHARE_LIST_PAGE_SIZE,
+      pageSize: pageSize,
+      order: order,
+      direction: direction,
+      search: search,
     }
     return await this.shareApi.listDoc(params)
   }
