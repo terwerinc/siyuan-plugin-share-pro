@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.1.0...share-pro-v1.2.0) (2024-11-04)
+
+
+### Features
+
+* support custom css and custom theme ([b349b8d](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/b349b8dcff52f90bbc86f2a4942ee8f0d78e2e42))
+
 ## [1.1.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.0.0...share-pro-v1.1.0) (2024-11-01)
 ### Features
 * change menu, remove some unusable setting from pc ([cdcf84f](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/cdcf84f972b12f392073a8f61150a93caaf7c35d))
