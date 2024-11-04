@@ -14,4 +14,4 @@ export const DEFAULT_SIYUAN_COOKIE = ""
 export const SHARE_PRO_STORE_NAME = "share-pro.json"
 export const SHARE_SERVICE_ENDPOINT_DEV = "http://localhost:8000"
 export const SHARE_SERVICE_ENDPOINT_PROD = "https://api.terwergreen.com:8888"
-export const SHARE_LIST_PAGE_SIZE = 15
+export const SHARE_LIST_PAGE_SIZE = 5
