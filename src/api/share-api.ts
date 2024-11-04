@@ -67,12 +67,26 @@ class ShareApi {
     return res
   }
 
+  public async saveSetting(token: string, setting: any) {
+    const headers = {
+      Authorization: `${token}`,
+    }
+    const params = {
+      group: "GENERAL",
+      key: "static.app.config.json",
+      value: JSON.stringify(setting),
+    }
+    const res = await this.shareServiceRequest(ServiceApiKeys.API_UPSATE_SETTING, params, headers)
+    this.logger.info("save setting =>", res)
+    return res
+  }
+
   // ================
   // private function
   // ================
 
   /**
-   * 向思源请求数据
+   * 向分享服务数据
    *
    * @param url - url
    * @param data - 数据
@@ -124,6 +138,7 @@ enum ServiceApiKeys {
   API_LICENSE_VIP_INFO = "/api/license/vipInfo",
   API_UPLOAD_MEDIA = "/api/asset/upload",
   API_LIST_DOC = "/api/share/listDoc",
+  API_UPSATE_SETTING = "/api/settings/update",
 }
 
 class ServiceResponse {

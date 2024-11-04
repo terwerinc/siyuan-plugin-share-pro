@@ -8,6 +8,7 @@
  */
 
 import { IServiceApiConfig } from "./cfg"
+import { AppConfig } from "./AppConfig"
 
 class ShareProConfig {
   siyuanConfig?: {
@@ -16,6 +17,8 @@ class ShareProConfig {
     cookie: ""
   }
   serviceApiConfig?: IServiceApiConfig
+  appConfig?: AppConfig
+  isCustomCssEnabled?: boolean
   inited: boolean
 }
 
