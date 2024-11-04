@@ -1,12 +1,16 @@
 <script lang="ts">
   import ShareProPlugin from "../index"
-  import { Dialog, getFrontend } from "siyuan"
+  import { Dialog, getFrontend, showMessage } from "siyuan"
   import { ShareProConfig } from "../models/ShareProConfig"
-  import { SHARE_PRO_STORE_NAME } from "../Constants"
+  import { isDev, SHARE_PRO_STORE_NAME } from "../Constants"
   import { onMount } from "svelte"
   import { KeyInfo } from "../models/KeyInfo"
   import { getRegisterInfo } from "../utils/LicenseUtils"
+  import { simpleLogger } from "zhi-lib-base"
+  import { ApiUtils } from "../utils/ApiUtils"
+  import { SettingService } from "../service/SettingService"
 
+  const logger = simpleLogger("share-setting", "share-pro", isDev)
   export let pluginInstance: ShareProPlugin
   export let dialog: Dialog
   export let vipInfo: {
@@ -14,22 +18,113 @@
     msg: string
     data: KeyInfo
   }
+  let theme = "Zhihu"
+  const settingService = new SettingService(pluginInstance)
 
   let settingConfig: ShareProConfig = pluginInstance.getDefaultCfg()
   let isPC = getFrontend() == "desktop"
 
   const onSaveSetting = async () => {
+    // 构建appConfig
+    settingConfig = await buildAppConfig(settingConfig)
     await pluginInstance.saveData(SHARE_PRO_STORE_NAME, settingConfig)
-    // showMessage(`${pluginInstance.i18n.settingConfigSaveSuccess}`, 2000, "info")
+    try {
+      await syncAppConfig()
+      showMessage(`${pluginInstance.i18n.settingConfigSaveSuccess}`, 2000, "info")
+    } catch (e) {
+      showMessage(`${pluginInstance.i18n.settingConfigSaveFail},${e}`, 7000, "error")
+    }
+
     dialog.destroy()
+  }
+
+  const syncAppConfig = async () => {
+    const appConfig = settingConfig.appConfig
+    const res = await settingService.syncSetting(settingConfig.serviceApiConfig.token, appConfig)
+    if (res.code == 1) {
+      throw res.msg
+    }
   }
 
   const onCancel = async () => {
     dialog.destroy()
   }
 
+  const fetchCustomCss = async () => {
+    let cssArray = []
+    // 当前运行在思源笔记中
+    try {
+      const { kernelApi } = await ApiUtils.getSiyuanKernelApi(pluginInstance)
+      const customCss = await kernelApi.siyuanRequest("/api/snippet/getSnippet", { type: "css", enabled: 2 })
+      if (customCss?.snippets?.length > 0) {
+        cssArray = customCss.snippets.filter((x) => x.enabled)
+      }
+    } catch (e) {
+      logger.error("get custom css error", e)
+    }
+    logger.info("get custom css", cssArray)
+    return cssArray as any
+  }
+
+  const buildAppConfig = async (settingConfig: ShareProConfig) => {
+    settingConfig.appConfig ||= {
+      lang: "zh_CN",
+      siteUrl: "https://siyuannote.space",
+      siteTitle: "在线分享专业版",
+      siteSlogan: "随时随地分享您的思源笔记",
+      siteDescription: "给您的知识安个家",
+      theme: {
+        mode: "light",
+        lightTheme: "Zhihu",
+        darkTheme: "Zhihu",
+        themeVersion: "0.1.1",
+      },
+      footer: "",
+      shareTemplate: "[url]",
+      homePageId: "20240903115146-wdyz9ue",
+
+      customCss: [] as any,
+    }
+    const supportedThemes = {
+      light: [
+        { value: "daylight", label: "daylight" },
+        { value: "Zhihu", label: "Zhihu" },
+        { value: "Savor", label: "写未" },
+      ],
+      dark: [
+        { value: "midlight", label: "midlight" },
+        { value: "Zhihu", label: "Zhihu" },
+        { value: "Savor", label: "写未" },
+      ],
+    }
+    const versionMap = {
+      midlight: "3.0.10",
+      daylight: "3.0.10",
+      Zhihu: "0.1.1",
+      Savor: "3.9.2",
+    }
+    settingConfig.appConfig.theme = {
+      mode: "light",
+      lightTheme: supportedThemes.light.find((x) => x.value === theme)?.value || "daylight",
+      darkTheme: supportedThemes.dark.find((x) => x.value === theme)?.value || "midlight",
+      themeVersion: versionMap[theme] || "unknown",
+    }
+
+    if (settingConfig.isCustomCssEnabled) {
+      settingConfig.appConfig.customCss = await fetchCustomCss()
+    } else {
+      settingConfig.appConfig.customCss = [] as any
+    }
+    return settingConfig
+  }
+
   onMount(async () => {
+    //  1、加载最新配置
     settingConfig = await pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
+    theme = settingConfig?.appConfig?.theme?.lightTheme ?? "Zhihu"
+    settingConfig.isCustomCssEnabled = settingConfig.isCustomCssEnabled ?? true
+    // 2、构建appConfig
+    settingConfig = await buildAppConfig(settingConfig)
   })
 </script>
 
@@ -50,8 +145,8 @@
     <div class="fn__block form-item">
       思源地址
       <!--
-      <div class="b3-label__text form-item-tip">思源笔记伺服地址，包括端口，例如：http://127.0.0.1:6806</div>
-      -->
+              <div class="b3-label__text form-item-tip">思源笔记伺服地址，包括端口，例如：http://127.0.0.1:6806</div>
+              -->
       <span class="fn__hr" />
       <input
         class="b3-text-field fn__block"
@@ -64,8 +159,8 @@
       <div class="fn__block form-item">
         思源鉴权token
         <!--
-      <div class="b3-label__text form-item-tip">思源笔记鉴权token，请从设置->关于复制，本地可留空</div>
-      -->
+                  <div class="b3-label__text form-item-tip">思源笔记鉴权token，请从设置->关于复制，本地可留空</div>
+                  -->
         <span class="fn__hr" />
         <input
           class="b3-text-field fn__block"
@@ -77,8 +172,8 @@
       <div class="fn__block form-item">
         思源cookie
         <!--
-      <div class="b3-label__text form-item-tip">开启了授权码之后必须复制cookie，否则可留空</div>
-      -->
+          <div class="b3-label__text form-item-tip">开启了授权码之后必须复制cookie，否则可留空</div>
+          -->
         <span class="fn__hr" />
         <input
           class="b3-text-field fn__block"
@@ -105,6 +200,30 @@
         bind:value={settingConfig.serviceApiConfig.token}
         rows="5"
         placeholder="请输入注册码"
+      />
+    </div>
+
+    <div class="fn__block form-item">
+      主题
+      <div class="b3-label__text form-item-tip">自定义分享页面主题</div>
+      <span class="fn__hr" />
+      <select id="theme" class="b3-select fn__flex-center fn__size200" bind:value={theme}>
+        <option value="daylight">daylight</option>
+        <option value="midlight">midlight</option>
+        <option value="Zhihu">Zhihu</option>
+        <option value="Savor">写未</option>
+      </select>
+    </div>
+
+    <div class="fn__block form-item">
+      启用自定义css片段
+      <div class="b3-label__text form-item-tip">同步自定义css片段到分享页面</div>
+      <span class="fn__hr" />
+      <input
+        class="b3-switch fn__flex-center"
+        id="syncCss"
+        type="checkbox"
+        bind:checked={settingConfig.isCustomCssEnabled}
       />
     </div>
 

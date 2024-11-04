@@ -17,6 +17,7 @@ import { ShareProConfig } from "../models/ShareProConfig"
 import { showMessage } from "siyuan"
 import { Post } from "zhi-blog-api"
 import { updateStatusBar } from "../statusBar"
+import { ApiUtils } from "../utils/ApiUtils"
 
 /**
  * 分享服务
@@ -114,18 +115,9 @@ class ShareService {
     return blogApi
   }
 
-  private async getSiyuanKernelApi() {
-    const cfg = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
-    const { kernelApi } = useSiyuanApi(cfg)
-    return {
-      cfg,
-      kernelApi,
-    }
-  }
-
   private async processShareMedia(docId: string, mediaList: any[]) {
     this.logger.debug(`Processing media for ${docId}`, mediaList)
-    const { cfg, kernelApi } = await this.getSiyuanKernelApi()
+    const { cfg, kernelApi } = await ApiUtils.getSiyuanKernelApi(this.pluginInstance)
 
     const perReq = 5
     const groupedMedia = []
