@@ -1,7 +1,9 @@
 # Changelog
 
-## [1.2.1](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.2.0...share-pro-v1.2.1) (2024-11-04)
+## [1.2.2](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.2.1...share-pro-v1.2.2) (2024-11-04)
 ### Bug Fixes
+* share manage default size set to 5 ([528c037](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/528c0373e20ebf8a0caafd21118df29874d1c182))
+## [1.2.1](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.2.0...share-pro-v1.2.1) (2024-11-04)
 * share manage default size set to 15 ([bb261f4](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/bb261f44b0d5d1c2809833becc24431b9a22fadd))
 ## [1.2.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.1.0...share-pro-v1.2.0) (2024-11-04)
 ### Features
