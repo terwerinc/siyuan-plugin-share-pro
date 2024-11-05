@@ -91,11 +91,13 @@
         { value: "daylight", label: "daylight" },
         { value: "Zhihu", label: "Zhihu" },
         { value: "Savor", label: "写未" },
+        { value: "Tsundoku", label: "積読" },
       ],
       dark: [
         { value: "midlight", label: "midlight" },
         { value: "Zhihu", label: "Zhihu" },
         { value: "Savor", label: "写未" },
+        { value: "Tsundoku", label: "積読" },
       ],
     }
     const versionMap = {
@@ -103,6 +105,7 @@
       daylight: "3.1.10",
       Zhihu: "0.1.3",
       Savor: "4.2.3",
+      Tsundoku: "2.3.5",
     }
     settingConfig.appConfig.theme = {
       mode: "light",
@@ -217,10 +220,11 @@
       <div class="b3-label__text form-item-tip">自定义分享页面主题</div>
       <span class="fn__hr" />
       <select id="theme" class="b3-select fn__flex-center fn__size200" bind:value={theme}>
-        <option value="daylight">daylight</option>
-        <option value="midlight">midlight</option>
-        <option value="Zhihu">Zhihu</option>
-        <option value="Savor">写未</option>
+        <option value="daylight">默认浅色(daylight)</option>
+        <option value="midlight">默认暗色(midlight)</option>
+        <option value="Zhihu">知乎(Zhihu)</option>
+        <option value="Savor">写未(Savor)</option>
+        <option value="Tsundoku">積読(Tsundoku)</option>
       </select>
     </div>
 
