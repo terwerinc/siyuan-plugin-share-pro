@@ -166,56 +166,63 @@
         <span>数据加载中...</span>
       </div>
     </div>
-  {:else}
-    <Bench
-      data={tableData}
-      columns={tableColumns}
-      bind:order={tableOrder}
-      bind:dir={tableDir}
-      bind:offset={tableOffset}
-      bind:limit={tableLimit}
-      bind:search={tableSearch}
-      classBenchContainer="share-bench-container"
-      searchPlaceholder="请输入关键字..."
-      textPrevious="上一页"
-      textNext="下一页"
-      textShowing="当前数据为索引从"
-      textTo="到"
-      textOf="，共"
-      textEntries="条记录"
-      textFiltered="筛选"
-      textPage="页码"
-      textFirstPage="首页"
-    />
   {/if}
+  <Bench
+    data={tableData}
+    columns={tableColumns}
+    bind:order={tableOrder}
+    bind:dir={tableDir}
+    bind:offset={tableOffset}
+    bind:limit={tableLimit}
+    bind:search={tableSearch}
+    classBenchContainer="share-bench-container"
+    searchPlaceholder="请输入关键字..."
+    textPrevious="上一页"
+    textNext="下一页"
+    textShowing="当前数据为索引从"
+    textTo="到"
+    textOf="，共"
+    textEntries="条记录"
+    textFiltered="筛选"
+    textPage="页码"
+    textFirstPage="首页"
+  />
 </div>
 
 <style lang="stylus">
   #share-manage
     padding 10px
+
   .loading-indicator-container
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    position: fixed
+    top: 0
+    left: 0
+    right: 0
+    bottom: 0
+    background: rgba(255, 255, 255, 0.8) /* 蒙版层背景色 */
+    display: flex
+    flex-direction: column
+    align-items: center
+    justify-content: center
+    z-index: 1000 /* 确保蒙版层在最上层 */
 
   .loading-indicator
-    display flex
-    align-items center
-    margin-top 20px
+    display: flex
+    align-items: center
+    margin-top: 20px
 
   .spinner
-    border 4px solid rgba(0, 0, 0, 0.1)
-    border-left-color #000
-    border-radius 50%
-    width 20px
-    height 20px
-    animation spin 1s linear infinite
-    margin-right 10px /* 使文字与加载图标之间有间距 */
+    border: 4px solid rgba(0, 0, 0, 0.1)
+    border-left-color: #000
+    border-radius: 50%
+    width: 20px
+    height: 20px
+    animation: spin 1s linear infinite
+    margin-right: 10px /* 使文字与加载图标之间有间距 */
 
   @keyframes spin
     0%
-      transform rotate(0deg)
+      transform: rotate(0deg)
     100%
-      transform rotate(360deg)
+      transform: rotate(360deg)
 </style>
