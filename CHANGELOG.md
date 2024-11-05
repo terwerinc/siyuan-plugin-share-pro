@@ -1,16 +1,11 @@
 # Changelog
 
 ## [1.3.1](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.3.0...share-pro-v1.3.1) (2024-11-05)
-
-
 ### Bug Fixes
-
 * remove debug code ([ec2fea2](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/ec2fea2e7bd337cfa3e94152c3ceabcfba223848))
-
 ## [1.3.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.2.2...share-pro-v1.3.0) (2024-11-05)
 ### Features
 * add loading to share manage ([03685e6](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/03685e6c46e5e4babac25371c27fb8058df177c2))
-### Bug Fixes
 * share manage default size set to 10 ([9447806](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/9447806e8ed1146a1204b3354ebe430c347b5f45))
 * text truncated due to excessive length ([c56d0b2](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/c56d0b28d7ce4277575819a5295dfeb46635ac5e))
 * when share manage title too long show ... ([6f251ee](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/6f251eea2b74f74233aa9dd24b26c94d96fca2ed))
