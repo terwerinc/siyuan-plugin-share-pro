@@ -18,6 +18,7 @@ import { showMessage } from "siyuan"
 import { Post } from "zhi-blog-api"
 import { updateStatusBar } from "../statusBar"
 import { ApiUtils } from "../utils/ApiUtils"
+import { ImageUtils } from "../utils/ImageUtils"
 
 /**
  * 分享服务
@@ -155,10 +156,13 @@ class ShareService {
           }
 
           this.addLog(`开始处理第${totalCount}张图片： ${imageUrl} ，请稍候...`, "info")
-          const res = await kernelApi.forwardProxy(imageUrl, [], undefined, "GET", undefined, undefined, "base64")
+          // const res = await kernelApi.forwardProxy(imageUrl, [], undefined, "GET", undefined, undefined, "base64")
+          // 内部请求不必要走代理
+          const res = await ImageUtils.fetchBase64WithContentType(imageUrl)
           this.logger.debug("Image base64 response =>", res)
 
           if (res?.status !== 200) {
+            errorCount += 1
             this.addLog(`Image retrieval error: ${res.msg}`, "error")
             continue
           }
