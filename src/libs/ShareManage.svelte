@@ -159,7 +159,7 @@
 </script>
 
 <div id="share-manage">
-  {#if !loading}
+  {#if loading}
     <div class="loading-indicator-container">
       <div class="loading-indicator">
         <div class="spinner" />
