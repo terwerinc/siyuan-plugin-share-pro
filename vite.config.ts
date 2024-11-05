@@ -52,6 +52,7 @@ export default defineConfig({
   // https://github.com/vitejs/vite/discussions/3058#discussioncomment-2115319
   // 在这里自定义变量
   define: {
+    "process.env.NODE_ENV": isWatch ? `"development"` : `"production"`,
     "process.env.DEV_MODE": `"${isWatch}"`,
   },
 
@@ -97,7 +98,7 @@ export default defineConfig({
 
       // make sure to externalize deps that shouldn't be bundled
       // into your library
-      external: ["siyuan", "process"],
+      external: ["siyuan"],
 
       output: {
         entryFileNames: "[name].js",
