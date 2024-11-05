@@ -1,22 +1,22 @@
 # Changelog
 
+## [1.4.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.3.3...share-pro-v1.4.0) (2024-11-05)
+### Features
+* support Trends theme
+* support pink-room theme ([7728120](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/77281207a6778db5aaf46f80e6c32b2025b11c46))
+* support tsundoku theme ([d19f343](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/d19f343b5d87385844ff6f6c7eb777d4a744f132))
+* update themes ([48f6d7d](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/48f6d7d4fb1b108746d4ae40803a4d156caf5e7e))
+### Bug Fixes
+* remove unused setting ([1bac8de](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/1bac8de36b4ec5ed74309fb96a9ccba0112f7c62))
+* zhihu theme code block ([fd898a0](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/fd898a02a2423196d656e62a82d20dd07b62c731))
 ## [1.3.3](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.3.2...share-pro-v1.3.3) (2024-11-05)
-
-
-### Bug Fixes
-
-* add docker support (experimental) ([a2aac19](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/a2aac19e55599654d6a160b9433381486f23e049))
 * add docker support (experimental), change picture fetch strategy ([d0bbcd2](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/d0bbcd215e0a0da6030e231246e273a2c0f0185f))
-* pager not work ([3323bc4](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/3323bc45ccb8dbd2f43f5ea881504f592e44dec6))
 * pager not work ([871e465](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/871e4656b26a212b7a828ac94275fac1d14f7b80))
-
 ## [1.3.2](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.3.1...share-pro-v1.3.2) (2024-11-05)
-### Bug Fixes
 * update error ([deb87c5](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/deb87c59a5cac36d8fed00c36f79bfe49721f9a5))
 ## [1.3.1](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.3.0...share-pro-v1.3.1) (2024-11-05)
 * remove debug code ([ec2fea2](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/ec2fea2e7bd337cfa3e94152c3ceabcfba223848))
 ## [1.3.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.2.2...share-pro-v1.3.0) (2024-11-05)
-### Features
 * add loading to share manage ([03685e6](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/03685e6c46e5e4babac25371c27fb8058df177c2))
 * share manage default size set to 10 ([9447806](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/9447806e8ed1146a1204b3354ebe430c347b5f45))
 * text truncated due to excessive length ([c56d0b2](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/c56d0b28d7ce4277575819a5295dfeb46635ac5e))
