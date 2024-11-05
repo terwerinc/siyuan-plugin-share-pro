@@ -4,7 +4,7 @@
   "description": "share your notes from siyuan-note with one click",
   "type": "module",
   "repository": "terwer/share-pro",
-  "homepage": "https://github.com/terwerinc/share-pro",
+  "homepage": "https://github.com/terwerinc/siyuan-plugin-share-pro",
   "author": "terwer",
   "license": "MIT",
   "scripts": {
