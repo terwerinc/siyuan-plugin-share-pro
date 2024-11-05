@@ -92,12 +92,16 @@
         { value: "Zhihu", label: "Zhihu" },
         { value: "Savor", label: "写未" },
         { value: "Tsundoku", label: "積読" },
+        { value: "pink-room", label: "粉色小屋" },
+        { value: "trends-in-siyuan", label: "Trends" },
       ],
       dark: [
         { value: "midlight", label: "midlight" },
         { value: "Zhihu", label: "Zhihu" },
         { value: "Savor", label: "写未" },
         { value: "Tsundoku", label: "積読" },
+        { value: "pink-room", label: "粉色小屋" },
+        { value: "trends-in-siyuan", label: "Trends" },
       ],
     }
     const versionMap = {
@@ -106,6 +110,8 @@
       Zhihu: "0.1.3",
       Savor: "4.2.3",
       Tsundoku: "2.3.5",
+      "pink-room": "0.9.4",
+      "trends-in-siyuan": "0.4.0",
     }
     settingConfig.appConfig.theme = {
       mode: "light",
@@ -225,6 +231,8 @@
         <option value="Zhihu">知乎(Zhihu)</option>
         <option value="Savor">写未(Savor)</option>
         <option value="Tsundoku">積読(Tsundoku)</option>
+        <option value="pink-room">粉色小屋(pink-room)</option>
+        <option value="trends-in-siyuan">Trends</option>
       </select>
     </div>
 
