@@ -12,9 +12,9 @@ import { AppConfig } from "./AppConfig"
 
 class ShareProConfig {
   siyuanConfig?: {
-    apiUrl: ""
-    token: ""
-    cookie: ""
+    apiUrl: string
+    token: string
+    cookie: string
   }
   serviceApiConfig?: IServiceApiConfig
   appConfig?: AppConfig

@@ -1,8 +1,8 @@
 <script lang="ts">
   import ShareProPlugin from "../index"
-  import { Dialog, getFrontend, showMessage } from "siyuan"
+  import { Dialog, getBackend, getFrontend, showMessage } from "siyuan"
   import { ShareProConfig } from "../models/ShareProConfig"
-  import { isDev, SHARE_PRO_STORE_NAME } from "../Constants"
+  import { DEFAULT_SIYUAN_API_URL, isDev, SHARE_PRO_STORE_NAME } from "../Constants"
   import { onMount } from "svelte"
   import { KeyInfo } from "../models/KeyInfo"
   import { getRegisterInfo } from "../utils/LicenseUtils"
@@ -23,6 +23,7 @@
 
   let settingConfig: ShareProConfig = pluginInstance.getDefaultCfg()
   let isPC = getFrontend() == "desktop"
+  let isDocker = getBackend() == "docker"
 
   const onSaveSetting = async () => {
     // 构建appConfig
@@ -118,11 +119,18 @@
     return settingConfig
   }
 
+  const autoSetApiUrl = () => {
+    settingConfig.siyuanConfig.apiUrl = window.location.origin as string
+  }
+
   onMount(async () => {
     //  1、加载最新配置
     settingConfig = await pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
     theme = settingConfig?.appConfig?.theme?.lightTheme ?? "Zhihu"
     settingConfig.isCustomCssEnabled = settingConfig.isCustomCssEnabled ?? true
+    if (settingConfig.siyuanConfig?.apiUrl.length == 0) {
+      settingConfig.siyuanConfig.apiUrl = window.location.origin
+    }
     // 2、构建appConfig
     settingConfig = await buildAppConfig(settingConfig)
   })
@@ -144,9 +152,9 @@
 
     <div class="fn__block form-item">
       思源地址
-      <!--
-              <div class="b3-label__text form-item-tip">思源笔记伺服地址，包括端口，例如：http://127.0.0.1:6806</div>
-              -->
+      <div class="b3-label__text form-item-tip">
+        思源笔记伺服地址，包括端口，本地单空间可固定：http://127.0.0.1:6806，多个工作空间或者 Docker 外网，请自动获取
+      </div>
       <span class="fn__hr" />
       <input
         class="b3-text-field fn__block"
@@ -154,6 +162,7 @@
         bind:value={settingConfig.siyuanConfig.apiUrl}
         placeholder="请输入思源地址"
       />
+      <a href="javascript:void(0)" id="autoSetApiUrl" on:click={autoSetApiUrl}>自动获取</a>
     </div>
     {#if !isPC}
       <div class="fn__block form-item">
