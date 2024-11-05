@@ -22,8 +22,8 @@
   const settingService = new SettingService(pluginInstance)
 
   let settingConfig: ShareProConfig = pluginInstance.getDefaultCfg()
-  let isPC = getFrontend() == "desktop"
-  let isDocker = getBackend() == "docker"
+  // let isPC = getFrontend() == "desktop"
+  // let isDocker = getBackend() == "docker"
 
   const onSaveSetting = async () => {
     // 构建appConfig
@@ -164,7 +164,7 @@
       />
       <a href="javascript:void(0)" id="autoSetApiUrl" on:click={autoSetApiUrl}>自动获取</a>
     </div>
-    {#if !isPC}
+    {#if false}
       <div class="fn__block form-item">
         思源鉴权token
         <!--
