@@ -21,6 +21,7 @@
   export let keyInfo: KeyInfo
   const shareService = new ShareService(pluginInstance)
   let docs = []
+  let loading = false
 
   let tableData,
     tableLimit = SHARE_LIST_PAGE_SIZE,
@@ -42,6 +43,13 @@
       name: "文档标题",
       html: true,
       sort: false,
+      formatter: (cell) => {
+        if (cell.length > 25) {
+          return `<span title="${cell}">${cell.substring(0, 25)}...</span>`
+        } else {
+          return cell
+        }
+      },
       onClick: (e) => {},
     },
     {
@@ -83,35 +91,42 @@
   ]
 
   const updateTable = async function () {
-    console.log("start update table:", {
-      tableOffset,
-      tableLimit,
-      tableOrder,
-      tableDir,
-      tableSearch,
-    })
-    // 需要根据 tableOffset tableLimit计算 pageNum
-    const pageNum = Math.ceil(tableOffset / tableLimit)
-    const resp = await shareService.listDoc(pageNum, tableLimit, tableOrder, tableDir, tableSearch)
-    docs = resp.data.data
-    tableData = {
-      results: docs.map((doc) => {
-        return {
-          docId: doc.docId,
-          author: keyInfo.email,
-          title: doc.data.title,
-          media_count: doc.media.length,
-          createdAt: doc.createdAt,
-          status: doc.status,
-          action: `
+    loading = true
+    try {
+      console.log("start update table:", {
+        tableOffset,
+        tableLimit,
+        tableOrder,
+        tableDir,
+        tableSearch,
+      })
+      // 需要根据 tableOffset tableLimit计算 pageNum
+      const pageNum = Math.ceil(tableOffset / tableLimit)
+      const resp = await shareService.listDoc(pageNum, tableLimit, tableOrder, tableDir, tableSearch)
+      docs = resp.data.data
+      tableData = {
+        results: docs.map((doc) => {
+          return {
+            docId: doc.docId,
+            author: keyInfo.email,
+            title: doc.data.title,
+            media_count: doc.media.length,
+            createdAt: doc.createdAt,
+            status: doc.status,
+            action: `
             <a href="javascript:;" onclick="window.cancelShareFromSharePro('${doc.docId}','${doc.data.title}')">取消分享</a>&nbsp;&nbsp;
             <a href="javascript:;" onclick="window.goToOriginalDocFromSharePro('${doc.docId}')">转到该文档</a>
             `,
-        }
-      }),
-      recordsTotal: resp.data.total,
+          }
+        }),
+        recordsTotal: resp.data.total,
+      }
+      logger.info(`loaded docs for ${keyInfo.email}`, docs)
+    } catch (e) {
+      showMessage("数据加载失败:", e)
+    } finally {
+      loading = false
     }
-    logger.info(`loaded docs for ${keyInfo.email}`, docs)
   }
 
   // @ts-ignore
@@ -144,29 +159,63 @@
 </script>
 
 <div id="share-manage">
-  <Bench
-    data={tableData}
-    columns={tableColumns}
-    bind:order={tableOrder}
-    bind:dir={tableDir}
-    bind:offset={tableOffset}
-    bind:limit={tableLimit}
-    bind:search={tableSearch}
-    classBenchContainer="share-bench-container"
-    searchPlaceholder="请输入关键字..."
-    textPrevious="上一页"
-    textNext="下一页"
-    textShowing="当前数据为索引从"
-    textTo="到"
-    textOf="，共"
-    textEntries="条记录"
-    textFiltered="筛选"
-    textPage="页码"
-    textFirstPage="首页"
-  />
+  {#if !loading}
+    <div class="loading-indicator-container">
+      <div class="loading-indicator">
+        <div class="spinner" />
+        <span>数据加载中...</span>
+      </div>
+    </div>
+  {:else}
+    <Bench
+      data={tableData}
+      columns={tableColumns}
+      bind:order={tableOrder}
+      bind:dir={tableDir}
+      bind:offset={tableOffset}
+      bind:limit={tableLimit}
+      bind:search={tableSearch}
+      classBenchContainer="share-bench-container"
+      searchPlaceholder="请输入关键字..."
+      textPrevious="上一页"
+      textNext="下一页"
+      textShowing="当前数据为索引从"
+      textTo="到"
+      textOf="，共"
+      textEntries="条记录"
+      textFiltered="筛选"
+      textPage="页码"
+      textFirstPage="首页"
+    />
+  {/if}
 </div>
 
 <style lang="stylus">
   #share-manage
     padding 10px
+  .loading-indicator-container
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+  .loading-indicator
+    display flex
+    align-items center
+    margin-top 20px
+
+  .spinner
+    border 4px solid rgba(0, 0, 0, 0.1)
+    border-left-color #000
+    border-radius 50%
+    width 20px
+    height 20px
+    animation spin 1s linear infinite
+    margin-right 10px /* 使文字与加载图标之间有间距 */
+
+  @keyframes spin
+    0%
+      transform rotate(0deg)
+    100%
+      transform rotate(360deg)
 </style>
