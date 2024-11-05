@@ -1,8 +1,8 @@
 <script lang="ts">
   import ShareProPlugin from "../index"
-  import { Dialog, getBackend, getFrontend, showMessage } from "siyuan"
+  import { Dialog, showMessage } from "siyuan"
   import { ShareProConfig } from "../models/ShareProConfig"
-  import { DEFAULT_SIYUAN_API_URL, isDev, SHARE_PRO_STORE_NAME } from "../Constants"
+  import { isDev, SHARE_PRO_STORE_NAME } from "../Constants"
   import { onMount } from "svelte"
   import { KeyInfo } from "../models/KeyInfo"
   import { getRegisterInfo } from "../utils/LicenseUtils"
@@ -22,8 +22,8 @@
   const settingService = new SettingService(pluginInstance)
 
   let settingConfig: ShareProConfig = pluginInstance.getDefaultCfg()
-  let isPC = getFrontend() == "desktop"
-  let isDocker = getBackend() == "docker"
+  // let isPC = getFrontend() == "desktop"
+  // let isDocker = getBackend() == "docker"
 
   const onSaveSetting = async () => {
     // 构建appConfig
@@ -91,18 +91,27 @@
         { value: "daylight", label: "daylight" },
         { value: "Zhihu", label: "Zhihu" },
         { value: "Savor", label: "写未" },
+        { value: "Tsundoku", label: "積読" },
+        { value: "pink-room", label: "粉色小屋" },
+        { value: "trends-in-siyuan", label: "Trends" },
       ],
       dark: [
         { value: "midlight", label: "midlight" },
         { value: "Zhihu", label: "Zhihu" },
         { value: "Savor", label: "写未" },
+        { value: "Tsundoku", label: "積読" },
+        { value: "pink-room", label: "粉色小屋" },
+        { value: "trends-in-siyuan", label: "Trends" },
       ],
     }
     const versionMap = {
-      midlight: "3.0.10",
-      daylight: "3.0.10",
-      Zhihu: "0.1.1",
-      Savor: "3.9.2",
+      midlight: "3.1.10",
+      daylight: "3.1.10",
+      Zhihu: "0.1.3",
+      Savor: "4.2.3",
+      Tsundoku: "2.3.5",
+      "pink-room": "0.9.4",
+      "trends-in-siyuan": "0.4.0",
     }
     settingConfig.appConfig.theme = {
       mode: "light",
@@ -164,12 +173,12 @@
       />
       <a href="javascript:void(0)" id="autoSetApiUrl" on:click={autoSetApiUrl}>自动获取</a>
     </div>
-    {#if !isPC}
+    {#if false}
       <div class="fn__block form-item">
         思源鉴权token
         <!--
-                  <div class="b3-label__text form-item-tip">思源笔记鉴权token，请从设置->关于复制，本地可留空</div>
-                  -->
+                          <div class="b3-label__text form-item-tip">思源笔记鉴权token，请从设置->关于复制，本地可留空</div>
+                          -->
         <span class="fn__hr" />
         <input
           class="b3-text-field fn__block"
@@ -181,8 +190,8 @@
       <div class="fn__block form-item">
         思源cookie
         <!--
-          <div class="b3-label__text form-item-tip">开启了授权码之后必须复制cookie，否则可留空</div>
-          -->
+                  <div class="b3-label__text form-item-tip">开启了授权码之后必须复制cookie，否则可留空</div>
+                  -->
         <span class="fn__hr" />
         <input
           class="b3-text-field fn__block"
@@ -197,9 +206,9 @@
       注册码
       <div class="b3-label__text form-item-tip">
         <!--
-        <a class="fn__code" href="https://store.terwer.space/products/share-pro">点击这里</a>
-        自助获取注册码，或者
-        -->
+                <a class="fn__code" href="https://store.terwer.space/products/share-pro">点击这里</a>
+                自助获取注册码，或者
+                -->
         发邮件到 youweics@163.com 申请试用
       </div>
       <span class="fn__hr" />
@@ -217,10 +226,13 @@
       <div class="b3-label__text form-item-tip">自定义分享页面主题</div>
       <span class="fn__hr" />
       <select id="theme" class="b3-select fn__flex-center fn__size200" bind:value={theme}>
-        <option value="daylight">daylight</option>
-        <option value="midlight">midlight</option>
-        <option value="Zhihu">Zhihu</option>
-        <option value="Savor">写未</option>
+        <option value="daylight">默认浅色(daylight)</option>
+        <option value="midlight">默认暗色(midlight)</option>
+        <option value="Zhihu">知乎(Zhihu)</option>
+        <option value="Savor">写未(Savor)</option>
+        <option value="Tsundoku">積読(Tsundoku)</option>
+        <option value="pink-room">粉色小屋(pink-room)</option>
+        <option value="trends-in-siyuan">Trends</option>
       </select>
     </div>
 
