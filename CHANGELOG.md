@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.2](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.3.1...share-pro-v1.3.2) (2024-11-05)
+
+
+### Bug Fixes
+
+* update error ([deb87c5](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/deb87c59a5cac36d8fed00c36f79bfe49721f9a5))
+
 ## [1.3.1](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.3.0...share-pro-v1.3.1) (2024-11-05)
 ### Bug Fixes
 * remove debug code ([ec2fea2](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/ec2fea2e7bd337cfa3e94152c3ceabcfba223848))
