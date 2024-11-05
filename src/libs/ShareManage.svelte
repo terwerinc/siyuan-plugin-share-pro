@@ -42,6 +42,13 @@
       name: "文档标题",
       html: true,
       sort: false,
+      formatter: (cell) => {
+        if (cell.length > 25) {
+          return `<span title="${cell}">${cell.substring(0, 25)}...</span>`
+        } else {
+          return cell
+        }
+      },
       onClick: (e) => {},
     },
     {
