@@ -52,10 +52,12 @@
 
   .tabs.vertical {
     flex-direction: column;
+    margin-top: 10px;
   }
 
   .tabs:not(.vertical) {
     flex-direction: row;
+    margin-left: 10px;
   }
 
   .tab-list {
@@ -74,27 +76,30 @@
 
   .tab {
     padding: 10px;
-    border: 1px solid #ccc;
+    border: none; /* 初始边框 */
     background-color: #f1f1f1;
     cursor: pointer;
     flex: 1 1 auto; /* 使按钮均匀分布 */
+    position: relative; /* 用于定位边框 */
   }
 
-  .tab.active {
-    background-color: #ddd;
+  .tab.active,
+  .tab:active {
+    background-color: #007bff; /* 金融蓝 */
+    color: white;
   }
 
   .tab-content {
     padding: 10px;
-    border: 1px solid #ccc;
-    border-top: none;
   }
 
   .tabs.vertical .tab-content {
-    flex: 1; /* 垂直布局时，内容占满剩余空间 */
+    /* 垂直布局时，内容占满剩余空间 */
+    flex: 1;
   }
 
   .tabs:not(.vertical) .tab-content {
-    flex: 1; /* 水平布局时，内容占满剩余空间 */
+    /* 水平布局时，内容占满剩余空间 */
+    flex: 1;
   }
 </style>

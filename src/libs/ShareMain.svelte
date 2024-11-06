@@ -32,4 +32,6 @@
   }
 </script>
 
+<Tab {tabs} {activeTab} on:tabChange={handleTabChange} vertical={true} />
+<div style="height: 20px;"></div>
 <Tab {tabs} {activeTab} on:tabChange={handleTabChange} vertical={false} />
