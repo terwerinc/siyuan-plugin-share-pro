@@ -13,7 +13,7 @@ import { isDev, SHARE_PRO_STORE_NAME } from "./Constants"
 import { icons } from "./utils/svg"
 import { confirm, Dialog, Menu, showMessage } from "siyuan"
 import { ShareProConfig } from "./models/ShareProConfig"
-import ShareSetting from "./libs/ShareSetting.svelte"
+import ShareSetting from "./libs/pages/ShareSetting.svelte"
 import { ShareService } from "./service/ShareService"
 import PageUtil from "./utils/pageUtil"
 import { WidgetInvoke } from "./invoke/widgetInvoke"
@@ -172,7 +172,7 @@ class Topbar {
         const d = new Dialog({
           title: `${this.pluginInstance.i18n.shareSetting} - ${this.pluginInstance.i18n.sharePro} v${pkg.version}`,
           content: `<div id="${settingId}"></div>`,
-          width: this.pluginInstance.isMobile ? "92vw" : "720px",
+          width: this.pluginInstance.isMobile ? "92vw" : "61.8vw",
         })
         new ShareSetting({
           target: document.getElementById(settingId) as HTMLElement,

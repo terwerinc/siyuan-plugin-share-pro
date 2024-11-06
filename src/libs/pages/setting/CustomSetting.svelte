@@ -1,29 +1,30 @@
-<script lang="ts">
-  import ShareProPlugin from "../index"
-  import { Dialog, showMessage } from "siyuan"
-  import { ShareProConfig } from "../models/ShareProConfig"
-  import { isDev, SHARE_PRO_STORE_NAME } from "../Constants"
-  import { onMount } from "svelte"
-  import { KeyInfo } from "../models/KeyInfo"
-  import { getRegisterInfo } from "../utils/LicenseUtils"
-  import { simpleLogger } from "zhi-lib-base"
-  import { ApiUtils } from "../utils/ApiUtils"
-  import { SettingService } from "../service/SettingService"
+<!--
+  -            GNU GENERAL PUBLIC LICENSE
+  -               Version 3, 29 June 2007
+  -
+  -  Copyright (C) 2024 Terwer, Inc. <https://terwer.space/>
+  -  Everyone is permitted to copy and distribute verbatim copies
+  -  of this license document, but changing it is not allowed.
+  -->
 
-  const logger = simpleLogger("share-setting", "share-pro", isDev)
+<script lang="ts">
+  import { SettingService } from "../../../service/SettingService"
+  import { ShareProConfig } from "../../../models/ShareProConfig"
+  import { onMount } from "svelte"
+  import { isDev, SHARE_PRO_STORE_NAME } from "../../../Constants"
+  import { ApiUtils } from "../../../utils/ApiUtils"
+  import { Dialog, showMessage } from "siyuan"
+  import { simpleLogger } from "zhi-lib-base"
+  import ShareProPlugin from "../../../index"
+  import { KeyInfo } from "../../../models/KeyInfo"
+
+  const logger = simpleLogger("custom-setting", "share-pro", isDev)
   export let pluginInstance: ShareProPlugin
   export let dialog: Dialog
-  export let vipInfo: {
-    code: number
-    msg: string
-    data: KeyInfo
-  }
   let theme = "Zhihu"
   const settingService = new SettingService(pluginInstance)
 
   let settingConfig: ShareProConfig = pluginInstance.getDefaultCfg()
-  // let isPC = getFrontend() == "desktop"
-  // let isDocker = getBackend() == "docker"
 
   const onSaveSetting = async () => {
     // 构建appConfig
@@ -37,34 +38,6 @@
     }
 
     dialog.destroy()
-  }
-
-  const syncAppConfig = async () => {
-    const appConfig = settingConfig.appConfig
-    const res = await settingService.syncSetting(settingConfig.serviceApiConfig.token, appConfig)
-    if (res.code == 1) {
-      throw res.msg
-    }
-  }
-
-  const onCancel = async () => {
-    dialog.destroy()
-  }
-
-  const fetchCustomCss = async () => {
-    let cssArray = []
-    // 当前运行在思源笔记中
-    try {
-      const { kernelApi } = await ApiUtils.getSiyuanKernelApi(pluginInstance)
-      const customCss = await kernelApi.siyuanRequest("/api/snippet/getSnippet", { type: "css", enabled: 2 })
-      if (customCss?.snippets?.length > 0) {
-        cssArray = customCss.snippets.filter((x) => x.enabled)
-      }
-    } catch (e) {
-      logger.error("get custom css error", e)
-    }
-    logger.info("get custom css", cssArray)
-    return cssArray as any
   }
 
   const buildAppConfig = async (settingConfig: ShareProConfig) => {
@@ -128,8 +101,32 @@
     return settingConfig
   }
 
-  const autoSetApiUrl = () => {
-    settingConfig.siyuanConfig.apiUrl = window.location.origin as string
+  const fetchCustomCss = async () => {
+    let cssArray = []
+    // 当前运行在思源笔记中
+    try {
+      const { kernelApi } = await ApiUtils.getSiyuanKernelApi(pluginInstance)
+      const customCss = await kernelApi.siyuanRequest("/api/snippet/getSnippet", { type: "css", enabled: 2 })
+      if (customCss?.snippets?.length > 0) {
+        cssArray = customCss.snippets.filter((x) => x.enabled)
+      }
+    } catch (e) {
+      logger.error("get custom css error", e)
+    }
+    logger.info("get custom css", cssArray)
+    return cssArray as any
+  }
+
+  const syncAppConfig = async () => {
+    const appConfig = settingConfig.appConfig
+    const res = await settingService.syncSetting(settingConfig.serviceApiConfig.token, appConfig)
+    if (res.code == 1) {
+      throw res.msg
+    }
+  }
+
+  const onCancel = async () => {
+    dialog.destroy()
   }
 
   onMount(async () => {
@@ -147,80 +144,6 @@
 
 <div>
   <div class="config__tab-container">
-    {#if vipInfo.code === 1}
-      <div class="fn__block form-item no-register">注册码不合法或尚未注册</div>
-    {:else}
-      <div class="fn__block form-item registered">
-        <span>已注册[{vipInfo.data.isVip ? "vip" : "普通用户"}]， </span>
-        <span>注册给：{vipInfo.data.email}，</span>
-        <span>注册类型: {getRegisterInfo(vipInfo.data.payType)}，</span>
-        <span>有效期：{vipInfo.data.num >= 999 ? "永久" : vipInfo.data.num}， </span>
-        <span>注册时间：{vipInfo.data.from}</span>
-      </div>
-    {/if}
-
-    <div class="fn__block form-item">
-      思源地址
-      <div class="b3-label__text form-item-tip">
-        思源笔记伺服地址，包括端口，本地单空间可固定：http://127.0.0.1:6806，多个工作空间或者 Docker 外网，请自动获取
-      </div>
-      <span class="fn__hr" />
-      <input
-        class="b3-text-field fn__block"
-        id="siyuanApiUrl"
-        bind:value={settingConfig.siyuanConfig.apiUrl}
-        placeholder="请输入思源地址"
-      />
-      <a href="javascript:void(0)" id="autoSetApiUrl" on:click={autoSetApiUrl}>自动获取</a>
-    </div>
-    {#if false}
-      <div class="fn__block form-item">
-        思源鉴权token
-        <!--
-                          <div class="b3-label__text form-item-tip">思源笔记鉴权token，请从设置->关于复制，本地可留空</div>
-                          -->
-        <span class="fn__hr" />
-        <input
-          class="b3-text-field fn__block"
-          id="siyuanAuthToken"
-          bind:value={settingConfig.siyuanConfig.token}
-          placeholder="请输入思源token，本地可留空"
-        />
-      </div>
-      <div class="fn__block form-item">
-        思源cookie
-        <!--
-                  <div class="b3-label__text form-item-tip">开启了授权码之后必须复制cookie，否则可留空</div>
-                  -->
-        <span class="fn__hr" />
-        <input
-          class="b3-text-field fn__block"
-          id="siyuanCookie"
-          bind:value={settingConfig.siyuanConfig.cookie}
-          placeholder="请输入思源cookie，未开启授权码可留空"
-        />
-      </div>
-    {/if}
-
-    <div class="fn__block form-item">
-      注册码
-      <div class="b3-label__text form-item-tip">
-        <!--
-                <a class="fn__code" href="https://store.terwer.space/products/share-pro">点击这里</a>
-                自助获取注册码，或者
-                -->
-        发邮件到 youweics@163.com 申请试用
-      </div>
-      <span class="fn__hr" />
-      <textarea
-        class="b3-text-field fn__block"
-        id="regCode"
-        bind:value={settingConfig.serviceApiConfig.token}
-        rows="5"
-        placeholder="请输入注册码"
-      />
-    </div>
-
     <div class="fn__block form-item">
       主题
       <div class="b3-label__text form-item-tip">自定义分享页面主题</div>
@@ -267,15 +190,5 @@
   .form-item-tip {
     font-size: 12px !important;
     color: var(--b3-theme-on-background);
-  }
-
-  .no-register {
-    color: red !important;
-    padding-bottom: 0;
-  }
-
-  .registered {
-    color: green !important;
-    padding-bottom: 0;
   }
 </style>

@@ -1,6 +1,7 @@
 {
   "sharePro": "Share pro",
   "startShare": "Start share",
+  "viewArticle": "View doc",
   "cancelShare": "Cancel share",
   "reShare": "Share again",
   "shareSetting": "Share setting",
@@ -15,5 +16,24 @@
   "confirmDelete": "Are you sure to stop share this doc？",
   "manageDoc": "Doc manage",
   "msgNotFoundDoc": "Doc not found, cannot share",
-  "createShare": "Create share"
+  "createShare": "Create share",
+  "basicSetting": "Basic setting",
+  "customSetting": "Custom setting",
+  "keyInfo": {
+    "notValid": "Registration Code Is Invalid Or Not Registered",
+    "registered": "You have already registered ",
+    "freeUser": "Free user",
+    "registerTo": "to: ",
+    "registerType": "type: ",
+    "expired": "expiration date: ",
+    "expireTime": "from: ",
+    "lifetime": "lifetime"
+  },
+  "cardType": {
+    "day": "day",
+    "week": "week",
+    "month": "month",
+    "quarter": "quarter",
+    "year": "year"
+  }
 }

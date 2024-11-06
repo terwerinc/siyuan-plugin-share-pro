@@ -10,7 +10,7 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte"
 
-  export let tabs: { label: string; content: any }[] = []
+  export let tabs: { label: string; content: any; props?: Record<string, any> }[] = []
   export let activeTab: number = 0
   export let vertical: boolean = false
 
@@ -36,7 +36,7 @@
   <div class="tab-content">
     {#if tabs[activeTab]}
       {#if typeof tabs[activeTab].content === "function"}
-        <svelte:component this={tabs[activeTab].content} />
+        <svelte:component this={tabs[activeTab].content} {...tabs[activeTab].props} />
       {:else}
         {tabs[activeTab].content}
       {/if}
@@ -48,49 +48,74 @@
   .tabs {
     display: flex;
     flex-direction: column;
+    /* 添加圆角 */
+    border-radius: 8px;
+    /* 防止内容溢出圆角 */
+    overflow: hidden;
+    background-color: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin: 10px;
   }
 
   .tabs.vertical {
-    flex-direction: column;
-    margin-top: 10px;
+    flex-direction: row;
   }
 
   .tabs:not(.vertical) {
-    flex-direction: row;
-    margin-left: 10px;
+    flex-direction: column;
   }
 
   .tab-list {
     display: flex;
     flex-wrap: wrap;
+    border-bottom: 1px solid #e0e0e0;
   }
 
   .tabs.vertical .tab-list {
-    flex-direction: row; /* 垂直布局时，按钮水平排列 */
-    width: 100%; /* 确保按钮水平排列 */
+    /* 垂直布局时，按钮水平排列 */
+    flex-direction: column;
+    border-right: 1px solid #e0e0e0;
+    border-bottom: none;
   }
 
   .tabs:not(.vertical) .tab-list {
-    flex-direction: column; /* 水平布局时，按钮垂直排列 */
+    /* 水平布局时，按钮垂直排列 */
+    flex-direction: row;
   }
 
   .tab {
-    padding: 10px;
-    border: none; /* 初始边框 */
-    background-color: #f1f1f1;
+    padding: 12px 16px;
+    /* 初始边框 */
+    border: none;
+    background-color: transparent;
     cursor: pointer;
-    flex: 1 1 auto; /* 使按钮均匀分布 */
-    position: relative; /* 用于定位边框 */
+    /* 使按钮均匀分布 */
+    /* flex: 1 1 auto; */
+    /* 用于定位边框 */
+    position: relative;
+    font-size: 14px;
+    color: #555;
+    transition: background-color 0.2s ease;
+  }
+
+  .tabs.vertical .tab:not(:last-child) {
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .tabs:not(.vertical) .tab:not(:last-child) {
+    border-right: 1px solid #e0e0e0;
   }
 
   .tab.active,
   .tab:active {
-    background-color: #007bff; /* 金融蓝 */
-    color: white;
+    /* Notion 蓝色 */
+    background-color: #eaf4ff;
+    color: #1a73e8;
   }
 
   .tab-content {
-    padding: 10px;
+    padding: 16px;
+    background-color: #fff;
   }
 
   .tabs.vertical .tab-content {

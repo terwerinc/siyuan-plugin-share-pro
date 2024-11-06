@@ -7,13 +7,13 @@
   -  of this license document, but changing it is not allowed.
   -->
 <script lang="ts">
-  import ShareProPlugin from "../index"
-  import { KeyInfo } from "../models/KeyInfo"
+  import ShareProPlugin from "../../index"
+  import { KeyInfo } from "../../models/KeyInfo"
   import { onMount } from "svelte"
-  import { ShareService } from "../service/ShareService"
+  import { ShareService } from "../../service/ShareService"
   import { simpleLogger } from "zhi-lib-base"
-  import { isDev, SHARE_LIST_PAGE_SIZE } from "../Constants"
-  import Bench from "./components/bench/Bench.svelte"
+  import { isDev, SHARE_LIST_PAGE_SIZE } from "../../Constants"
+  import Bench from "../components/bench/Bench.svelte"
   import { confirm, openTab, showMessage } from "siyuan"
 
   const logger = simpleLogger("share-manage", "share-pro", isDev)

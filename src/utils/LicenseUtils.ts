@@ -8,27 +8,29 @@
  *
  */
 
-const getRegisterInfo = (payType: string): string => {
+import ShareProPlugin from "../index"
+
+const getRegisterInfo = (pluginInstance: ShareProPlugin, payType: string): string => {
   let registerInfo: string
 
   switch (payType) {
     case "day":
-      registerInfo = "日卡"
+      registerInfo = pluginInstance.i18n.cardType.day
       break
     case "week":
-      registerInfo = "周卡"
+      registerInfo = pluginInstance.i18n.cardType.week
       break
     case "month":
-      registerInfo = "月卡"
+      registerInfo = pluginInstance.i18n.cardType.month
       break
     case "quarter":
-      registerInfo = "季卡"
+      registerInfo = pluginInstance.i18n.cardType.quarter
       break
     case "year":
-      registerInfo = "年卡"
+      registerInfo = pluginInstance.i18n.cardType.year
       break
     default:
-      registerInfo = "默认日卡"
+      registerInfo = pluginInstance.i18n.cardType.day
       break
   }
 

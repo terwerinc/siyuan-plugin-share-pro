@@ -16,5 +16,24 @@
   "confirmDelete": "确认取消分享该文档吗？",
   "manageDoc": "分享管理",
   "msgNotFoundDoc": "未找到当前文档，无法分享",
-  "createShare": "创建分享"
+  "createShare": "创建分享",
+  "basicSetting": "基础设置",
+  "customSetting": "个性设置",
+  "keyInfo": {
+    "notValid": "注册码不合法或尚未注册",
+    "registered": "已注册",
+    "freeUser": "普通用户",
+    "registerTo": "注册给: ",
+    "registerType": "注册类型: ",
+    "expired": "有效期: ",
+    "expireTime": "注册时间: ",
+    "lifetime": "永久"
+  },
+  "cardType": {
+    "day": "日卡",
+    "week": "周卡",
+    "month": "月卡",
+    "quarter": "季卡",
+    "year": "年卡"
+  }
 }

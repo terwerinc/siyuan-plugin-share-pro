@@ -8,22 +8,18 @@
  */
 import ShareProPlugin from "./index"
 import { Topbar } from "./topbar"
-import { TopDialog } from "./topDialog"
 
 class Main {
   private pluginInstance: ShareProPlugin
-  // private topbar: Topbar
-  private dlg: TopDialog
+  private topbar: Topbar
 
   constructor(pluginInstance: ShareProPlugin) {
     this.pluginInstance = pluginInstance
-    // this.topbar = new Topbar(pluginInstance)
-    this.dlg = new TopDialog(pluginInstance)
+    this.topbar = new Topbar(pluginInstance)
   }
 
   public start() {
-    // this.topbar.initTopbar()
-    this.dlg.initTopDialog()
+    this.topbar.initTopbar()
   }
 }
 
