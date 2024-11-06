@@ -63,27 +63,41 @@ class ShareService {
       }
       const resp = await this.shareApi.createShare(shareBody)
       if (resp.code !== 0) {
-        this.logger.error("文档" + docId + "分享失败：" + resp.msg)
-        showMessage("分享失败：" + resp.msg, 7000, "error")
+        this.logger.error(
+          this.pluginInstance.i18n.shareService.msgDoc +
+            docId +
+            this.pluginInstance.i18n.shareService.msgShareError +
+            resp.msg
+        )
+        showMessage(this.pluginInstance.i18n.shareService.msgShareError + resp.msg, 7000, "error")
         return
       }
-      this.logger.info("文档『" + post.title + "[" + docId + "]』分享成功")
+      this.logger.info(
+        this.pluginInstance.i18n.shareService.msgDoc +
+          post.title +
+          "[" +
+          docId +
+          "]" +
+          this.pluginInstance.i18n.shareService.msgShareSuccess
+      )
 
       // 处理图片
       const data = resp.data
       const media = data.media
       if (media && media.length > 0) {
-        showMessage("文本已分享，检测到文档图片，开始处理图片...", 7000, "info")
+        showMessage(this.pluginInstance.i18n.shareService.msgProcessPic, 7000, "info")
         // 异步处理图片
-        this.addLog("后台处理图片开始...", "info")
+        this.addLog(this.pluginInstance.i18n.shareService.msgStartPicBack, "info")
         void this.processShareMedia(docId, media)
-        this.addLog("后台处理图片完毕.", "info")
+        this.addLog(this.pluginInstance.i18n.shareService.msgEndPicBack, "info")
       } else {
-        showMessage("分享成功", 3000, "info")
+        showMessage(this.pluginInstance.i18n.shareService.msgShareSuccess, 3000, "info")
       }
     } catch (e) {
-      this.logger.error("文档" + docId + "分享失败：" + e)
-      showMessage("分享失败：" + e, 7000, "error")
+      this.logger.error(
+        this.pluginInstance.i18n.shareService.msgDoc + docId + this.pluginInstance.i18n.shareService.msgShareError + e
+      )
+      showMessage(this.pluginInstance.i18n.shareService.msgShareError + e, 7000, "error")
     }
   }
 
@@ -133,7 +147,12 @@ class ShareService {
       const mediaGroup = groupedMedia[i]
       const processedParams = []
 
-      this.addLog(`开始处理第${i + 1}组图片.共${groupedMedia.length}组，每组${perReq}个图片`, "info")
+      const msgStartGroup = this.pluginInstance.i18n.shareService.msgStartGroup
+      const msgStartGroupWithParam = msgStartGroup
+        .replace("[param1]", i + 1)
+        .replace("[param2]", groupedMedia.length)
+        .replace("[param3]", perReq)
+      this.addLog(msgStartGroupWithParam, "info")
       for (const media of mediaGroup) {
         try {
           if (media.type !== "IMAGE") {
@@ -155,7 +174,11 @@ class ShareService {
             }
           }
 
-          this.addLog(`开始处理第${totalCount}张图片： ${imageUrl} ，请稍候...`, "info")
+          const msgStartCurrentPic = this.pluginInstance.i18n.shareService.msgStartCurrentPic
+          const msgStartCurrentPicWithParam = msgStartCurrentPic
+            .replace("[param1]", totalCount)
+            .replace("[param2]", imageUrl)
+          this.addLog(msgStartCurrentPicWithParam, "info")
           // const res = await kernelApi.forwardProxy(imageUrl, [], undefined, "GET", undefined, undefined, "base64")
           // 内部请求不必要走代理
           const res = await ImageUtils.fetchBase64WithContentType(imageUrl)
@@ -178,11 +201,16 @@ class ShareService {
           }
           processedParams.push(params)
         } catch (e) {
-          this.logger.error("上传媒体时发生异常 =>", e)
-          showMessage("上传媒体时发生异常 =>" + e, 7000, "error")
+          this.logger.error(this.pluginInstance.i18n.shareService.msgMediaUploadError, e)
+          showMessage(this.pluginInstance.i18n.shareService.msgMediaUploadError + e, 7000, "error")
         }
       }
-      this.addLog(`第${i + 1}组图片处理完毕.共${groupedMedia.length}组，每组${perReq}个图片`, "info")
+      const msgGroupProcessSuccess = this.pluginInstance.i18n.shareService.msgGroupProcessSuccess
+      const msgGroupProcessSuccessWithParam = msgGroupProcessSuccess
+        .replace("[param1]", i + 1)
+        .replace("[param2]", groupedMedia.length)
+        .replace("[param3]", perReq)
+      this.addLog(msgGroupProcessSuccessWithParam, "info")
 
       const hasNext = mediaGroup.length === perReq
       const reqParams = {
@@ -192,31 +220,50 @@ class ShareService {
       }
 
       // 处理上传结果
-      this.addLog(`准备批量上传第${i + 1}组图片，请稍候...`, "info")
+      const msgProcessPicBatch = this.pluginInstance.i18n.shareService.msgProcessPicBatch
+      const msgProcessPicBatchWithParam = msgProcessPicBatch.replace("[param1]", i + 1)
+      this.addLog(msgProcessPicBatchWithParam, "info")
       let uploadResult = await this.shareApi.uploadMedia(reqParams)
-      this.addLog("图片批量处理结果=>" + JSON.stringify(uploadResult), "info")
+      this.addLog(this.pluginInstance.i18n.shareService.msgBatchResult + JSON.stringify(uploadResult), "info")
       if (uploadResult.code === 0) {
         successCount += processedParams.length
         if (!hasNext) {
-          showMessage("您分享的文档「" + docId + "」已成功更新图片资源", 3000, "info")
+          showMessage(
+            this.pluginInstance.i18n.shareService.msgYourDoc +
+              docId +
+              this.pluginInstance.i18n.shareService.msgSuccessUpdateMedia,
+            3000,
+            "info"
+          )
         }
-        this.addLog(`第${i + 1}组已成功上传媒体`, "info")
+        const msgCurrentMediaSuccess = this.pluginInstance.i18n.shareService.msgCurrentMediaSuccess
+        const msgCurrentMediaSuccessWithParam = msgCurrentMediaSuccess.replace("[param1]", i + 1)
+        this.addLog(msgCurrentMediaSuccessWithParam, "info")
       } else {
         errorCount += processedParams.length
         let rtnMsg = uploadResult.msg
         if (!uploadResult.msg) {
           rtnMsg = (uploadResult as any).message
         }
-        const errMsg = `第${i + 1}组媒体上传失败=>` + rtnMsg
+        const msgCurrentMediaError = this.pluginInstance.i18n.shareService.msgCurrentMediaError
+        const msgCurrentMediaErrorWithParam = msgCurrentMediaError.replace("[param1]", i + 1)
+        const errMsg = msgCurrentMediaErrorWithParam + rtnMsg
         this.addLog(errMsg, "error")
         showMessage(errMsg, 7000, "error")
       }
     }
-    this.addLog(`图片全部处理完毕，总数(${totalCount})，成功（${successCount}），失败（${errorCount}）`, "info")
+    const successPic = this.pluginInstance.i18n.shareService.successPic
+    const successPicWithParam = successPic
+      .replace("[param1]", totalCount)
+      .replace("[param2]", successCount)
+      .replace("[param3]", errorCount)
+    this.addLog(successPicWithParam, "info")
     if (successCount === totalCount) {
-      showMessage("恭喜你，图片全部处理成功", 3000, "info")
+      showMessage(this.pluginInstance.i18n.shareService.success, 3000, "info")
     } else {
-      showMessage(`${errorCount}张图片处理失败，请查看日志`, 7000, "error")
+      const errorPic = this.pluginInstance.i18n.shareService.errorPic
+      const msgWithParam = errorPic.replace("[param1]", errorCount)
+      showMessage(msgWithParam, 7000, "error")
     }
   }
 

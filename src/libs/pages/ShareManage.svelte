@@ -7,13 +7,13 @@
   -  of this license document, but changing it is not allowed.
   -->
 <script lang="ts">
-  import ShareProPlugin from "../index"
-  import { KeyInfo } from "../models/KeyInfo"
+  import ShareProPlugin from "../../index"
+  import { KeyInfo } from "../../models/KeyInfo"
   import { onMount } from "svelte"
-  import { ShareService } from "../service/ShareService"
+  import { ShareService } from "../../service/ShareService"
   import { simpleLogger } from "zhi-lib-base"
-  import { isDev, SHARE_LIST_PAGE_SIZE } from "../Constants"
-  import Bench from "./components/bench/Bench.svelte"
+  import { isDev, SHARE_LIST_PAGE_SIZE } from "../../Constants"
+  import Bench from "../components/bench/Bench.svelte"
   import { confirm, openTab, showMessage } from "siyuan"
 
   const logger = simpleLogger("share-manage", "share-pro", isDev)
@@ -31,16 +31,16 @@
     tableSearch
 
   const tableColumns = [
-    { id: "docId", name: "文档ID", hidden: false },
+    { id: "docId", name: pluginInstance.i18n.manage.columnDocId, hidden: false },
     {
       id: "author",
-      name: "作者",
+      name: pluginInstance.i18n.manage.columnAuthor,
       sort: false,
       onClick: (e) => {},
     },
     {
       id: "title",
-      name: "文档标题",
+      name: pluginInstance.i18n.manage.columnTitle,
       html: true,
       sort: false,
       formatter: (cell) => {
@@ -54,19 +54,19 @@
     },
     {
       id: "createdAt",
-      name: "分享时间",
+      name: pluginInstance.i18n.manage.columnCreatedAt,
       formatter: (cell) => {
         return cell
       },
     },
     {
       id: "media_count",
-      name: "附件数量",
+      name: pluginInstance.i18n.manage.columnMediaCount,
       sort: false,
     },
     {
       id: "status",
-      name: "分享状态",
+      name: pluginInstance.i18n.manage.columnStatus,
       html: true,
       formatter: (cell) => {
         // 根据枚举来
@@ -74,9 +74,9 @@
         // COMPLETED("completed")
         // FAILED("failed")
         const statusMap = {
-          ING: "分享进行中",
-          COMPLETED: "分享完成",
-          FAILED: "分享失败",
+          ING: pluginInstance.i18n.manage.statusIng,
+          COMPLETED: pluginInstance.i18n.manage.statusSuccess,
+          FAILED: pluginInstance.i18n.manage.statusError,
         }
         return statusMap[cell]
       },
@@ -84,7 +84,7 @@
     },
     {
       id: "action",
-      name: "操作",
+      name: pluginInstance.i18n.manage.action,
       html: true,
       sort: false,
     },
@@ -114,8 +114,8 @@
             createdAt: doc.createdAt,
             status: doc.status,
             action: `
-            <a href="javascript:;" onclick="window.cancelShareFromSharePro('${doc.docId}','${doc.data.title}')">取消分享</a>&nbsp;&nbsp;
-            <a href="javascript:;" onclick="window.goToOriginalDocFromSharePro('${doc.docId}')">转到该文档</a>
+            <a href="javascript:;" onclick="window.cancelShareFromSharePro('${doc.docId}','${doc.data.title}')">${pluginInstance.i18n.manage.actionCancel}</a>&nbsp;&nbsp;
+            <a href="javascript:;" onclick="window.goToOriginalDocFromSharePro('${doc.docId}')">${pluginInstance.i18n.manage.actionGotoDoc}</a>
             `,
           }
         }),
@@ -123,7 +123,7 @@
       }
       logger.info(`loaded docs for ${keyInfo.email}`, docs)
     } catch (e) {
-      showMessage("数据加载失败:", e)
+      showMessage(pluginInstance.i18n.manage.dataLoadingError, e)
     } finally {
       loading = false
     }
@@ -134,9 +134,10 @@
     confirm(pluginInstance.i18n.tipTitle, pluginInstance.i18n.confirmDelete + "【" + docTitle + "】", async () => {
       const ret = await shareService.deleteDoc(docId)
       if (ret.code === 0) {
-        showMessage("文档已取消分享", 3000, "info")
+        await updateTable()
+        showMessage(pluginInstance.i18n.topbar.cancelSuccess, 3000, "info")
       } else {
-        showMessage("取消分享失败=>" + ret.msg, 7000, "error")
+        showMessage(pluginInstance.i18n.topbar.cancelError + ret.msg, 7000, "error")
       }
     })
   }
@@ -163,7 +164,7 @@
     <div class="loading-indicator-container">
       <div class="loading-indicator">
         <div class="spinner" />
-        <span>数据加载中...</span>
+        <span>{pluginInstance.i18n.manage.dataLoading}</span>
       </div>
     </div>
   {/if}
@@ -176,16 +177,16 @@
     bind:limit={tableLimit}
     bind:search={tableSearch}
     classBenchContainer="share-bench-container"
-    searchPlaceholder="请输入关键字..."
-    textPrevious="上一页"
-    textNext="下一页"
-    textShowing="当前数据为索引从"
-    textTo="到"
-    textOf="，共"
-    textEntries="条记录"
-    textFiltered="筛选"
-    textPage="页码"
-    textFirstPage="首页"
+    searchPlaceholder={pluginInstance.i18n.manage.tableKeyword}
+    textPrevious={pluginInstance.i18n.manage.tablePrevious}
+    textNext={pluginInstance.i18n.manage.tableNext}
+    textShowing={pluginInstance.i18n.manage.tableShowing}
+    textTo={pluginInstance.i18n.manage.tableTo}
+    textOf={pluginInstance.i18n.manage.tableOf}
+    textEntries={pluginInstance.i18n.manage.tableEntries}
+    textFiltered={pluginInstance.i18n.manage.tableFiltered}
+    textPage={pluginInstance.i18n.manage.tablePage}
+    textFirstPage={pluginInstance.i18n.manage.tableFirstPage}
   />
 </div>
 

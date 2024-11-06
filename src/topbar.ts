@@ -13,7 +13,7 @@ import { isDev, SHARE_PRO_STORE_NAME } from "./Constants"
 import { icons } from "./utils/svg"
 import { confirm, Dialog, Menu, showMessage } from "siyuan"
 import { ShareProConfig } from "./models/ShareProConfig"
-import ShareSetting from "./libs/ShareSetting.svelte"
+import ShareSetting from "./libs/pages/ShareSetting.svelte"
 import { ShareService } from "./service/ShareService"
 import PageUtil from "./utils/pageUtil"
 import { WidgetInvoke } from "./invoke/widgetInvoke"
@@ -22,7 +22,7 @@ import pkg from "../package.json"
 /**
  * 顶部按钮
  */
-export class Topbar {
+class Topbar {
   private logger: ILogger
   private pluginInstance: ShareProPlugin
   private shareService: ShareService
@@ -47,7 +47,8 @@ export class Topbar {
       try {
         await this.addMenu(topBarElement.getBoundingClientRect())
       } catch (e) {
-        showMessage("分享服务异常，请联系 youweics@163.com：" + e, 7000, "error")
+        const errMsg = this.pluginInstance.i18n.topbar.shareSuccessError + e
+        showMessage(errMsg, 7000, "error")
       }
     })
   }
@@ -79,7 +80,7 @@ export class Topbar {
         if (shareData) {
           this.logger.info("get shared data =>", shareData)
           if (shareData.shareStatus !== "COMPLETED") {
-            alert("图片未处理完成或者失败，建议等待或者重新分享")
+            alert(this.pluginInstance.i18n.topbar.msgIngError)
           }
         }
         menu.addItem({
@@ -94,9 +95,9 @@ export class Topbar {
                 }
                 const ret = await this.shareService.deleteDoc(docCheck.docId)
                 if (ret.code === 0) {
-                  showMessage("文档已取消分享", 3000, "info")
+                  showMessage(this.pluginInstance.i18n.topbar.cancelSuccess, 3000, "info")
                 } else {
-                  showMessage("取消分享失败=>" + ret.msg, 7000, "error")
+                  showMessage(this.pluginInstance.i18n.topbar.cancelError + ret.msg, 7000, "error")
                 }
               })
             } else {
@@ -129,8 +130,10 @@ export class Topbar {
             icon: `iconEye`,
             label: this.pluginInstance.i18n.viewArticle,
             click: async () => {
-              if (shareData) {
-                showMessage("文档未分享，无法查看=>" + docInfo.msg, 7000, "error")
+              if (!shareData) {
+                const noShareMsg = this.pluginInstance.i18n.topbar.msgNoShare + docInfo.msg
+                showMessage(noShareMsg, 7000, "error")
+                return
               }
               window.open(shareData.viewUrl)
             },
@@ -172,7 +175,7 @@ export class Topbar {
         const d = new Dialog({
           title: `${this.pluginInstance.i18n.shareSetting} - ${this.pluginInstance.i18n.sharePro} v${pkg.version}`,
           content: `<div id="${settingId}"></div>`,
-          width: this.pluginInstance.isMobile ? "92vw" : "720px",
+          width: this.pluginInstance.isMobile ? "92vw" : "61.8vw",
         })
         new ShareSetting({
           target: document.getElementById(settingId) as HTMLElement,
@@ -196,3 +199,5 @@ export class Topbar {
     }
   }
 }
+
+export { Topbar }

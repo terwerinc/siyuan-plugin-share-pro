@@ -11,7 +11,7 @@ import ShareProPlugin from "../index"
 import { ILogger, simpleLogger } from "zhi-lib-base"
 import { isDev } from "../Constants"
 import { openTab } from "siyuan"
-import ShareManage from "../libs/ShareManage.svelte"
+import ShareManage from "../libs/pages/ShareManage.svelte"
 import { KeyInfo } from "../models/KeyInfo"
 
 class WidgetInvoke {

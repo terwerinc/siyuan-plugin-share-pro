@@ -20,15 +20,15 @@ import {
   SHARE_SERVICE_ENDPOINT_DEV,
   SHARE_SERVICE_ENDPOINT_PROD,
 } from "./Constants"
-import { Topbar } from "./topbar"
+import { Main } from "./main"
 import { ShareProConfig } from "./models/ShareProConfig"
 import { initStatusBar } from "./statusBar"
 
 export default class ShareProPlugin extends Plugin {
   private logger: ILogger
-  private topbar: Topbar
   public isMobile: boolean
   public statusBarElement: any
+  private main: Main
 
   constructor(options: { app: App; id: string; name: string; i18n: IObject }) {
     super(options)
@@ -36,14 +36,14 @@ export default class ShareProPlugin extends Plugin {
     this.logger = simpleLogger("index", "share-pro", isDev)
     const frontEnd = getFrontend()
     this.isMobile = frontEnd === "mobile" || frontEnd === "browser-mobile"
-    this.topbar = new Topbar(this)
+    this.main = new Main(this)
   }
 
   async onload() {
     // 初始化菜单
-    this.topbar.initTopbar()
     initStatusBar(this)
     await this.initCfg()
+    this.main.start()
     this.logger.info("Share pro loaded")
   }
 
@@ -64,6 +64,9 @@ export default class ShareProPlugin extends Plugin {
         apiUrl: DEFAULT_SIYUAN_API_URL,
         token: DEFAULT_SIYUAN_AUTH_TOKEN,
         cookie: DEFAULT_SIYUAN_COOKIE,
+        preferenceConfig: {
+          fixTitle: false,
+        },
       },
       serviceApiConfig: {
         apiUrl: latestServiceApiUrl,
