@@ -82,5 +82,12 @@
     "success": "Congratulations, all images have been processed successfully",
     "successPic": "All images have been processed, total ([param1]), succeed ([param2]), failed ([param3])",
     "errorPic": "[param1] images failed to process, please check the logs"
+  },
+  "topbar": {
+    "shareSuccessError": "Share service exception, please contact youweics@163.com:",
+    "msgIngError": "Images are not fully processed or have failed, it is recommended to wait or reshare",
+    "cancelSuccess": "Document sharing has been canceled",
+    "cancelError": "Failed to cancel sharing=>",
+    "msgNoShare": "Document has not been shared, cannot view=>"
   }
 }

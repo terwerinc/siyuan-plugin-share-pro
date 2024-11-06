@@ -82,5 +82,12 @@
     "success": "恭喜你，图片全部处理成功",
     "successPic": "图片全部处理完毕，总数（[param1]），成功（[param2]），失败（[param2]）",
     "errorPic": "[param1]张图片处理失败，请查看日志"
+  },
+  "topbar": {
+    "shareSuccessError": "分享服务异常，请联系 youweics@163.com：",
+    "msgIngError": "图片未处理完成或者失败，建议等待或者重新分享",
+    "cancelSuccess": "文档已取消分享",
+    "cancelError": "取消分享失败=>",
+    "msgNoShare": "文档未分享，无法查看=>"
   }
 }
