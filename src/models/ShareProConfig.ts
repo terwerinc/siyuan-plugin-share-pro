@@ -15,6 +15,9 @@ class ShareProConfig {
     apiUrl: string
     token: string
     cookie: string
+    preferenceConfig?: {
+      fixTitle: boolean
+    }
   }
   serviceApiConfig?: IServiceApiConfig
   appConfig?: AppConfig

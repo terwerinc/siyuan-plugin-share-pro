@@ -23,12 +23,12 @@ export const useSiyuanApi = (cfg: ShareProConfig) => {
   // 开启了授权码可能不可用
   siyuanConfig.cookie = cfg.siyuanConfig.cookie
   // 一些常用设置
-  siyuanConfig.preferenceConfig.fixTitle = true
+  siyuanConfig.preferenceConfig.fixTitle = cfg.siyuanConfig?.preferenceConfig?.fixTitle ?? false
   siyuanConfig.preferenceConfig.removeFirstH1 = true
   siyuanConfig.preferenceConfig.removeMdWidgetTag = true
   const blogApi = new SiYuanApiAdaptor(siyuanConfig)
   const kernelApi = new SiyuanKernelApi(siyuanConfig)
-  logger.debug("siyuan api initd")
+  logger.debug("siyuan api inited")
 
   return {
     blogApi,

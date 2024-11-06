@@ -12,6 +12,7 @@
   "cancel": "取消",
   "save": "保存",
   "settingConfigSaveSuccess": "配置保存成功",
+  "settingConfigSaveAndSyncSuccess": "配置保存并同步成功",
   "settingConfigSaveFail": "配置已保存但是同步失败",
   "confirmDelete": "确认取消分享该文档吗？",
   "manageDoc": "分享管理",
@@ -35,5 +36,30 @@
     "month": "月卡",
     "quarter": "季卡",
     "year": "年卡"
+  },
+  "bs": {
+    "siyuanApi": "思源地址",
+    "siyuanApiAutoset": "自动获取",
+    "siyuanApiPlaceholder": "请输入思源地址",
+    "siyuanApiTip": "思源笔记伺服地址，包括端口，本地单空间可固定：http://127.0.0.1:6806，多个工作空间或者 Docker 外网，请自动获取",
+    "regCode": "注册码",
+    "regCodePlaceholder": "请输入注册码",
+    "regCodeClick": "点击这里",
+    "regCodeTip": "购买注册码，或者 发邮件到 youweics@163.com 申请试用"
+  },
+  "cs": {
+    "theme": "主题",
+    "themeTip": "自定义分享页面主题",
+    "themeTypeDaylight": "默认白天",
+    "themeTypeMidlight": "默认黑夜",
+    "themeTypeZhihu": "知乎",
+    "themeTypeSavor": "写味",
+    "themeTypeTsundoku": "積読",
+    "themeTypePinkRoom": "粉色小屋",
+    "themeTypeTrends": "Trends",
+    "customCss": "启用自定义css片段",
+    "customCssTip": "同步自定义css片段到分享页面",
+    "fixTitle": "移除标题序号",
+    "fixTitleTip": "移除类似`001.测试标题`里面的序号，移除后效为`测试标题`"
   }
 }

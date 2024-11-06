@@ -16,6 +16,7 @@
   import { KeyInfo } from "../../../models/KeyInfo"
   import { getRegisterInfo } from "../../../utils/LicenseUtils"
   import { simpleLogger } from "zhi-lib-base"
+  import { DefaultAppConfig, syncAppConfig } from "../../../utils/ShareConfigUtils"
 
   const logger = simpleLogger("basic-setting", "share-pro", isDev)
   export let pluginInstance: ShareProPlugin
@@ -29,8 +30,19 @@
   let settingConfig: ShareProConfig = pluginInstance.getDefaultCfg()
 
   const onSaveSetting = async () => {
-    await pluginInstance.saveData(SHARE_PRO_STORE_NAME, settingConfig)
-    showMessage(`${pluginInstance.i18n.settingConfigSaveSuccess}`, 2000, "info")
+    if (!settingConfig.appConfig) {
+      settingConfig.appConfig ||= DefaultAppConfig
+      await pluginInstance.saveData(SHARE_PRO_STORE_NAME, settingConfig)
+      try {
+        await syncAppConfig(pluginInstance, settingConfig)
+        showMessage(`${pluginInstance.i18n.settingConfigSaveAndSyncSuccess}`, 2000, "info")
+      } catch (e) {
+        showMessage(`${pluginInstance.i18n.settingConfigSaveFail},${e}`, 7000, "error")
+      }
+    } else {
+      await pluginInstance.saveData(SHARE_PRO_STORE_NAME, settingConfig)
+      showMessage(`${pluginInstance.i18n.settingConfigSaveSuccess}`, 2000, "info")
+    }
     dialog.destroy()
   }
 
@@ -74,25 +86,29 @@
     {/if}
 
     <div class="fn__block form-item">
-      思源地址
+      {pluginInstance.i18n.bs.siyuanApi}
       <div class="b3-label__text form-item-tip">
-        思源笔记伺服地址，包括端口，本地单空间可固定：http://127.0.0.1:6806，多个工作空间或者 Docker 外网，请自动获取
+        {pluginInstance.i18n.bs.siyuanApiTip}
       </div>
       <span class="fn__hr" />
       <input
         class="b3-text-field fn__block"
         id="siyuanApiUrl"
         bind:value={settingConfig.siyuanConfig.apiUrl}
-        placeholder="请输入思源地址"
+        placeholder={pluginInstance.i18n.bs.siyuanApiPlaceholder}
       />
-      <a href="javascript:void(0)" id="autoSetApiUrl" on:click={autoSetApiUrl}>自动获取</a>
+      <a href="javascript:void(0)" id="autoSetApiUrl" on:click={autoSetApiUrl}>
+        {pluginInstance.i18n.bs.siyuanApiAutoset}
+      </a>
     </div>
 
     <div class="fn__block form-item">
-      注册码
+      {pluginInstance.i18n.bs.regCode}
       <div class="b3-label__text form-item-tip">
-        <a class="fn__code" href="https://store.terwer.space/products/share-pro">点击这里</a>
-        自助获取注册码，或者 发邮件到 youweics@163.com 申请试用
+        <a class="fn__code" href="https://store.terwer.space/products/share-pro">
+          {pluginInstance.i18n.bs.regCodeClick}
+        </a>
+        {pluginInstance.i18n.bs.regCodeTip}
       </div>
       <span class="fn__hr" />
       <textarea
@@ -100,7 +116,7 @@
         id="regCode"
         bind:value={settingConfig.serviceApiConfig.token}
         rows="5"
-        placeholder="请输入注册码"
+        placeholder={pluginInstance.i18n.bs.regCodePlaceholder}
       />
     </div>
 

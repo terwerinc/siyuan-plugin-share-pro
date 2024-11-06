@@ -12,6 +12,7 @@
   "cancel": "Cancel",
   "save": "Save",
   "settingConfigSaveSuccess": "The configuration is saved successfully",
+  "settingConfigSaveAndSyncSuccess": "The configuration is saved and synced success",
   "settingConfigSaveFail": "The configuration is saved but synced error",
   "confirmDelete": "Are you sure to stop share this doc？",
   "manageDoc": "Doc manage",
@@ -35,5 +36,30 @@
     "month": "month",
     "quarter": "quarter",
     "year": "year"
+  },
+  "bs": {
+    "siyuanApi": "SiYuan address",
+    "siyuanApiAutoset": "Auto retrieve",
+    "siyuanApiPlaceholder": "Please enter SiYuan address",
+    "siyuanApiTip": "SiYuan note server address, including port. For local single workspace, it can be fixed to: http://127.0.0.1:6806. For multiple workspaces or Docker external network, please auto retrieve.",
+    "regCode": "Registration code",
+    "regCodePlaceholder": "Please enter registration code",
+    "regCodeClick": "Click here",
+    "regCodeTip": " to get a registration code, or send an email to youweics@163.com to apply for a trial"
+  },
+  "cs": {
+    "theme": "Theme",
+    "themeTip": "Customize the sharing page theme",
+    "themeTypeDaylight": "Daylight",
+    "themeTypeMidlight": "Midlight",
+    "themeTypeZhihu": "Zhihu",
+    "themeTypeSavor": "Savor",
+    "themeTypeTsundoku": "Tsundoku",
+    "themeTypePinkRoom": "Pink room",
+    "themeTypeTrends": "Trends",
+    "customCss": "Enable custom CSS snippets",
+    "customCssTip": "Sync custom CSS snippets to the sharing page",
+    "fixTitle": "Remove title numbers",
+    "fixTitleTip": "Remove numbers from titles like `001.Test title`, resulting in `Test title`"
   }
 }

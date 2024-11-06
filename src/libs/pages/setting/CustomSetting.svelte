@@ -8,7 +8,6 @@
   -->
 
 <script lang="ts">
-  import { SettingService } from "../../../service/SettingService"
   import { ShareProConfig } from "../../../models/ShareProConfig"
   import { onMount } from "svelte"
   import { isDev, SHARE_PRO_STORE_NAME } from "../../../Constants"
@@ -16,13 +15,13 @@
   import { Dialog, showMessage } from "siyuan"
   import { simpleLogger } from "zhi-lib-base"
   import ShareProPlugin from "../../../index"
-  import { KeyInfo } from "../../../models/KeyInfo"
+  import { DefaultAppConfig, getSupportedThemes, syncAppConfig, versionMap } from "../../../utils/ShareConfigUtils"
 
   const logger = simpleLogger("custom-setting", "share-pro", isDev)
   export let pluginInstance: ShareProPlugin
   export let dialog: Dialog
   let theme = "Zhihu"
-  const settingService = new SettingService(pluginInstance)
+  let themes = getSupportedThemes(pluginInstance)
 
   let settingConfig: ShareProConfig = pluginInstance.getDefaultCfg()
 
@@ -31,8 +30,8 @@
     settingConfig = await buildAppConfig(settingConfig)
     await pluginInstance.saveData(SHARE_PRO_STORE_NAME, settingConfig)
     try {
-      await syncAppConfig()
-      showMessage(`${pluginInstance.i18n.settingConfigSaveSuccess}`, 2000, "info")
+      await syncAppConfig(pluginInstance, settingConfig)
+      showMessage(`${pluginInstance.i18n.settingConfigSaveAndSyncSuccess}`, 2000, "info")
     } catch (e) {
       showMessage(`${pluginInstance.i18n.settingConfigSaveFail},${e}`, 7000, "error")
     }
@@ -41,55 +40,11 @@
   }
 
   const buildAppConfig = async (settingConfig: ShareProConfig) => {
-    settingConfig.appConfig ||= {
-      lang: "zh_CN",
-      siteUrl: "https://siyuannote.space",
-      siteTitle: "在线分享专业版",
-      siteSlogan: "随时随地分享您的思源笔记",
-      siteDescription: "给您的知识安个家",
-      theme: {
-        mode: "light",
-        lightTheme: "Zhihu",
-        darkTheme: "Zhihu",
-        themeVersion: "0.1.1",
-      },
-      footer: "",
-      shareTemplate: "[url]",
-      homePageId: "20240903115146-wdyz9ue",
-
-      customCss: [] as any,
-    }
-    const supportedThemes = {
-      light: [
-        { value: "daylight", label: "daylight" },
-        { value: "Zhihu", label: "Zhihu" },
-        { value: "Savor", label: "写未" },
-        { value: "Tsundoku", label: "積読" },
-        { value: "pink-room", label: "粉色小屋" },
-        { value: "trends-in-siyuan", label: "Trends" },
-      ],
-      dark: [
-        { value: "midlight", label: "midlight" },
-        { value: "Zhihu", label: "Zhihu" },
-        { value: "Savor", label: "写未" },
-        { value: "Tsundoku", label: "積読" },
-        { value: "pink-room", label: "粉色小屋" },
-        { value: "trends-in-siyuan", label: "Trends" },
-      ],
-    }
-    const versionMap = {
-      midlight: "3.1.10",
-      daylight: "3.1.10",
-      Zhihu: "0.1.3",
-      Savor: "4.2.3",
-      Tsundoku: "2.3.5",
-      "pink-room": "0.9.4",
-      "trends-in-siyuan": "0.4.0",
-    }
+    settingConfig.appConfig ||= DefaultAppConfig
     settingConfig.appConfig.theme = {
       mode: "light",
-      lightTheme: supportedThemes.light.find((x) => x.value === theme)?.value || "daylight",
-      darkTheme: supportedThemes.dark.find((x) => x.value === theme)?.value || "midlight",
+      lightTheme: themes.light.find((x) => x.value === theme)?.value || "daylight",
+      darkTheme: themes.dark.find((x) => x.value === theme)?.value || "midlight",
       themeVersion: versionMap[theme] || "unknown",
     }
 
@@ -117,14 +72,6 @@
     return cssArray as any
   }
 
-  const syncAppConfig = async () => {
-    const appConfig = settingConfig.appConfig
-    const res = await settingService.syncSetting(settingConfig.serviceApiConfig.token, appConfig)
-    if (res.code == 1) {
-      throw res.msg
-    }
-  }
-
   const onCancel = async () => {
     dialog.destroy()
   }
@@ -145,29 +92,37 @@
 <div>
   <div class="config__tab-container">
     <div class="fn__block form-item">
-      主题
-      <div class="b3-label__text form-item-tip">自定义分享页面主题</div>
+      {pluginInstance.i18n.cs.theme}
+      <div class="b3-label__text form-item-tip">{pluginInstance.i18n.cs.themeTip}</div>
       <span class="fn__hr" />
       <select id="theme" class="b3-select fn__flex-center fn__size200" bind:value={theme}>
-        <option value="daylight">默认浅色(daylight)</option>
-        <option value="midlight">默认暗色(midlight)</option>
-        <option value="Zhihu">知乎(Zhihu)</option>
-        <option value="Savor">写未(Savor)</option>
-        <option value="Tsundoku">積読(Tsundoku)</option>
-        <option value="pink-room">粉色小屋(pink-room)</option>
-        <option value="trends-in-siyuan">Trends</option>
+        {#each themes.light as item}
+          <option value={item.value}>{item.label}</option>
+        {/each}
       </select>
     </div>
 
     <div class="fn__block form-item">
-      启用自定义css片段
-      <div class="b3-label__text form-item-tip">同步自定义css片段到分享页面</div>
+        {pluginInstance.i18n.cs.customCss}
+      <div class="b3-label__text form-item-tip">{pluginInstance.i18n.cs.customCssTip}</div>
       <span class="fn__hr" />
       <input
         class="b3-switch fn__flex-center"
         id="syncCss"
         type="checkbox"
         bind:checked={settingConfig.isCustomCssEnabled}
+      />
+    </div>
+
+    <div class="fn__block form-item">
+        {pluginInstance.i18n.cs.fixTitle}
+      <div class="b3-label__text form-item-tip">{pluginInstance.i18n.cs.fixTitleTip}</div>
+      <span class="fn__hr" />
+      <input
+        class="b3-switch fn__flex-center"
+        id="syncCss"
+        type="checkbox"
+        bind:checked={settingConfig.siyuanConfig.preferenceConfig.fixTitle}
       />
     </div>
 
