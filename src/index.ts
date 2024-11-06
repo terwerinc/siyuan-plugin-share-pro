@@ -64,6 +64,9 @@ export default class ShareProPlugin extends Plugin {
         apiUrl: DEFAULT_SIYUAN_API_URL,
         token: DEFAULT_SIYUAN_AUTH_TOKEN,
         cookie: DEFAULT_SIYUAN_COOKIE,
+        preferenceConfig: {
+          fixTitle: false,
+        },
       },
       serviceApiConfig: {
         apiUrl: latestServiceApiUrl,

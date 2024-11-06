@@ -81,6 +81,8 @@
     settingConfig = await pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
     theme = settingConfig?.appConfig?.theme?.lightTheme ?? "Zhihu"
     settingConfig.isCustomCssEnabled = settingConfig.isCustomCssEnabled ?? true
+    settingConfig.siyuanConfig.preferenceConfig ||= {} as any
+    settingConfig.siyuanConfig.preferenceConfig.fixTitle = settingConfig.siyuanConfig.preferenceConfig.fixTitle ?? false
     if (settingConfig.siyuanConfig?.apiUrl.length == 0) {
       settingConfig.siyuanConfig.apiUrl = window.location.origin
     }
@@ -103,7 +105,7 @@
     </div>
 
     <div class="fn__block form-item">
-        {pluginInstance.i18n.cs.customCss}
+      {pluginInstance.i18n.cs.customCss}
       <div class="b3-label__text form-item-tip">{pluginInstance.i18n.cs.customCssTip}</div>
       <span class="fn__hr" />
       <input
@@ -115,7 +117,7 @@
     </div>
 
     <div class="fn__block form-item">
-        {pluginInstance.i18n.cs.fixTitle}
+      {pluginInstance.i18n.cs.fixTitle}
       <div class="b3-label__text form-item-tip">{pluginInstance.i18n.cs.fixTitleTip}</div>
       <span class="fn__hr" />
       <input
