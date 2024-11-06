@@ -68,6 +68,9 @@
     "msgShareError": "分享失败：",
     "msgProcessPic": "文本已分享，检测到文档图片，开始处理图片...",
     "msgStartPicBack": "后台处理图片开始...",
-    "msgEndPicBack": "后台处理图片完毕."
+    "msgEndPicBack": "后台处理图片完毕.",
+    "msgStartGroup": "开始处理第[param1]组图片.共[param2]组，每组[param3]个图片",
+    "msgStartCurrentPic": "开始处理第[param1]张图片：[param2] ，请稍候...",
+    "msgGroupProcessSuccess": "第[param1]组图片处理完毕.共[param2]组，每组[param3]个图片"
   }
 }

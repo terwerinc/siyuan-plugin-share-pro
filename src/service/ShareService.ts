@@ -147,7 +147,12 @@ class ShareService {
       const mediaGroup = groupedMedia[i]
       const processedParams = []
 
-      this.addLog(`开始处理第${i + 1}组图片.共${groupedMedia.length}组，每组${perReq}个图片`, "info")
+      const msgStartGroup = this.pluginInstance.i18n.shareService.msgStartGroup
+      const msgStartGroupWithParam = msgStartGroup
+        .replace("[param1]", i + 1)
+        .replace("[param2]", groupedMedia.length)
+        .replace("[param3]", perReq)
+      this.addLog(msgStartGroupWithParam, "info")
       for (const media of mediaGroup) {
         try {
           if (media.type !== "IMAGE") {
@@ -169,7 +174,11 @@ class ShareService {
             }
           }
 
-          this.addLog(`开始处理第${totalCount}张图片： ${imageUrl} ，请稍候...`, "info")
+          const msgStartCurrentPic = this.pluginInstance.i18n.shareService.msgStartCurrentPic
+          const msgStartCurrentPicWithParam = msgStartCurrentPic
+            .replace("[param1]", totalCount)
+            .replace("[param2]", imageUrl)
+          this.addLog(msgStartCurrentPicWithParam, "info")
           // const res = await kernelApi.forwardProxy(imageUrl, [], undefined, "GET", undefined, undefined, "base64")
           // 内部请求不必要走代理
           const res = await ImageUtils.fetchBase64WithContentType(imageUrl)
@@ -196,7 +205,12 @@ class ShareService {
           showMessage("上传媒体时发生异常 =>" + e, 7000, "error")
         }
       }
-      this.addLog(`第${i + 1}组图片处理完毕.共${groupedMedia.length}组，每组${perReq}个图片`, "info")
+      const msgGroupProcessSuccess = this.pluginInstance.i18n.shareService.msgGroupProcessSuccess
+      const msgGroupProcessSuccessWithParam = msgGroupProcessSuccess
+        .replace("[param1]", i + 1)
+        .replace("[param2]", groupedMedia.length)
+        .replace("[param3]", perReq)
+      this.addLog(msgGroupProcessSuccessWithParam, "info")
 
       const hasNext = mediaGroup.length === perReq
       const reqParams = {
