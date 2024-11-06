@@ -89,5 +89,31 @@
     "cancelSuccess": "文档已取消分享",
     "cancelError": "取消分享失败=>",
     "msgNoShare": "文档未分享，无法查看=>"
+  },
+  "manage": {
+    "dataLoading": "数据加载中...",
+    "dataLoadingError": "数据加载失败:",
+    "columnDocId": "文档ID",
+    "columnAuthor": "作者",
+    "columnTitle": "文档标题",
+    "columnCreatedAt": "分享时间",
+    "columnMediaCount": "附件数量",
+    "columnStatus": "分享状态",
+    "statusIng": "分享进行中",
+    "statusSuccess": "分享成功",
+    "statusError": "分享失败",
+    "action": "操作",
+    "actionCancel": "取消分享",
+    "actionGotoDoc": "转到该文档",
+    "tableKeyword": "请输入关键字...",
+    "tablePrevious": "上一页",
+    "tableNext": "下一页",
+    "tableShowing": "当前数据为索引从",
+    "tableTo": "到",
+    "tableOf": "，共",
+    "tableEntries": "条记录",
+    "tableFiltered": "筛选",
+    "tablePage": "页码",
+    "tableFirstPage": "首页"
   }
 }

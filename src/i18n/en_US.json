@@ -89,5 +89,31 @@
     "cancelSuccess": "Document sharing has been canceled",
     "cancelError": "Failed to cancel sharing=>",
     "msgNoShare": "Document has not been shared, cannot view=>"
+  },
+  "manage": {
+    "dataLoading": "loading...",
+    "dataLoadingError": "Data loading failed:",
+    "columnDocId": "Document ID",
+    "columnAuthor": "Author",
+    "columnTitle": "Document title",
+    "columnCreatedAt": "Share time",
+    "columnMediaCount": "Attachment count",
+    "columnStatus": "Share status",
+    "statusIng": "Sharing in progress",
+    "statusSuccess": "Share successful",
+    "statusError": "Share failed",
+    "action": "Action",
+    "actionCancel": "Cancel share",
+    "actionGotoDoc": "Go to document",
+    "tableKeyword": "Please enter keyword...",
+    "tablePrevious": "Previous page",
+    "tableNext": "Next page",
+    "tableShowing": "Current data index from",
+    "tableTo": "to",
+    "tableOf": "，total",
+    "tableEntries": "records",
+    "tableFiltered": "filtered",
+    "tablePage": "page number",
+    "tableFirstPage": "First page"
   }
 }
