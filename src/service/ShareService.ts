@@ -63,27 +63,41 @@ class ShareService {
       }
       const resp = await this.shareApi.createShare(shareBody)
       if (resp.code !== 0) {
-        this.logger.error("文档" + docId + "分享失败：" + resp.msg)
-        showMessage("分享失败：" + resp.msg, 7000, "error")
+        this.logger.error(
+          this.pluginInstance.i18n.shareService.msgDoc +
+            docId +
+            this.pluginInstance.i18n.shareService.msgShareError +
+            resp.msg
+        )
+        showMessage(this.pluginInstance.i18n.shareService.msgShareError + resp.msg, 7000, "error")
         return
       }
-      this.logger.info("文档『" + post.title + "[" + docId + "]』分享成功")
+      this.logger.info(
+        this.pluginInstance.i18n.shareService.msgDoc +
+          post.title +
+          "[" +
+          docId +
+          "]" +
+          this.pluginInstance.i18n.shareService.msgShareSuccess
+      )
 
       // 处理图片
       const data = resp.data
       const media = data.media
       if (media && media.length > 0) {
-        showMessage("文本已分享，检测到文档图片，开始处理图片...", 7000, "info")
+        showMessage(this.pluginInstance.i18n.shareService.msgProcessPic, 7000, "info")
         // 异步处理图片
-        this.addLog("后台处理图片开始...", "info")
+        this.addLog(this.pluginInstance.i18n.shareService.msgStartPicBack, "info")
         void this.processShareMedia(docId, media)
-        this.addLog("后台处理图片完毕.", "info")
+        this.addLog(this.pluginInstance.i18n.shareService.msgEndPicBack, "info")
       } else {
-        showMessage("分享成功", 3000, "info")
+        showMessage(this.pluginInstance.i18n.shareService.msgShareSuccess, 3000, "info")
       }
     } catch (e) {
-      this.logger.error("文档" + docId + "分享失败：" + e)
-      showMessage("分享失败：" + e, 7000, "error")
+      this.logger.error(
+        this.pluginInstance.i18n.shareService.msgDoc + docId + this.pluginInstance.i18n.shareService.msgShareError + e
+      )
+      showMessage(this.pluginInstance.i18n.shareService.msgShareError + e, 7000, "error")
     }
   }
 

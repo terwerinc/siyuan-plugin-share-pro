@@ -61,5 +61,13 @@
     "customCssTip": "Sync custom CSS snippets to the sharing page",
     "fixTitle": "Remove title numbers",
     "fixTitleTip": "Remove numbers from titles like `001.Test title`, resulting in `Test title`"
+  },
+  "shareService": {
+    "msgDoc": "Document",
+    "msgShareSuccess": "Share success",
+    "msgShareError": "Share failed:",
+    "msgProcessPic": "Text has been shared, detected document image, starting image processing...",
+    "msgStartPicBack": "Backend processing image is starting...",
+    "msgEndPicBack": "Backend processing image completed."
   }
 }
