@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.5.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.4.0...share-pro-v1.5.0) (2024-11-06)
+
+
+### Features
+
+* add an option to disable remove title ([7eeb47b](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/7eeb47b0c5363392a369f72fb6a3923e06705287))
+* add an option to disable remove title ([f5b28c7](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/f5b28c71ed3dfc05429e678f83b5a29826f3ac1b))
+* new UI/UX (experimental) - add i18n ([6bfacd7](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/6bfacd75e5d9524b64b6bd8ffbe252f84397171f))
+* new UI/UX (experimental) - add i18n ([5f2e136](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/5f2e1363d0737c253fb255efb2813e2b705bbf92))
+* new UI/UX (experimental) - add i18n ([7278250](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/72782501066c175413cd4e8a40fbd6a06d7c6705))
+* new UI/UX (experimental) - add i18n ([bab6027](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/bab60277bcc23ff2eeb535e1e8d5b3e9b40c0911))
+* new UI/UX (experimental) - add i18n ([b07550c](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/b07550c9ad7f38f462b63579a0512bab32c5b960))
+* new UI/UX (experimental) - add i18n, change set ui ([edf75c3](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/edf75c35c795c3f8eda6f63504a155658f6adb68))
+* new UI/UX (experimental) - add tab component ([db1d189](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/db1d189a0341b7496306010da7ea0df44d75bb20))
+* new UI/UX (experimental) - add tab component ([579eb3a](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/579eb3adcf251b6192f4ff089486743c6716a117))
+
+
+### Miscellaneous
+
+* fix link ([e0a47a1](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/e0a47a14647ad56e51a9d2791107228d2844166b))
+
 ## [1.4.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.3.3...share-pro-v1.4.0) (2024-11-05)
 ### Features
 * support Trends theme
