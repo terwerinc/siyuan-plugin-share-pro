@@ -15,5 +15,6 @@
   "settingConfigSaveFail": "配置已保存但是同步失败",
   "confirmDelete": "确认取消分享该文档吗？",
   "manageDoc": "分享管理",
-  "msgNotFoundDoc": "未找到当前文档，无法分享"
+  "msgNotFoundDoc": "未找到当前文档，无法分享",
+  "createShare": "创建分享"
 }

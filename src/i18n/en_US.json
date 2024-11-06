@@ -14,5 +14,6 @@
   "settingConfigSaveFail": "The configuration is saved but synced error",
   "confirmDelete": "Are you sure to stop share this doc？",
   "manageDoc": "Doc manage",
-  "msgNotFoundDoc": "Doc not found, cannot share"
+  "msgNotFoundDoc": "Doc not found, cannot share",
+  "createShare": "Create share"
 }

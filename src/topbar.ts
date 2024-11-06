@@ -22,7 +22,7 @@ import pkg from "../package.json"
 /**
  * 顶部按钮
  */
-export class Topbar {
+class Topbar {
   private logger: ILogger
   private pluginInstance: ShareProPlugin
   private shareService: ShareService
@@ -196,3 +196,5 @@ export class Topbar {
     }
   }
 }
+
+export { Topbar }
