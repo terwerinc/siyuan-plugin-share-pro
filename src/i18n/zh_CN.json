@@ -71,6 +71,16 @@
     "msgEndPicBack": "后台处理图片完毕.",
     "msgStartGroup": "开始处理第[param1]组图片.共[param2]组，每组[param3]个图片",
     "msgStartCurrentPic": "开始处理第[param1]张图片：[param2] ，请稍候...",
-    "msgGroupProcessSuccess": "第[param1]组图片处理完毕.共[param2]组，每组[param3]个图片"
+    "msgGroupProcessSuccess": "第[param1]组图片处理完毕.共[param2]组，每组[param3]个图片",
+    "msgMediaUploadError": "上传媒体时发生异常 =>",
+    "msgProcessPicBatch": "准备批量上传第[param1]组图片，请稍候...",
+    "msgBatchResult": "图片批量处理结果=>",
+    "msgYourDoc": "您分享的文档「",
+    "msgSuccessUpdateMedia": "」已成功更新图片资源",
+    "msgCurrentMediaSuccess": "第[param1]组已成功上传媒体",
+    "msgCurrentMediaError": "第[param1]组媒体上传失败=>",
+    "success": "恭喜你，图片全部处理成功",
+    "successPic": "图片全部处理完毕，总数（[param1]），成功（[param2]），失败（[param2]）",
+    "errorPic": "[param1]张图片处理失败，请查看日志"
   }
 }
