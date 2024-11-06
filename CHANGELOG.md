@@ -1,8 +1,13 @@
 # Changelog
 
-## [1.4.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.3.3...share-pro-v1.4.0) (2024-11-05)
+## [1.5.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.4.0...share-pro-v1.5.0) (2024-11-06)
 ### Features
-* support Trends theme
+* add an option to disable remove title ([7eeb47b](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/f5b28c71ed3dfc05429e678f83b5a29826f3ac1b))
+* new ui/ux (experimental) - add tab component ([db1d189](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/db1d189a0341b7496306010da7ea0df44d75bb20))
+### Miscellaneous
+* fix link ([e0a47a1](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/e0a47a14647ad56e51a9d2791107228d2844166b))
+## [1.4.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.3.3...share-pro-v1.4.0) (2024-11-05)
+* support trends theme
 * support pink-room theme ([7728120](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/77281207a6778db5aaf46f80e6c32b2025b11c46))
 * support tsundoku theme ([d19f343](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/d19f343b5d87385844ff6f6c7eb777d4a744f132))
 * update themes ([48f6d7d](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/48f6d7d4fb1b108746d4ae40803a4d156caf5e7e))
@@ -32,7 +37,6 @@
 * support share manage ([afd660e](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/afd660e88f08ea5c9cbf079bc72df8f6edad7d88))
 * support share manage with pager ([46aa6a6](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/46aa6a67a0349c38f00ab2127183e29a609d8efc))
 * change share icon ([04e6c0b](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/04e6c0b4d3419401d0aee4cfd146e88e82677452))
-### Miscellaneous
 * update deps ([23eae5d](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/23eae5d67fce44a2b1bab89b9638e149f4e1fc30))
 ## [1.0.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v0.5.0...share-pro-v1.0.0) (2024-10-22)
 ### ⚠ BREAKING CHANGES
