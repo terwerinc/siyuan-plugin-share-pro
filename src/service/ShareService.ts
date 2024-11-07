@@ -212,7 +212,9 @@ class ShareService {
         .replace("[param3]", perReq)
       this.addLog(msgGroupProcessSuccessWithParam, "info")
 
-      const hasNext = mediaGroup.length === perReq
+      // const hasNext = mediaGroup.length === perReq
+      // 修正 hasNext 的判断逻辑
+      const hasNext = i < groupedMedia.length - 1
       const reqParams = {
         docId: docId,
         medias: processedParams,
@@ -252,6 +254,7 @@ class ShareService {
         showMessage(errMsg, 7000, "error")
       }
     }
+
     const successPic = this.pluginInstance.i18n.shareService.successPic
     const successPicWithParam = successPic
       .replace("[param1]", totalCount)

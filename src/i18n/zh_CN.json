@@ -80,7 +80,7 @@
     "msgCurrentMediaSuccess": "第[param1]组已成功上传媒体",
     "msgCurrentMediaError": "第[param1]组媒体上传失败=>",
     "success": "恭喜你，图片全部处理成功",
-    "successPic": "图片全部处理完毕，总数（[param1]），成功（[param2]），失败（[param2]）",
+    "successPic": "图片全部处理完毕，总数（[param1]），成功（[param2]），失败（[param3]）",
     "errorPic": "[param1]张图片处理失败，请查看日志"
   },
   "topbar": {
