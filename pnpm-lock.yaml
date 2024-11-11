@@ -67,8 +67,8 @@ importers:
         specifier: ^0.22.0
         version: 0.22.0(rollup@4.24.4)(vite@5.4.10(@types/node@18.19.64)(stylus@0.64.0))
       vite-plugin-static-copy:
-        specifier: ^2.0.0
-        version: 2.0.0(vite@5.4.10(@types/node@18.19.64)(stylus@0.64.0))
+        specifier: ^2.1.0
+        version: 2.1.0(vite@5.4.10(@types/node@18.19.64)(stylus@0.64.0))
       vite-tsconfig-paths:
         specifier: ^5.1.0
         version: 5.1.0(typescript@5.6.3)(vite@5.4.10(@types/node@18.19.64)(stylus@0.64.0))
@@ -1097,6 +1097,7 @@ packages:
   eslint@8.57.0:
     resolution: {integrity: sha512-dZ6+mexnaTIbSBZWgou51U6OmzIhYM2VcNdtiTtI7qPNZm35Akpr0f6vtw3w1Kmn5PYo+tZVfh13WrhpS6oLqQ==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
 
   espree@9.6.1:
@@ -2142,8 +2143,8 @@ packages:
     peerDependencies:
       vite: ^2.0.0 || ^3.0.0 || ^4.0.0 || ^5.0.0
 
-  vite-plugin-static-copy@2.0.0:
-    resolution: {integrity: sha512-b/quFjTUa/RY9t3geIyeeT2GtWEoRI0GawYFFjys5iMLGgVP638NTGu0RoMjwmi8MoZZ3BQw4OQvb1GpVcXZDA==}
+  vite-plugin-static-copy@2.1.0:
+    resolution: {integrity: sha512-n8lEOIVM00Y/zronm0RG8RdPyFd0SAAFR0sii3NWmgG3PSCyYMsvUNRQTlb3onp1XeMrKIDwCrPGxthKvqX9OQ==}
     engines: {node: ^18.0.0 || >=20.0.0}
     peerDependencies:
       vite: ^5.0.0
@@ -4664,7 +4665,7 @@ snapshots:
     transitivePeerDependencies:
       - rollup
 
-  vite-plugin-static-copy@2.0.0(vite@5.4.10(@types/node@18.19.64)(stylus@0.64.0)):
+  vite-plugin-static-copy@2.1.0(vite@5.4.10(@types/node@18.19.64)(stylus@0.64.0)):
     dependencies:
       chokidar: 3.6.0
       fast-glob: 3.3.2
