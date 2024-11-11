@@ -54,6 +54,12 @@ class ShareService {
       sPost.mt_keywords = post.mt_keywords
       sPost.categories = post.categories
       sPost.shortDesc = post.shortDesc
+      // 文档树
+      sPost.docTree = post.docTree
+      sPost.docTreeLevel = post.docTreeLevel
+      // 目录大纲
+      sPost.outline = post.outline
+      sPost.outlineLevel = post.outlineLevel
       const shareBody = {
         docId: post.postid,
         // slug: post.wp_slug.trim().length == 0 ? post.postid : post.wp_slug,
