@@ -15,8 +15,8 @@ importers:
         specifier: ^0.8.0
         version: 0.8.0
       zhi-siyuan-api:
-        specifier: ^2.22.0
-        version: 2.22.0(typescript@5.6.3)
+        specifier: ^2.23.0
+        version: 2.23.0(typescript@5.6.3)
     devDependencies:
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.1.2
@@ -1097,6 +1097,7 @@ packages:
   eslint@8.57.0:
     resolution: {integrity: sha512-dZ6+mexnaTIbSBZWgou51U6OmzIhYM2VcNdtiTtI7qPNZm35Akpr0f6vtw3w1Kmn5PYo+tZVfh13WrhpS6oLqQ==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
 
   espree@9.6.1:
@@ -2354,14 +2355,17 @@ packages:
   zhi-blog-api@1.66.0:
     resolution: {integrity: sha512-0FQmYhJUaMHlnAHXkS0r2OEy26EX4IEPxw5AKDLmI8yoafniZtJ1knpmyx+Ds9dGrvTZj1iELSRYOTkdhIe5YA==}
 
+  zhi-blog-api@1.67.0:
+    resolution: {integrity: sha512-AVytAFXe4bs/12Xnt0dbKvYMUMudt4JMYjaeI0RUtkKEEZRevO6BedrU9G5py2R0M9cRxBhO2TadlqIAV5qiUA==}
+
   zhi-common@1.33.0:
     resolution: {integrity: sha512-ggHVmZ/zkVIOLfAWv4vqJBZY9BZnlnBUhlOmtYoVHV35UdxI5zcvvakBRgDZxjyknikHOLot7MtYfccCCOdyKw==}
 
   zhi-lib-base@0.8.0:
     resolution: {integrity: sha512-3Ky5p6KvLWpXy2tlb/JIfSEKLSe5w43PBLM6g+hNcWwpL9S62emgcpUAHzGWBbC0vlLBLungt2LOsmwAfhrZ0w==}
 
-  zhi-siyuan-api@2.22.0:
-    resolution: {integrity: sha512-a4z3+aGDfWSkiTRQW2Rvjw8q174ueE1aEWrdBZlaTiRbaKs8/jU8kdITJM1IozEcTt3Db7o+ibC7mkgARFQ5wA==}
+  zhi-siyuan-api@2.23.0:
+    resolution: {integrity: sha512-T4DSd5wR3lsBCdCrKefuoleMfeOjF5yOJOXMCeXlw7EQduz4n4IkP8dHixP/GkSSQdEJHc1Ia0jbUlu9nQka1w==}
 
 snapshots:
 
@@ -4849,6 +4853,13 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
+  zhi-blog-api@1.67.0(typescript@5.6.3):
+    dependencies:
+      zhi-common: 1.33.0(typescript@5.6.3)
+      zhi-lib-base: 0.8.0
+    transitivePeerDependencies:
+      - typescript
+
   zhi-common@1.33.0(typescript@5.6.3):
     dependencies:
       js-yaml: 4.1.0
@@ -4861,9 +4872,9 @@ snapshots:
 
   zhi-lib-base@0.8.0: {}
 
-  zhi-siyuan-api@2.22.0(typescript@5.6.3):
+  zhi-siyuan-api@2.23.0(typescript@5.6.3):
     dependencies:
-      zhi-blog-api: 1.66.0(typescript@5.6.3)
+      zhi-blog-api: 1.67.0(typescript@5.6.3)
       zhi-common: 1.33.0(typescript@5.6.3)
       zhi-lib-base: 0.8.0
     transitivePeerDependencies:
