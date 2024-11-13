@@ -1,24 +1,13 @@
 # Changelog
 
 ## [1.6.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.5.0...share-pro-v1.6.0) (2024-11-13)
-
-
 ### Features
-
-* new UI/UX (experimental) - add i18n ([f54d4fa](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/f54d4fa14c79857b9e1d3b64a1979a5fcad547de))
-* support docTree and outline ([ad85aea](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/ad85aeaa02a4216fcc8fd934b00f2d3480e0d13d))
-* support docTree and outline ([fb0444b](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/fb0444b9b98c6a0635f5d2d8a91e5c15136ec555))
-
-
-### Miscellaneous
-
-* fix upload next error ([eedf031](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/eedf031bc3a846b56c2952bbe8c08c82f85e3102))
-
-## [1.5.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.4.0...share-pro-v1.5.0) (2024-11-06)
-### Features
-* add an option to disable remove title ([7eeb47b](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/f5b28c71ed3dfc05429e678f83b5a29826f3ac1b))
 * new ui/ux (experimental) - add tab component ([db1d189](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/db1d189a0341b7496306010da7ea0df44d75bb20))
+* support doctree and outline ([fb0444b](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/fb0444b9b98c6a0635f5d2d8a91e5c15136ec555))
 ### Miscellaneous
+* fix upload next error ([eedf031](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/eedf031bc3a846b56c2952bbe8c08c82f85e3102))
+## [1.5.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.4.0...share-pro-v1.5.0) (2024-11-06)
+* add an option to disable remove title ([7eeb47b](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/f5b28c71ed3dfc05429e678f83b5a29826f3ac1b))
 * fix link ([e0a47a1](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/e0a47a14647ad56e51a9d2791107228d2844166b))
 ## [1.4.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.3.3...share-pro-v1.4.0) (2024-11-05)
 * support trends theme
