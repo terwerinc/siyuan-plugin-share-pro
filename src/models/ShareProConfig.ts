@@ -17,6 +17,10 @@ class ShareProConfig {
     cookie: string
     preferenceConfig?: {
       fixTitle: boolean
+      docTreeEnable: boolean
+      docTreeLevel: number
+      outlineEnable: boolean
+      outlineLevel: number
     }
   }
   serviceApiConfig?: IServiceApiConfig

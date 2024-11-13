@@ -54,6 +54,12 @@ class ShareService {
       sPost.mt_keywords = post.mt_keywords
       sPost.categories = post.categories
       sPost.shortDesc = post.shortDesc
+      // 文档树
+      sPost.docTree = post.docTree
+      sPost.docTreeLevel = post.docTreeLevel
+      // 目录大纲
+      sPost.outline = post.outline
+      sPost.outlineLevel = post.outlineLevel
       const shareBody = {
         docId: post.postid,
         // slug: post.wp_slug.trim().length == 0 ? post.postid : post.wp_slug,
@@ -212,7 +218,9 @@ class ShareService {
         .replace("[param3]", perReq)
       this.addLog(msgGroupProcessSuccessWithParam, "info")
 
-      const hasNext = mediaGroup.length === perReq
+      // const hasNext = mediaGroup.length === perReq
+      // 修正 hasNext 的判断逻辑
+      const hasNext = i < groupedMedia.length - 1
       const reqParams = {
         docId: docId,
         medias: processedParams,
@@ -252,6 +260,7 @@ class ShareService {
         showMessage(errMsg, 7000, "error")
       }
     }
+
     const successPic = this.pluginInstance.i18n.shareService.successPic
     const successPicWithParam = successPic
       .replace("[param1]", totalCount)
