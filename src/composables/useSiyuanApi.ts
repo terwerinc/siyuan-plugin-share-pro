@@ -27,7 +27,7 @@ export const useSiyuanApi = (cfg: ShareProConfig) => {
   siyuanConfig.preferenceConfig.docTreeEnable = cfg.siyuanConfig?.preferenceConfig?.docTreeEnable ?? true
   siyuanConfig.preferenceConfig.docTreeLevel = cfg.siyuanConfig?.preferenceConfig?.docTreeLevel ?? 3
   siyuanConfig.preferenceConfig.outlineEnable = cfg.siyuanConfig?.preferenceConfig?.outlineEnable ?? true
-  siyuanConfig.preferenceConfig.outlineLevel = cfg.siyuanConfig?.preferenceConfig?.outlineLevel ?? 3
+  siyuanConfig.preferenceConfig.outlineLevel = cfg.siyuanConfig?.preferenceConfig?.outlineLevel ?? 6
   siyuanConfig.preferenceConfig.removeFirstH1 = true
   siyuanConfig.preferenceConfig.removeMdWidgetTag = true
   const blogApi = new SiYuanApiAdaptor(siyuanConfig)
