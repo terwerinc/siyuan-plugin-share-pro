@@ -32,7 +32,6 @@ const DefaultAppConfig: AppConfig = {
 } as AppConfig
 
 const getSupportedThemes = (pluginInstance: ShareProPlugin) => {
-  // @ts-ignore
   return {
     light: [
       { value: "daylight", label: pluginInstance.i18n.cs.themeTypeDaylight },
