@@ -132,6 +132,7 @@
     "tableFirstPage": "First page",
     "setHomeConfirm": "Note: Setting the home page only takes effect for custom domains added to the whitelist. Are you sure you want to set the home page to「[param1]」?",
     "setHomeSuccess": "Home page set successfully",
-    "setHomeError": "Home page setting failed=>"
+    "setHomeError": "Home page setting failed=>",
+    "actionSetAlready": "Already set"
   }
 }

@@ -35,13 +35,13 @@
     tableSearch
 
   const tableColumns = [
-    { id: "docId", name: pluginInstance.i18n.manage.columnDocId, hidden: false },
-    {
-      id: "author",
-      name: pluginInstance.i18n.manage.columnAuthor,
-      sort: false,
-      onClick: (e) => {},
-    },
+    // { id: "docId", name: pluginInstance.i18n.manage.columnDocId, hidden: false },
+    // {
+    //   id: "author",
+    //   name: pluginInstance.i18n.manage.columnAuthor,
+    //   sort: false,
+    //   onClick: (e) => {},
+    // },
     {
       id: "title",
       name: pluginInstance.i18n.manage.columnTitle,
@@ -111,15 +111,15 @@
       tableData = {
         results: docs.map((doc) => {
           return {
-            docId: doc.docId,
-            author: keyInfo.email,
+            // docId: doc.docId,
+            // author: keyInfo.email,
             title: doc.data.title,
             media_count: doc.media.length,
             createdAt: doc.createdAt,
             status: doc.status,
             action: `
             <a href="javascript:;" onclick="window.cancelShareFromSharePro('${doc.docId}','${doc.data.title}')">${pluginInstance.i18n.manage.actionCancel}</a>&nbsp;&nbsp;
-            <a href="javascript:;" onclick="window.setHomeFromSharePro('${doc.docId}','${doc.data.title}')">${pluginInstance.i18n.manage.actionSetHome}</a>&nbsp;&nbsp;
+            <a href="javascript:;" style="${settingConfig?.appConfig?.homePageId===doc.docId?'color:green;text-decoration:none;cursor:text;':''}" onclick="window.setHomeFromSharePro('${doc.docId}','${doc.data.title}',${settingConfig?.appConfig?.homePageId===doc.docId})">${settingConfig?.appConfig?.homePageId===doc.docId?pluginInstance.i18n.manage.actionSetAlready:pluginInstance.i18n.manage.actionSetHome}</a>&nbsp;&nbsp;
             <a href="javascript:;" onclick="window.viewDocFromSharePro('${doc.docId}','${doc.data.title}')">${pluginInstance.i18n.manage.actionViewDoc}</a>&nbsp;&nbsp;
             <a href="javascript:;" onclick="window.goToOriginalDocFromSharePro('${doc.docId}')">${pluginInstance.i18n.manage.actionGotoDoc}</a>
             `,
@@ -149,7 +149,11 @@
   }
 
   // @ts-ignore
-  window.setHomeFromSharePro = async function (docId: string, docTitle: string, _isSet: boolean) {
+  window.setHomeFromSharePro = async function (docId: string, docTitle: string, isSet: boolean) {
+    if(isSet){
+      return
+    }
+
     const msgSetHomeConfirmWithParam = pluginInstance.i18n.manage.setHomeConfirm
     const msgSetHomeConfirm = msgSetHomeConfirmWithParam.replace("[param1]", docTitle)
     confirm(pluginInstance.i18n.tipTitle, msgSetHomeConfirm, async () => {
@@ -158,6 +162,7 @@
       try {
         const settingService = new SettingService(pluginInstance)
         await syncAppConfig(settingService, settingConfig)
+        await updateTable()
         showMessage(`${pluginInstance.i18n.manage.setHomeSuccess}`, 2000, "info")
       } catch (e) {
         showMessage(`${pluginInstance.i18n.manage.setHomeError}${e}`, 7000, "error")
@@ -188,8 +193,8 @@
   }
 
   onMount(async () => {
-    await updateTable()
     settingConfig = await pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
+    await updateTable()
   })
 
   $: tableLimit, tableOffset, tableOrder, tableDir, tableSearch, updateTable()
