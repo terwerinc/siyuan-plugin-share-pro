@@ -19,6 +19,10 @@ import { ShareProConfig } from "../models/ShareProConfig"
 export const useSiyuanApi = (cfg: ShareProConfig) => {
   const logger = simpleLogger("use-siyuan-api", "share-pro", isDev)
 
+  if (cfg.siyuanConfig.apiUrl !== window.location.origin) {
+    logger.warn("siyuan api url not match, use default")
+    cfg.siyuanConfig.apiUrl = window.location.origin
+  }
   const siyuanConfig = new SiyuanConfig(cfg.siyuanConfig.apiUrl, cfg.siyuanConfig.token)
   // 开启了授权码可能不可用
   siyuanConfig.cookie = cfg.siyuanConfig.cookie
