@@ -1,6 +1,7 @@
 {
   "sharePro": "Share pro",
-  "startShare": "Start share",
+  "startShare": "Quick Share",
+  "customShare": "Custom Share",
   "viewArticle": "View doc",
   "cancelShare": "Cancel share",
   "reShare": "Share again",
@@ -60,7 +61,13 @@
     "customCss": "Enable custom CSS snippets",
     "customCssTip": "Sync custom CSS snippets to the sharing page",
     "fixTitle": "Remove title numbers",
-    "fixTitleTip": "Remove numbers from titles like `001.Test title`, resulting in `Test title`"
+    "fixTitleTip": "Remove numbers from titles like `001.Test title`, resulting in `Test title`",
+    "domain": "Custom Domain",
+    "domainTip": "Supports built-in and custom domains, where https://share.terwergreen.com is a domain registered in China with fast access speed for mainland China, while other domains are global CDN domains.",
+    "domainClick": "Click Here",
+    "domainApply": "Apply For Custom Domain",
+    "docPath": "Custom Document Path",
+    "docPathTip": "Custom document path access, for example: https://siyuannote.site/x/[docId], where x can be d, s, p, a, doc, link, post, article, etc."
   },
   "shareService": {
     "msgDoc": "Document",

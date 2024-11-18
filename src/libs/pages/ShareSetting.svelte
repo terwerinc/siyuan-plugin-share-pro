@@ -51,6 +51,7 @@
       props: {
         pluginInstance: pluginInstance,
         dialog: dialog,
+        vipInfo: vipInfo,
       },
     })
 

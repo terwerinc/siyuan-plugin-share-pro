@@ -1,6 +1,7 @@
 {
   "sharePro": "在线分享专业版",
-  "startShare": "分享文档",
+  "startShare": "一键分享",
+  "customShare": "个性分享",
   "viewArticle": "查看文档",
   "cancelShare": "取消分享",
   "reShare": "重新分享",
@@ -60,7 +61,13 @@
     "customCss": "启用自定义css片段",
     "customCssTip": "同步自定义css片段到分享页面",
     "fixTitle": "移除标题序号",
-    "fixTitleTip": "移除类似`001.测试标题`里面的序号，移除后效果为`测试标题`"
+    "fixTitleTip": "移除类似`001.测试标题`里面的序号，移除后效果为`测试标题`",
+    "domain": "自定义域名",
+    "domainTip": "支持内置的和自定义域名，其中 https://share.terwergreen.com 为中国大陆国内备案域名，中国大陆访问速度极快，其他域名为全球 CDN 域名。",
+    "domainClick": "点击这里",
+    "domainApply": "申请自定义域名",
+    "docPath": "自定义文档路径",
+    "docPathTip": "自定义文档路径访问路径，例如：https://siyuannote.site/x/[docId]，其中的 x 可以为 d、s、p、a、doc、link、post、article 等"
   },
   "shareService": {
     "msgDoc": "文档",
