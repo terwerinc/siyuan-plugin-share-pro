@@ -54,6 +54,11 @@ interface AppConfig {
   basePaths: Array<string>
   docPath: string
 
+  docTreeEnabled: boolean
+  docTreeLevel: number
+  outlineEnabled: boolean
+  outlineLevel: number
+
   // 加上字符串索引签名，兼容 AppConfigInput 约束
   [key: string]: any
 }

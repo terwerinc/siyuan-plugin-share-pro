@@ -43,7 +43,11 @@ class ShareService {
 
   public async createShare(docId: string) {
     try {
-      const blogApi = await this.getSiyuanApi()
+      const cfg = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
+      // 上面是通用配置
+      // 查询配置的单片文档的配置
+      // 在这里可以重写单篇文档
+      const blogApi = await this.getSiyuanApi(cfg)
       const post = await blogApi.getPost(docId)
       this.logger.debug("get post", post)
       const sPost = new Post()
@@ -130,8 +134,7 @@ class ShareService {
   // private function
   // ================
 
-  private async getSiyuanApi() {
-    const cfg = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
+  private async getSiyuanApi(cfg: ShareProConfig) {
     const { blogApi } = useSiyuanApi(cfg)
     return blogApi
   }

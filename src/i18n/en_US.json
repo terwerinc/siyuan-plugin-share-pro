@@ -67,7 +67,13 @@
     "domainClick": "Click Here",
     "domainApply": "Apply For Custom Domain",
     "docPath": "Custom Document Path",
-    "docPathTip": "Custom document path access, for example: https://siyuannote.site/x/[docId], where x can be d, s, p, a, doc, link, post, article, etc."
+    "docPathTip": "Custom document path access, for example: https://siyuannote.site/x/[docId], where x can be d, s, p, a, doc, link, post, article, etc.",
+    "docTree": "Document Tree",
+    "docTreeTip": "Whether to enable the document tree. If enabled, you can set the maximum depth, up to 3 levels, meaning it will fetch 3 levels up and 3 levels down from the current document.",
+    "docTreeDepth": "Document Tree Depth",
+    "outline": "Document Outline",
+    "outlineTip": "Whether to enable the document outline. If enabled, you can set the maximum depth, up to 6 levels, meaning it will fetch up to 6 levels of the outline.",
+    "outlineDepth": "Document Outline Depth"
   },
   "shareService": {
     "msgDoc": "Document",

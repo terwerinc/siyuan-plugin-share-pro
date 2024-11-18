@@ -141,15 +141,15 @@ class Topbar {
           menu.addSeparator()
         }
 
-        // 个性文档
-        menu.addItem({
-          icon: `iconSparkles`,
-          label: this.pluginInstance.i18n.customShare + "<span style='color:red'>new</span>",
-          click: async () => {
-            alert("custom share")
-          },
-        })
-        menu.addSeparator()
+        // // 个性文档
+        // menu.addItem({
+        //   icon: `iconSparkles`,
+        //   label: this.pluginInstance.i18n.customShare + "<span style='color:red'>new</span>",
+        //   click: async () => {
+        //     alert("custom share")
+        //   },
+        // })
+        // menu.addSeparator()
       } else {
         // showMessage(this.pluginInstance.i18n.msgNotFoundDoc, 7000, "error")
       }
