@@ -41,12 +41,26 @@ class ShareService {
     return await this.shareApi.getVipInfo(token)
   }
 
-  public async createShare(docId: string) {
+  public async createShare(docId: string, singleDocSetting?: any) {
     try {
       const cfg = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
+      // ===============================================================================================================
       // 上面是通用配置
-      // 查询配置的单片文档的配置
+      const { kernelApi } = useSiyuanApi(cfg)
+      // 保存单篇文档的配置
+      singleDocSetting = singleDocSetting ?? "{}"
+      await kernelApi.setSingleBlockAttr(docId, "share-pro-setting", singleDocSetting)
+      cfg.siyuanConfig.preferenceConfig.docTreeEnable =
+        singleDocSetting?.docTreeEnable ?? cfg.siyuanConfig.preferenceConfig.docTreeEnable
+      cfg.siyuanConfig.preferenceConfig.docTreeLevel =
+        singleDocSetting?.docTreeLevel ?? cfg.siyuanConfig.preferenceConfig.docTreeLevel
+      // 大纲配置
+      cfg.siyuanConfig.preferenceConfig.outlineEnable =
+        singleDocSetting?.outlineEnable ?? cfg.siyuanConfig.preferenceConfig.outlineEnable
+      cfg.siyuanConfig.preferenceConfig.outlineLevel =
+        singleDocSetting?.outlineLevel ?? cfg.siyuanConfig.preferenceConfig.outlineLevel
       // 在这里可以重写单篇文档
+      // ===============================================================================================================
       const blogApi = await this.getSiyuanApi(cfg)
       const post = await blogApi.getPost(docId)
       this.logger.debug("get post", post)

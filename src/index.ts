@@ -96,6 +96,14 @@ export default class ShareProPlugin extends Plugin {
     return storeConfig as T
   }
 
+  public async safeParse<T>(str: string, def = {}) {
+    try {
+      return JSON.parse(str) as T
+    } catch (e) {
+      return def as T
+    }
+  }
+
   private async initCfg() {
     const cfg = await this.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
     if (!cfg.inited) {
