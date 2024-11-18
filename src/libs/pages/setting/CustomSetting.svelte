@@ -7,6 +7,7 @@
   -  of this license document, but changing it is not allowed.
   -->
 
+<!--suppress ALL -->
 <script lang="ts">
   import { ShareProConfig } from "../../../models/ShareProConfig"
   import { onMount } from "svelte"
@@ -16,21 +17,66 @@
   import { simpleLogger } from "zhi-lib-base"
   import ShareProPlugin from "../../../index"
   import { DefaultAppConfig, getSupportedThemes, syncAppConfig, versionMap } from "../../../utils/ShareConfigUtils"
+  import { SettingService } from "../../../service/SettingService"
+  import { KeyInfo } from "../../../models/KeyInfo"
 
   const logger = simpleLogger("custom-setting", "share-pro", isDev)
   export let pluginInstance: ShareProPlugin
   export let dialog: Dialog
+  export let vipInfo: {
+    code: number
+    msg: string
+    data: KeyInfo
+  }
+
   let theme = "Zhihu"
   let themes = getSupportedThemes(pluginInstance)
+  let domain = isDev ? "http://localhost:4000" : "https://siyuannote.site"
+  let domains = isDev ? ["http://localhost:4000"] : ["https://siyuannote.site", "https://siyuannote.space"]
+  let docPath = "x"
+  let docPaths = ["x", "s", "p", "a", "static", "post", "link", "doc", "article"]
+  let domainApplyUrl = "https://github.com/terwerinc/siyuan-plugin-share-pro/issues/114"
+  let docTreeEnabled = true
+  let docTreeLevel = 3
+  let docTreeLevelOptions = [1, 2, 3]
+  let outlineEnabled = true
+  let outlineLevel = 6
+  let outlineLevelOptions = [
+    {
+      label: "h1",
+      value: 1,
+    },
+    {
+      label: "h2",
+      value: 2,
+    },
+    {
+      label: "h3",
+      value: 3,
+    },
+    {
+      label: "h4",
+      value: 4,
+    },
+    {
+      label: "h5",
+      value: 5,
+    },
+    {
+      label: "h6",
+      value: 6,
+    },
+  ]
 
   let settingConfig: ShareProConfig = pluginInstance.getDefaultCfg()
+  const settingService = new SettingService(pluginInstance)
 
   const onSaveSetting = async () => {
     // 构建appConfig
     settingConfig = await buildAppConfig(settingConfig)
     await pluginInstance.saveData(SHARE_PRO_STORE_NAME, settingConfig)
     try {
-      await syncAppConfig(pluginInstance, settingConfig)
+      await syncAppConfig(settingService, settingConfig)
       showMessage(`${pluginInstance.i18n.settingConfigSaveAndSyncSuccess}`, 2000, "info")
     } catch (e) {
       showMessage(`${pluginInstance.i18n.settingConfigSaveFail},${e}`, 7000, "error")
@@ -47,6 +93,18 @@
       darkTheme: themes.dark.find((x) => x.value === theme)?.value || "midlight",
       themeVersion: versionMap[theme] || "unknown",
     }
+    // 域名
+    settingConfig.appConfig.domains = domains
+    settingConfig.appConfig.domain = domain
+    // 文档路径
+    settingConfig.appConfig.docPaths = docPaths
+    settingConfig.appConfig.docPath = docPath
+    // 文档树
+    settingConfig.appConfig.docTreeEnabled = docTreeEnabled
+    settingConfig.appConfig.docTreeLevel = docTreeLevel
+    // 文档大纲
+    settingConfig.appConfig.outlineEnabled = outlineEnabled
+    settingConfig.appConfig.outlineLevel = outlineLevel
 
     if (settingConfig.isCustomCssEnabled) {
       settingConfig.appConfig.customCss = await fetchCustomCss()
@@ -88,6 +146,16 @@
     }
     // 2、构建appConfig
     settingConfig = await buildAppConfig(settingConfig)
+    // 3、初始化appConfig到本地
+    const sAppConfig = await settingService.getSettingByAuthor(vipInfo.data.email)
+    domains = sAppConfig?.domains ?? domains
+    domain = sAppConfig?.domain ?? domain
+    docPaths = sAppConfig?.docPaths ?? docPaths
+    docPath = sAppConfig?.docPath ?? docPath
+    docTreeEnabled = sAppConfig?.docTreeEnabled ?? docTreeEnabled
+    docTreeLevel = sAppConfig?.docTreeLevel ?? docTreeLevel
+    outlineEnabled = sAppConfig?.outlineEnabled ?? outlineEnabled
+    outlineLevel = sAppConfig?.outlineLevel ?? outlineLevel
   })
 </script>
 
@@ -126,6 +194,62 @@
         type="checkbox"
         bind:checked={settingConfig.siyuanConfig.preferenceConfig.fixTitle}
       />
+    </div>
+
+    <div class="fn__block form-item">
+      {pluginInstance.i18n.cs.domain}
+      <div class="b3-label__text form-item-tip">
+        {pluginInstance.i18n.cs.domainTip}
+        <a href={domainApplyUrl} target="_blank">{pluginInstance.i18n.cs.domainClick}</a>
+        {pluginInstance.i18n.cs.domainApply}
+      </div>
+      <span class="fn__hr" />
+      <select id="theme" class="b3-select fn__flex-center fn__size200" bind:value={domain}>
+        {#each domains as item}
+          <option value={item}>{item}</option>
+        {/each}
+      </select>
+    </div>
+
+    <div class="fn__block form-item">
+      {pluginInstance.i18n.cs.docPath}
+      <div class="b3-label__text form-item-tip">{pluginInstance.i18n.cs.docPathTip}</div>
+      <span class="fn__hr" />
+      <select id="theme" class="b3-select fn__flex-center fn__size200" bind:value={docPath}>
+        {#each docPaths as item}
+          <option value={item}>{item}</option>
+        {/each}
+      </select>
+    </div>
+
+    <div class="fn__block form-item">
+      {pluginInstance.i18n.cs.docTree}
+      <div class="b3-label__text form-item-tip">{pluginInstance.i18n.cs.docTreeTip}</div>
+      <span class="fn__hr" />
+      <input class="b3-switch fn__flex-center" id="syncCss" type="checkbox" bind:checked={docTreeEnabled} />
+      {#if docTreeEnabled}
+        &nbsp;{pluginInstance.i18n.cs.docTreeDepth}: &nbsp;
+        <select id="theme" class="b3-select fn__flex-center fn__size200" bind:value={docTreeLevel}>
+          {#each docTreeLevelOptions as item}
+            <option value={item}>{item}</option>
+          {/each}
+        </select>
+      {/if}
+    </div>
+
+    <div class="fn__block form-item">
+      {pluginInstance.i18n.cs.outline}
+      <div class="b3-label__text form-item-tip">{pluginInstance.i18n.cs.outlineTip}</div>
+      <span class="fn__hr" />
+      <input class="b3-switch fn__flex-center" id="syncCss" type="checkbox" bind:checked={outlineEnabled} />
+      {#if outlineEnabled}
+        &nbsp;{pluginInstance.i18n.cs.outlineDepth}: &nbsp;
+        <select id="theme" class="b3-select fn__flex-center fn__size200" bind:value={outlineLevel}>
+          {#each outlineLevelOptions as item}
+            <option value={item.value}>{item.label}</option>
+          {/each}
+        </select>
+      {/if}
     </div>
 
     <div class="b3-dialog__action">

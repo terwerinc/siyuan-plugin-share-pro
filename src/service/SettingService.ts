@@ -29,6 +29,10 @@ class SettingService {
   public async syncSetting(token: string, setting: any) {
     return await this.shareApi.saveSetting(token, setting)
   }
+
+  public async getSettingByAuthor(author: string) {
+    return await this.shareApi.getSettingByAuthor(author)
+  }
 }
 
 export { SettingService }

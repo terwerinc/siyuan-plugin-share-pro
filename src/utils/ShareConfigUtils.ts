@@ -61,8 +61,7 @@ const versionMap = {
   "trends-in-siyuan": "0.4.0",
 }
 
-const syncAppConfig = async (pluginInstance: ShareProPlugin, settingConfig: ShareProConfig) => {
-  const settingService = new SettingService(pluginInstance)
+const syncAppConfig = async (settingService: SettingService, settingConfig: ShareProConfig) => {
   const appConfig = settingConfig.appConfig
   const res = await settingService.syncSetting(settingConfig.serviceApiConfig.token, appConfig)
   if (res.code == 1) {
