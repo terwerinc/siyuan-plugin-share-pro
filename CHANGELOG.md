@@ -1,7 +1,14 @@
 # Changelog
 
-## [1.6.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.5.0...share-pro-v1.6.0) (2024-11-13)
+## [1.7.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.6.0...share-pro-v1.7.0) (2024-11-18)
 ### Features
+* add custom share (experimental) ([a29ec59](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/a29ec59ad4220f2f1329403f56dbbbd7a0132df4))
+* fix siyuan api url error ([b3c0598](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/b3c0598e8c0488c6a293569e0affc4e5a5765e89))
+* support doc path config ([b874d1c](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/b874d1cb18553a8a73f9681a21048150160ede56))
+* support domain config ([8c6f252](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/8c6f2524bba1981a751213e119495ac0ebef9705))
+* support set home for custom domain users ([a047fbd](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/a047fbd648c959997ce02931a27aad6cf6c158e7))
+* support setting for doctree and outline ([24a2fd1](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/24a2fd149ab88a2d6ef1958beded9b8999bf7c2b))
+## [1.6.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.5.0...share-pro-v1.6.0) (2024-11-13)
 * new ui/ux (experimental) - add tab component ([db1d189](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/db1d189a0341b7496306010da7ea0df44d75bb20))
 * support doctree and outline ([fb0444b](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/fb0444b9b98c6a0635f5d2d8a91e5c15136ec555))
 ### Miscellaneous
