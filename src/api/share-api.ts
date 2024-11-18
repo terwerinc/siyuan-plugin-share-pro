@@ -67,6 +67,17 @@ class ShareApi {
     return res
   }
 
+  public async getSettingByAuthor(author: string) {
+    const params = {
+      group: "GENERAL",
+      key: "static.app.config.json",
+      author: author,
+    }
+    const res = (await this.shareServiceRequest(ServiceApiKeys.API_GET_SETTING_BY_AUTHOR, params, {})) as any
+    this.logger.info("get setting by author=>", res)
+    return res
+  }
+
   public async saveSetting(token: string, setting: any) {
     const headers = {
       Authorization: `${token}`,
@@ -76,8 +87,8 @@ class ShareApi {
       key: "static.app.config.json",
       value: JSON.stringify(setting),
     }
-    const res = await this.shareServiceRequest(ServiceApiKeys.API_UPSATE_SETTING, params, headers)
-    this.logger.info("save setting =>", res)
+    const res = await this.shareServiceRequest(ServiceApiKeys.API_UPDATE_SETTING, params, headers)
+    this.logger.info("get setting by author =>", res)
     return res
   }
 
@@ -138,7 +149,9 @@ enum ServiceApiKeys {
   API_LICENSE_VIP_INFO = "/api/license/vipInfo",
   API_UPLOAD_MEDIA = "/api/asset/upload",
   API_LIST_DOC = "/api/share/listDoc",
-  API_UPSATE_SETTING = "/api/settings/update",
+  API_GET_SETTING = "/api/settings/share",
+  API_GET_SETTING_BY_AUTHOR = "/api/settings/byAuthor",
+  API_UPDATE_SETTING = "/api/settings/update",
 }
 
 class ServiceResponse {
