@@ -130,7 +130,7 @@
     "tableFiltered": "筛选",
     "tablePage": "页码",
     "tableFirstPage": "首页",
-    "setHomeConfirm": " 确认将首页设置为「[param1]」吗？",
+    "setHomeConfirm": "注意：设置首页仅对添加了白名单的自定义域名生效，确认将首页设置为「[param1]」吗？",
     "setHomeSuccess": "首页设置成功",
     "setHomeError": "首页设置失败=>"
   }
