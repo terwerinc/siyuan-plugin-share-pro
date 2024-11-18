@@ -117,6 +117,8 @@
     "statusError": "Share failed",
     "action": "Action",
     "actionCancel": "Cancel share",
+    "actionSetHome": "Set Home",
+    "actionViewDoc": "View Document",
     "actionGotoDoc": "Go to document",
     "tableKeyword": "Please enter keyword...",
     "tablePrevious": "Previous page",
@@ -127,6 +129,9 @@
     "tableEntries": "records",
     "tableFiltered": "filtered",
     "tablePage": "page number",
-    "tableFirstPage": "First page"
+    "tableFirstPage": "First page",
+    "setHomeConfirm": "Confirm to set the home page to「[param1]」?",
+    "setHomeSuccess": "Home page set successfully",
+    "setHomeError": "Home page setting failed=>"
   }
 }
