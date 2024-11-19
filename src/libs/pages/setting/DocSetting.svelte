@@ -11,7 +11,7 @@
 <script lang="ts">
   import { ShareProConfig } from "../../../models/ShareProConfig"
   import { onMount } from "svelte"
-  import { isDev, SHARE_PRO_STORE_NAME } from "../../../Constants"
+  import { DEFAULT_SIYUAN_LANG, isDev, SHARE_PRO_STORE_NAME } from "../../../Constants"
   import { ApiUtils } from "../../../utils/ApiUtils"
   import { Dialog, showMessage } from "siyuan"
   import { simpleLogger } from "zhi-lib-base"
@@ -80,18 +80,13 @@
 
   const buildAppConfig = async (settingConfig: ShareProConfig) => {
     settingConfig.appConfig ||= DefaultAppConfig
+    settingConfig.appConfig.lang = DEFAULT_SIYUAN_LANG
     // 文档树
     settingConfig.appConfig.docTreeEnabled = docTreeEnabled
     settingConfig.appConfig.docTreeLevel = docTreeLevel
     // 文档大纲
     settingConfig.appConfig.outlineEnabled = outlineEnabled
     settingConfig.appConfig.outlineLevel = outlineLevel
-
-    if (settingConfig.isCustomCssEnabled) {
-      settingConfig.appConfig.customCss = await fetchCustomCss()
-    } else {
-      settingConfig.appConfig.customCss = [] as any
-    }
     return settingConfig
   }
 
