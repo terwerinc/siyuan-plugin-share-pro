@@ -21,6 +21,7 @@
   "createShare": "Create share",
   "basicSetting": "Basic setting",
   "customSetting": "Custom setting",
+  "docSetting": "Doc setting",
   "keyInfo": {
     "notValid": "Registration Code Is Invalid Or Not Registered",
     "registered": "You have already registered ",

@@ -17,6 +17,7 @@
   import { onMount } from "svelte"
   import { KeyInfo } from "../../models/KeyInfo"
   import CustomSetting from "./setting/CustomSetting.svelte"
+  import DocSetting from "./setting/DocSetting.svelte"
 
   const logger = simpleLogger("share-main", "share-pro", isDev)
   export let pluginInstance: ShareProPlugin
@@ -48,6 +49,16 @@
     tabData.push({
       label: pluginInstance.i18n.customSetting,
       content: CustomSetting,
+      props: {
+        pluginInstance: pluginInstance,
+        dialog: dialog,
+        vipInfo: vipInfo,
+      },
+    })
+    // 文档设置
+    tabData.push({
+      label: pluginInstance.i18n.docSetting,
+      content: DocSetting,
       props: {
         pluginInstance: pluginInstance,
         dialog: dialog,

@@ -11,7 +11,7 @@
 <script lang="ts">
   import { ShareProConfig } from "../../../models/ShareProConfig"
   import { onMount } from "svelte"
-  import { isDev, SHARE_PRO_STORE_NAME } from "../../../Constants"
+  import {DEFAULT_SIYUAN_LANG, isDev, SHARE_PRO_STORE_NAME} from "../../../Constants"
   import { ApiUtils } from "../../../utils/ApiUtils"
   import { Dialog, showMessage } from "siyuan"
   import { simpleLogger } from "zhi-lib-base"
@@ -36,37 +36,6 @@
   let docPath = "x"
   let docPaths = ["x", "s", "p", "a", "static", "post", "link", "doc", "article"]
   let domainApplyUrl = "https://github.com/terwerinc/siyuan-plugin-share-pro/issues/114"
-  let docTreeEnabled = true
-  let docTreeLevel = 3
-  let docTreeLevelOptions = [1, 2, 3]
-  let outlineEnabled = true
-  let outlineLevel = 6
-  let outlineLevelOptions = [
-    {
-      label: "h1",
-      value: 1,
-    },
-    {
-      label: "h2",
-      value: 2,
-    },
-    {
-      label: "h3",
-      value: 3,
-    },
-    {
-      label: "h4",
-      value: 4,
-    },
-    {
-      label: "h5",
-      value: 5,
-    },
-    {
-      label: "h6",
-      value: 6,
-    },
-  ]
 
   let settingConfig: ShareProConfig = pluginInstance.getDefaultCfg()
   const settingService = new SettingService(pluginInstance)
@@ -87,6 +56,7 @@
 
   const buildAppConfig = async (settingConfig: ShareProConfig) => {
     settingConfig.appConfig ||= DefaultAppConfig
+    settingConfig.appConfig.lang = DEFAULT_SIYUAN_LANG
     settingConfig.appConfig.theme = {
       mode: "light",
       lightTheme: themes.light.find((x) => x.value === theme)?.value || "daylight",
@@ -99,12 +69,6 @@
     // 文档路径
     settingConfig.appConfig.docPaths = docPaths
     settingConfig.appConfig.docPath = docPath
-    // 文档树
-    settingConfig.appConfig.docTreeEnabled = docTreeEnabled
-    settingConfig.appConfig.docTreeLevel = docTreeLevel
-    // 文档大纲
-    settingConfig.appConfig.outlineEnabled = outlineEnabled
-    settingConfig.appConfig.outlineLevel = outlineLevel
 
     if (settingConfig.isCustomCssEnabled) {
       settingConfig.appConfig.customCss = await fetchCustomCss()
@@ -152,10 +116,6 @@
     domain = sAppConfig?.domain ?? domain
     docPaths = sAppConfig?.docPaths ?? docPaths
     docPath = sAppConfig?.docPath ?? docPath
-    docTreeEnabled = sAppConfig?.docTreeEnabled ?? docTreeEnabled
-    docTreeLevel = sAppConfig?.docTreeLevel ?? docTreeLevel
-    outlineEnabled = sAppConfig?.outlineEnabled ?? outlineEnabled
-    outlineLevel = sAppConfig?.outlineLevel ?? outlineLevel
   })
 </script>
 
@@ -220,36 +180,6 @@
           <option value={item}>{item}</option>
         {/each}
       </select>
-    </div>
-
-    <div class="fn__block form-item">
-      {pluginInstance.i18n.cs.docTree}
-      <div class="b3-label__text form-item-tip">{pluginInstance.i18n.cs.docTreeTip}</div>
-      <span class="fn__hr" />
-      <input class="b3-switch fn__flex-center" id="syncCss" type="checkbox" bind:checked={docTreeEnabled} />
-      {#if docTreeEnabled}
-        &nbsp;{pluginInstance.i18n.cs.docTreeDepth}: &nbsp;
-        <select id="theme" class="b3-select fn__flex-center fn__size200" bind:value={docTreeLevel}>
-          {#each docTreeLevelOptions as item}
-            <option value={item}>{item}</option>
-          {/each}
-        </select>
-      {/if}
-    </div>
-
-    <div class="fn__block form-item">
-      {pluginInstance.i18n.cs.outline}
-      <div class="b3-label__text form-item-tip">{pluginInstance.i18n.cs.outlineTip}</div>
-      <span class="fn__hr" />
-      <input class="b3-switch fn__flex-center" id="syncCss" type="checkbox" bind:checked={outlineEnabled} />
-      {#if outlineEnabled}
-        &nbsp;{pluginInstance.i18n.cs.outlineDepth}: &nbsp;
-        <select id="theme" class="b3-select fn__flex-center fn__size200" bind:value={outlineLevel}>
-          {#each outlineLevelOptions as item}
-            <option value={item.value}>{item.label}</option>
-          {/each}
-        </select>
-      {/if}
     </div>
 
     <div class="b3-dialog__action">

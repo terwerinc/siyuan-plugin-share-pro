@@ -21,6 +21,7 @@
   "createShare": "创建分享",
   "basicSetting": "基础设置",
   "customSetting": "个性设置",
+  "docSetting": "文档设置",
   "keyInfo": {
     "notValid": "注册码不合法或尚未注册",
     "registered": "已注册",
