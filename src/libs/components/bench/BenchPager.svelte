@@ -187,4 +187,14 @@
   .bench-pager button.bench-pager-spread {
     cursor: unset;
   }
+
+  :global(html[data-theme-mode="dark"]) .bench-pager button.bench-pager-current {
+    background-color: var(--b3-theme-background);
+  }
+
+  :global(html[data-theme-mode="dark"]) .bench-pager button {
+    background-color: #333;
+    color: #fff;
+    border-color: #555;
+  }
 </style>
