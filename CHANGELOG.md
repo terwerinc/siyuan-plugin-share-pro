@@ -1,7 +1,11 @@
 # Changelog
 
-## [1.7.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.6.0...share-pro-v1.7.0) (2024-11-18)
+## [1.8.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.7.0...share-pro-v1.8.0) (2024-11-19)
 ### Features
+* split setting ([161d2b2](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/161d2b23c46bbeb80a04029d49227f6cc6d22767))
+* support dark mode ([6dbfb2b](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/6dbfb2b568a05ff8a73fefc95b49c3cdfe6e8a79))
+* support lang setting ([30f62de](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/30f62ded923d2d723a3a981e9b3e89ae6d7a522c))
+## [1.7.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.6.0...share-pro-v1.7.0) (2024-11-18)
 * add custom share (experimental) ([a29ec59](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/a29ec59ad4220f2f1329403f56dbbbd7a0132df4))
 * fix siyuan api url error ([b3c0598](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/b3c0598e8c0488c6a293569e0affc4e5a5765e89))
 * support doc path config ([b874d1c](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/b874d1cb18553a8a73f9681a21048150160ede56))
