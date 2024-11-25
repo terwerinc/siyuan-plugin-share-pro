@@ -30,7 +30,7 @@ export const useSiyuanApi = (cfg: ShareProConfig) => {
   siyuanConfig.preferenceConfig.fixTitle = cfg.siyuanConfig?.preferenceConfig?.fixTitle ?? false
   siyuanConfig.preferenceConfig.docTreeEnable = cfg.appConfig?.docTreeEnabled ?? true
   siyuanConfig.preferenceConfig.docTreeLevel = cfg.appConfig.docTreeLevel ?? 3
-  siyuanConfig.preferenceConfig.outlineEnable = cfg.appConfig.outlineEnabled ?? true
+  siyuanConfig.preferenceConfig.outlineEnable = cfg.appConfig?.outlineEnabled ?? true
   siyuanConfig.preferenceConfig.outlineLevel = cfg.appConfig.outlineLevel ?? 6
   siyuanConfig.preferenceConfig.removeFirstH1 = true
   siyuanConfig.preferenceConfig.removeMdWidgetTag = true
