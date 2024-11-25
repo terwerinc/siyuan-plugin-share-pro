@@ -1,5 +1,8 @@
 # Changelog
 
+## [1.8.1](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.8.0...share-pro-v1.8.1) (2024-11-25)
+### Bug Fixes
+* setting error in some cases ([e553342](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/e553342f9bf305f0112d6fdcc5aaba6abbbfd133))
 ## [1.8.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.7.0...share-pro-v1.8.0) (2024-11-19)
 ### Features
 * split setting ([161d2b2](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/161d2b23c46bbeb80a04029d49227f6cc6d22767))
@@ -25,7 +28,6 @@
 * support pink-room theme ([7728120](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/77281207a6778db5aaf46f80e6c32b2025b11c46))
 * support tsundoku theme ([d19f343](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/d19f343b5d87385844ff6f6c7eb777d4a744f132))
 * update themes ([48f6d7d](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/48f6d7d4fb1b108746d4ae40803a4d156caf5e7e))
-### Bug Fixes
 * remove unused setting ([1bac8de](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/1bac8de36b4ec5ed74309fb96a9ccba0112f7c62))
 * zhihu theme code block ([fd898a0](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/fd898a02a2423196d656e62a82d20dd07b62c731))
 ## [1.3.3](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.3.2...share-pro-v1.3.3) (2024-11-05)
