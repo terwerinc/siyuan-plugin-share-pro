@@ -48,17 +48,19 @@ class ShareService {
       // 上面是通用配置
       const { kernelApi } = useSiyuanApi(cfg)
       // 保存单篇文档的配置
-      singleDocSetting = singleDocSetting ?? "{}"
-      await kernelApi.setSingleBlockAttr(docId, "share-pro-setting", singleDocSetting)
-      cfg.siyuanConfig.preferenceConfig.docTreeEnable =
-        singleDocSetting?.docTreeEnable ?? cfg.siyuanConfig.preferenceConfig.docTreeEnable
-      cfg.siyuanConfig.preferenceConfig.docTreeLevel =
-        singleDocSetting?.docTreeLevel ?? cfg.siyuanConfig.preferenceConfig.docTreeLevel
-      // 大纲配置
-      cfg.siyuanConfig.preferenceConfig.outlineEnable =
-        singleDocSetting?.outlineEnable ?? cfg.siyuanConfig.preferenceConfig.outlineEnable
-      cfg.siyuanConfig.preferenceConfig.outlineLevel =
-        singleDocSetting?.outlineLevel ?? cfg.siyuanConfig.preferenceConfig.outlineLevel
+      if (singleDocSetting) {
+        const { docTreeEnable, docTreeLevel, outlineEnable, outlineLevel } = singleDocSetting
+        cfg.siyuanConfig.preferenceConfig = {
+          ...cfg.siyuanConfig.preferenceConfig,
+          docTreeEnable: docTreeEnable ?? cfg.siyuanConfig.preferenceConfig.docTreeEnable,
+          docTreeLevel: docTreeLevel ?? cfg.siyuanConfig.preferenceConfig.docTreeLevel,
+          outlineEnable: outlineEnable ?? cfg.siyuanConfig.preferenceConfig.outlineEnable,
+          outlineLevel: outlineLevel ?? cfg.siyuanConfig.preferenceConfig.outlineLevel,
+        }
+        await kernelApi.setSingleBlockAttr(docId, "share-pro-setting", JSON.stringify(singleDocSetting))
+      } else {
+        await kernelApi.setSingleBlockAttr(docId, "share-pro-setting", JSON.stringify({}))
+      }
       // 在这里可以重写单篇文档
       // ===============================================================================================================
       const blogApi = await this.getSiyuanApi(cfg)
