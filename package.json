@@ -38,7 +38,7 @@
     "vite-plugin-node-polyfills": "^0.22.0",
     "vite-plugin-static-copy": "^2.1.0",
     "vite-tsconfig-paths": "^5.1.2",
-    "vitest": "^2.1.4"
+    "vitest": "^2.1.6"
   },
   "dependencies": {
     "zhi-blog-api": "^1.67.0",
