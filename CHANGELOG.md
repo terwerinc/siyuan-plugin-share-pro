@@ -1,8 +1,9 @@
 # Changelog
 
-## [1.8.1](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.8.0...share-pro-v1.8.1) (2024-11-25)
+## [1.8.2](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.8.1...share-pro-v1.8.2) (2024-11-29)
 ### Bug Fixes
 * setting error in some cases ([e553342](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/e553342f9bf305f0112d6fdcc5aaba6abbbfd133))
+## [1.8.1](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.8.0...share-pro-v1.8.1) (2024-11-25)
 ## [1.8.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.7.0...share-pro-v1.8.0) (2024-11-19)
 ### Features
 * split setting ([161d2b2](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/161d2b23c46bbeb80a04029d49227f6cc6d22767))
