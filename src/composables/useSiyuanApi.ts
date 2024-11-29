@@ -29,9 +29,9 @@ export const useSiyuanApi = (cfg: ShareProConfig) => {
   // 一些常用设置
   siyuanConfig.preferenceConfig.fixTitle = cfg.siyuanConfig?.preferenceConfig?.fixTitle ?? false
   siyuanConfig.preferenceConfig.docTreeEnable = cfg.appConfig?.docTreeEnabled ?? true
-  siyuanConfig.preferenceConfig.docTreeLevel = cfg.appConfig.docTreeLevel ?? 3
+  siyuanConfig.preferenceConfig.docTreeLevel = cfg.appConfig?.docTreeLevel ?? 3
   siyuanConfig.preferenceConfig.outlineEnable = cfg.appConfig?.outlineEnabled ?? true
-  siyuanConfig.preferenceConfig.outlineLevel = cfg.appConfig.outlineLevel ?? 6
+  siyuanConfig.preferenceConfig.outlineLevel = cfg.appConfig?.outlineLevel ?? 6
   siyuanConfig.preferenceConfig.removeFirstH1 = true
   siyuanConfig.preferenceConfig.removeMdWidgetTag = true
   const blogApi = new SiYuanApiAdaptor(siyuanConfig)
