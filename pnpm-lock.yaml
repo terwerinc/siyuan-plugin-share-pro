@@ -46,8 +46,8 @@ importers:
         specifier: ^2.0.5
         version: 2.0.5
       siyuan:
-        specifier: ^1.0.6
-        version: 1.0.6
+        specifier: ^1.0.7
+        version: 1.0.7
       stylus:
         specifier: ^0.64.0
         version: 0.64.0
@@ -1896,8 +1896,8 @@ packages:
     resolution: {integrity: sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw==}
     engines: {node: '>=14'}
 
-  siyuan@1.0.6:
-    resolution: {integrity: sha512-ogCCzhz0CBr56uIWdd//an58FFw+lJQXsrdOZlR2EMnVGjjvfGTEjNX7+ok49p4+D1ytxSq9oTtlfHCIpGUw7w==}
+  siyuan@1.0.7:
+    resolution: {integrity: sha512-DHJdf/y2Il6M1GrUMBq3tw6wv1MFvijwIX6ZnvQVLByI6l+SUXJau89kNnd2t0JIBawnX7ETMWnZIr09TUKiWg==}
 
   slash@3.0.0:
     resolution: {integrity: sha512-g9Q1haeby36OSStwb4ntCGGGaKsaVSjQ68fBxoQcutl5fS1vuY18H3wSt3jFyFtrkx+Kz0V1G85A4MyAdDMi2Q==}
@@ -4412,7 +4412,7 @@ snapshots:
 
   signal-exit@4.1.0: {}
 
-  siyuan@1.0.6: {}
+  siyuan@1.0.7: {}
 
   slash@3.0.0: {}
 
