@@ -8,7 +8,7 @@
  */
 
 export const DEFAULT_SIYUAN_LANG = window.siyuan.config.lang
-export const isDev = process.env.DEV_MODE === "true"
+export const isDev = typeof process === "undefined" ? false : process.env.DEV_MODE === "true"
 export const DEFAULT_SIYUAN_API_URL = window.location.origin
 export const DEFAULT_SIYUAN_AUTH_TOKEN = ""
 export const DEFAULT_SIYUAN_COOKIE = ""
