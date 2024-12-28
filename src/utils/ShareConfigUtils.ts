@@ -18,15 +18,16 @@ const DefaultAppConfig: AppConfig = {
   siteTitle: "在线分享专业版",
   siteSlogan: "随时随地分享您的思源笔记",
   siteDescription: "给您的知识安个家",
+  header: "",
+  footer: "",
+  shareTemplate: "[url]",
+  homePageId: "20240903115146-wdyz9ue",
   theme: {
     mode: "light",
     lightTheme: "Zhihu",
     darkTheme: "Zhihu",
-    themeVersion: "0.1.1",
+    themeVersion: "0.1.5",
   },
-  footer: "",
-  shareTemplate: "[url]",
-  homePageId: "20240903115146-wdyz9ue",
 
   customCss: [] as any,
 } as AppConfig
@@ -52,9 +53,9 @@ const getSupportedThemes = (pluginInstance: ShareProPlugin) => {
   }
 }
 const versionMap = {
-  midlight: "3.1.10",
-  daylight: "3.1.10",
-  Zhihu: "0.1.3",
+  midlight: "3.1.17",
+  daylight: "3.1.17",
+  Zhihu: "0.1.5",
   Savor: "4.2.3",
   Tsundoku: "2.3.5",
   "pink-room": "0.9.4",
