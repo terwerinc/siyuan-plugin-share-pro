@@ -1,6 +1,7 @@
 {
   "sharePro": "Share pro",
-  "startShare": "Start share",
+  "startShare": "Quick Share",
+  "customShare": "Custom Share",
   "viewArticle": "View doc",
   "cancelShare": "Cancel share",
   "reShare": "Share again",
@@ -20,6 +21,7 @@
   "createShare": "Create share",
   "basicSetting": "Basic setting",
   "customSetting": "Custom setting",
+  "docSetting": "Doc setting",
   "keyInfo": {
     "notValid": "Registration Code Is Invalid Or Not Registered",
     "registered": "You have already registered ",
@@ -60,7 +62,19 @@
     "customCss": "Enable custom CSS snippets",
     "customCssTip": "Sync custom CSS snippets to the sharing page",
     "fixTitle": "Remove title numbers",
-    "fixTitleTip": "Remove numbers from titles like `001.Test title`, resulting in `Test title`"
+    "fixTitleTip": "Remove numbers from titles like `001.Test title`, resulting in `Test title`",
+    "domain": "Custom Domain",
+    "domainTip": "Supports built-in and custom domains, where https://share.terwergreen.com is a domain registered in China with fast access speed for mainland China, while other domains are global CDN domains.",
+    "domainClick": "Click Here",
+    "domainApply": "Apply For Custom Domain",
+    "docPath": "Custom Document Path",
+    "docPathTip": "Custom document path access, for example: https://siyuannote.site/x/[docId], where x can be d, s, p, a, doc, link, post, article, etc.",
+    "docTree": "Document Tree",
+    "docTreeTip": "Whether to enable the document tree. If enabled, you can set the maximum depth, up to 3 levels, meaning it will fetch 3 levels up and 3 levels down from the current document. Enabling or disabling takes effect immediately, but changing the depth requires re-sharing.",
+    "docTreeDepth": "Document Tree Depth",
+    "outline": "Document Outline",
+    "outlineTip": "Whether to enable the document outline. If enabled, you can set the maximum depth to 6, meaning it will fetch up to h6. Enabling or disabling takes effect immediately, but changing the depth requires re-sharing.",
+    "outlineDepth": "Document Outline Depth"
   },
   "shareService": {
     "msgDoc": "Document",
@@ -104,6 +118,8 @@
     "statusError": "Share failed",
     "action": "Action",
     "actionCancel": "Cancel share",
+    "actionSetHome": "Set Home",
+    "actionViewDoc": "View Document",
     "actionGotoDoc": "Go to document",
     "tableKeyword": "Please enter keyword...",
     "tablePrevious": "Previous page",
@@ -114,6 +130,10 @@
     "tableEntries": "records",
     "tableFiltered": "filtered",
     "tablePage": "page number",
-    "tableFirstPage": "First page"
+    "tableFirstPage": "First page",
+    "setHomeConfirm": "Note: Setting the home page only takes effect for custom domains added to the whitelist. Are you sure you want to set the home page to「[param1]」?",
+    "setHomeSuccess": "Home page set successfully",
+    "setHomeError": "Home page setting failed=>",
+    "actionSetAlready": "Already set"
   }
 }

@@ -1,91 +1,90 @@
 <script>
+    export let data, columns, order, dir
 
-    export let data, columns, order, dir;
-
-    export let classTableWrapper = "bench-wrapper";
-    export let classTable = "bench-table";
-    export let classTableBody = "bench-tbody";
-    export let classTableHead = "bench-thead";
-    export let classTableData = "bench-td";
-    export let classTableHeader = "bench-th";
-    export let classTableRow = "bench-tr";
+    export let classTableWrapper = "bench-wrapper"
+    export let classTable = "bench-table"
+    export let classTableBody = "bench-tbody"
+    export let classTableHead = "bench-thead"
+    export let classTableData = "bench-td"
+    export let classTableHeader = "bench-th"
+    export let classTableRow = "bench-tr"
 
     const sort = (col) => {
         if (col.sort !== false) {
             if (col.id == order) {
                 if (!dir) {
-                    dir = 'desc';
+                    dir = "desc"
                 } else {
-                    dir = (dir == 'desc') ? 'asc' : 'desc';
+                    dir = dir == "desc" ? "asc" : "desc"
                 }
             } else {
-                order = col.id;
-                dir = 'desc';
+                order = col.id
+                dir = "desc"
             }
         }
     }
-
 </script>
 
 <bench-table>
     {#if data.results}
-    <div class={classTableWrapper}>
-        <table class={classTable}>
-            <thead class={classTableHead}>
+        <div class={classTableWrapper}>
+            <table class={classTable}>
+                <thead class={classTableHead}>
                 <tr class={classTableRow}>
                     {#each columns as col}
-                    <th class="{classTableHeader} {col.sort !== false ? 'sort' : ''} {col.id == order ? 'sorted' : ''}"
-                        style={col.hidden === true ? 'display: none' : ''} on:click={() => sort(col)}
-                    >
-                        {col.name ?? ""}
-                        {#if col.sort !== false}
-                            <span class="sortIcon">
-                                {#if col.id == order}
-                                <button class="{(dir == 'desc') ? "sort-desc" : "sort-asc"}" />
-                                {:else}
-                                <button class="unsorted" />
-                                {/if}
-                            </span>
-                        {/if}
-                    </th>
+                        <th
+                                class="{classTableHeader} {col.sort !== false ? 'sort' : ''} {col.id == order ? 'sorted' : ''}"
+                                style={col.hidden === true ? "display: none" : ""}
+                                on:click={() => sort(col)}
+                        >
+                            {col.name ?? ""}
+                            {#if col.sort !== false}
+                  <span class="sortIcon">
+                    {#if col.id == order}
+                      <button class={dir == "desc" ? "sort-desc" : "sort-asc"}/>
+                    {:else}
+                      <button class="unsorted"/>
+                    {/if}
+                  </span>
+                            {/if}
+                        </th>
                     {/each}
                 </tr>
-            </thead>
-            <tbody class={classTableBody}>
+                </thead>
+                <tbody class={classTableBody}>
                 {#each data.results as row}
-                <tr class={classTableRow}>
-                    {#each columns as col}
-                    <td class={classTableData}
-                        style={col.hidden === true ? 'display: none' : ''}
-                        on:click={e => col.onClick ? col.onClick(e) : undefined }
-                        on:keydown={e => col.onKeyDown ? col.onKeyDown(e) : undefined }
-                        on:change={e => col.onChange ? col.onChange(e) : undefined }
-                        on:mouseover={e => col.onMouseOver ? col.onMouseOver(e) : undefined }
-                        on:focus={e => col.onFocus ? col.onFocus(e) : undefined }
-                        on:mouseout={e => col.onMouseOut ? col.onMouseOut(e) : undefined }
-                        on:blur={e => col.onBlur ? col.onBlur(e) : undefined }
-                        on:keydown={e => col.onKeyDown ? col.onKeyDown(e) : undefined }
-                    >
-                        {#if col.formatter}
-                            {#if col.html}
-                                {@html col.formatter(row[col.id]) ?? ""}
-                            {:else}
-                                {col.formatter(row[col.id]) ?? ""}
-                            {/if}
-                        {:else}
-                            {#if col.html}
-                                {@html row[col.id] ?? ""}
-                            {:else}
-                                {row[col.id] ?? ""}
-                            {/if}
-                        {/if}
-                    </td>
-                    {/each}
-                </tr>
+                    <tr class={classTableRow}>
+                        {#each columns as col}
+                            <td
+                                    class={classTableData}
+                                    style={col.hidden === true ? "display: none" : ""}
+                                    on:click={(e) => (col.onClick ? col.onClick(e) : undefined)}
+                                    on:keydown={(e) => (col.onKeyDown ? col.onKeyDown(e) : undefined)}
+                                    on:change={(e) => (col.onChange ? col.onChange(e) : undefined)}
+                                    on:mouseover={(e) => (col.onMouseOver ? col.onMouseOver(e) : undefined)}
+                                    on:focus={(e) => (col.onFocus ? col.onFocus(e) : undefined)}
+                                    on:mouseout={(e) => (col.onMouseOut ? col.onMouseOut(e) : undefined)}
+                                    on:blur={(e) => (col.onBlur ? col.onBlur(e) : undefined)}
+                                    on:keydown={(e) => (col.onKeyDown ? col.onKeyDown(e) : undefined)}
+                            >
+                                {#if col.formatter}
+                                    {#if col.html}
+                                        {@html col.formatter(row[col.id]) ?? ""}
+                                    {:else}
+                                        {col.formatter(row[col.id]) ?? ""}
+                                    {/if}
+                                {:else if col.html}
+                                    {@html row[col.id] ?? ""}
+                                {:else}
+                                    {row[col.id] ?? ""}
+                                {/if}
+                            </td>
+                        {/each}
+                    </tr>
                 {/each}
-            </tbody>
-        </table>
-    </div>
+                </tbody>
+            </table>
+        </div>
     {/if}
 </bench-table>
 
@@ -136,7 +135,8 @@
         overflow: auto;
     }
 
-    .bench-tbody, td.bench-td {
+    .bench-tbody,
+    td.bench-td {
         background-color: #fff;
     }
 
@@ -169,11 +169,11 @@
         border: none;
         cursor: pointer;
         float: right;
-        height: 20px;
+        height: 24px;
         margin: 0;
         outline: none;
         padding: 0;
-        width: 13px;
+        width: 15px;
     }
 
     th.bench-th span.sortIcon button.unsorted {
@@ -206,4 +206,21 @@
         width: 10px;
     }
 
+    /* 适配暗黑模式 */
+    :global(html[data-theme-mode="dark"]) .bench-wrapper {
+        background-color: #1f2937;
+        border-color: #374151;
+        box-shadow: 0 1px 3px #0000001a, 0 1px 2px #00000042;
+    }
+
+    :global(html[data-theme-mode="dark"]) th.bench-th {
+        background-color: var(--b3-theme-background);
+        border-color: #374151;
+        color: #9ca3af;
+    }
+
+    :global(html[data-theme-mode="dark"]) td.bench-td {
+        background-color: var(--b3-theme-surface);
+        border-color: #374151;
+    }
 </style>

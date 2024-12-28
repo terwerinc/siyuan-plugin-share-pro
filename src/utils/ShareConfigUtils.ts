@@ -11,9 +11,10 @@ import { AppConfig } from "../models/AppConfig"
 import { SettingService } from "../service/SettingService"
 import { ShareProConfig } from "../models/ShareProConfig"
 import ShareProPlugin from "../index"
+import { DEFAULT_SIYUAN_LANG } from "../Constants"
 
 const DefaultAppConfig: AppConfig = {
-  lang: "zh_CN",
+  lang: DEFAULT_SIYUAN_LANG,
   siteUrl: "https://siyuan.wiki",
   siteTitle: "在线分享专业版",
   siteSlogan: "随时随地分享您的思源笔记",
@@ -62,8 +63,7 @@ const versionMap = {
   "trends-in-siyuan": "0.4.0",
 }
 
-const syncAppConfig = async (pluginInstance: ShareProPlugin, settingConfig: ShareProConfig) => {
-  const settingService = new SettingService(pluginInstance)
+const syncAppConfig = async (settingService: SettingService, settingConfig: ShareProConfig) => {
   const appConfig = settingConfig.appConfig
   const res = await settingService.syncSetting(settingConfig.serviceApiConfig.token, appConfig)
   if (res.code == 1) {

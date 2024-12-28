@@ -44,87 +44,80 @@
   </div>
 </div>
 
-<style>
-  .tabs {
-    display: flex;
-    flex-direction: column;
-    /* 添加圆角 */
-    border-radius: 8px;
-    /* 防止内容溢出圆角 */
-    overflow: hidden;
-    background-color: #fff;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    margin: 10px;
-  }
+<style lang="stylus">
+  .tabs
+    display flex
+    flex-direction column
+    border-radius 8px
+    overflow hidden
+    background-color #fff
+    box-shadow 0 1px 3px rgba(0, 0, 0, 0.1)
+    margin 10px
 
-  .tabs.vertical {
-    flex-direction: row;
-  }
+  .tabs.vertical
+    flex-direction row
 
-  .tabs:not(.vertical) {
-    flex-direction: column;
-  }
+  .tabs:not(.vertical)
+    flex-direction column
 
-  .tab-list {
-    display: flex;
-    flex-wrap: wrap;
-    border-bottom: 1px solid #e0e0e0;
-  }
+  .tab-list
+    display flex
+    flex-wrap wrap
+    border-bottom 1px solid #e0e0e0
 
-  .tabs.vertical .tab-list {
-    /* 垂直布局时，按钮水平排列 */
-    flex-direction: column;
-    border-right: 1px solid #e0e0e0;
-    border-bottom: none;
-  }
+  .tabs.vertical .tab-list
+    flex-direction column
+    border-right 1px solid #e0e0e0
+    border-bottom none
 
-  .tabs:not(.vertical) .tab-list {
-    /* 水平布局时，按钮垂直排列 */
-    flex-direction: row;
-  }
+  .tabs:not(.vertical) .tab-list
+    flex-direction row
 
-  .tab {
-    padding: 12px 16px;
-    /* 初始边框 */
-    border: none;
-    background-color: transparent;
-    cursor: pointer;
-    /* 使按钮均匀分布 */
-    /* flex: 1 1 auto; */
-    /* 用于定位边框 */
-    position: relative;
-    font-size: 14px;
-    color: #555;
-    transition: background-color 0.2s ease;
-  }
+  .tab
+    padding 12px 16px
+    border none
+    background-color transparent
+    cursor pointer
+    position relative
+    font-size 14px
+    color #555
+    transition background-color 0.2s ease
 
-  .tabs.vertical .tab:not(:last-child) {
-    border-bottom: 1px solid #e0e0e0;
-  }
+  .tabs.vertical .tab:not(:last-child)
+    border-bottom 1px solid #e0e0e0
 
-  .tabs:not(.vertical) .tab:not(:last-child) {
-    border-right: 1px solid #e0e0e0;
-  }
+  .tabs:not(.vertical) .tab:not(:last-child)
+    border-right 1px solid #e0e0e0
 
-  .tab.active,
-  .tab:active {
-    /* Notion 蓝色 */
-    background-color: #eaf4ff;
-    color: #1a73e8;
-  }
+  .tab.active, .tab:active
+    background-color var(--b3-list-hover)
+    color var(--b3-theme-on-background)
 
-  .tab-content {
-    padding: 16px;
-    background-color: #fff;
-  }
+  .tab-content
+    padding 16px
+    background-color #fff
 
-  .tabs.vertical .tab-content {
-    /* 垂直布局时，内容占满剩余空间 */
-    flex: 1;
-  }
+  .tabs.vertical .tab-content
+    flex 1
 
-  .tabs:not(.vertical) .tab-content {
-    /* 水平布局时，内容占满剩余空间 */
-    flex: 1;
-  }
+  .tabs:not(.vertical) .tab-content
+    flex 1
+
+  /* 适配暗黑主题 */
+  :global(html[data-theme-mode="dark"]) .tabs
+    background-color: var(--b3-theme-background);
+    .tab-content
+      background-color: var(--b3-theme-background);
+
+  :global(html[data-theme-mode="dark"]) .tab-list
+    border-bottom 1px solid var(--b3-theme-surface-lighter)
+
+  :global(html[data-theme-mode="dark"]) .tabs.vertical .tab-list
+    border-right 1px solid var(--b3-theme-surface-lighter)
+
+  :global(html[data-theme-mode="dark"]) .tabs.vertical .tab:not(:last-child)
+    border-bottom 1px solid var(--b3-theme-surface-lighter)
+
+  :global(html[data-theme-mode="dark"]) .tabs:not(.vertical) .tab:not(:last-child)
+    border-right 1px solid var(--b3-theme-surface-lighter)
 </style>

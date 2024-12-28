@@ -56,9 +56,10 @@
 
   onMount(async () => {
     settingConfig = await pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
-    if (settingConfig.siyuanConfig?.apiUrl.length == 0) {
-      settingConfig.siyuanConfig.apiUrl = window.location.origin
-    }
+    autoSetApiUrl()
+    // if (settingConfig.siyuanConfig?.apiUrl.length == 0) {
+    //  settingConfig.siyuanConfig.apiUrl = window.location.origin
+    // }
   })
 </script>
 
@@ -85,6 +86,8 @@
       </div>
     {/if}
 
+    <!-- 自动获取即可，没必要再设置了 -->
+    <!--
     <div class="fn__block form-item">
       {pluginInstance.i18n.bs.siyuanApi}
       <div class="b3-label__text form-item-tip">
@@ -101,6 +104,7 @@
         {pluginInstance.i18n.bs.siyuanApiAutoset}
       </a>
     </div>
+    -->
 
     <div class="fn__block form-item">
       {pluginInstance.i18n.bs.regCode}
