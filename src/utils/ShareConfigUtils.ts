@@ -13,8 +13,8 @@ import { ShareProConfig } from "../models/ShareProConfig"
 import ShareProPlugin from "../index"
 
 const DefaultAppConfig: AppConfig = {
-  lang: "DEFAULT_SIYUAN_LANG",
-  siteUrl: "https://siyuannote.space",
+  lang: "zh_CN",
+  siteUrl: "https://siyuan.wiki",
   siteTitle: "在线分享专业版",
   siteSlogan: "随时随地分享您的思源笔记",
   siteDescription: "给您的知识安个家",
