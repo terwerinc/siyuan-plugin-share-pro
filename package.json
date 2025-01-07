@@ -43,7 +43,7 @@
   "dependencies": {
     "zhi-blog-api": "^1.67.1",
     "zhi-lib-base": "^0.8.0",
-    "zhi-siyuan-api": "^2.24.1"
+    "zhi-siyuan-api": "^2.26.0"
   },
   "packageManager": "pnpm@9.9.0"
 }
