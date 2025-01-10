@@ -9,14 +9,14 @@ importers:
   .:
     dependencies:
       zhi-blog-api:
-        specifier: ^1.67.1
-        version: 1.67.1(typescript@5.7.2)
+        specifier: ^1.67.2
+        version: 1.67.2(typescript@5.7.2)
       zhi-lib-base:
         specifier: ^0.8.0
         version: 0.8.0
       zhi-siyuan-api:
-        specifier: ^2.24.1
-        version: 2.24.1(typescript@5.7.2)
+        specifier: ^2.26.0
+        version: 2.26.0(typescript@5.7.2)
     devDependencies:
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.1.2
@@ -2356,17 +2356,17 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
-  zhi-blog-api@1.67.1:
-    resolution: {integrity: sha512-r2i9JBYdIQSGp/X8HvZ2pEJZMJYQUfxu0TsoKk0boVMHCdSbYqgpYe2dyHA/96yBeN1nIQ5eir7d+GjBtK942A==}
+  zhi-blog-api@1.67.2:
+    resolution: {integrity: sha512-ieke5izvzeMXvB1LCu9Fhaf3M5uSSrYATcLXbbiEBqBPBPH9PCmnfvC5TTRJadLEAaimlP/UFE+lL9X4muXyNg==}
 
-  zhi-common@1.33.0:
-    resolution: {integrity: sha512-ggHVmZ/zkVIOLfAWv4vqJBZY9BZnlnBUhlOmtYoVHV35UdxI5zcvvakBRgDZxjyknikHOLot7MtYfccCCOdyKw==}
+  zhi-common@1.33.1:
+    resolution: {integrity: sha512-R+/9Ha2bF44I2a/vF9EDewvb4KK2AxnC03LOBXwCyAFQkge+EKvua5zYqeNMNMYn9aUBDJ6MEOyrd2CORe2QcA==}
 
   zhi-lib-base@0.8.0:
     resolution: {integrity: sha512-3Ky5p6KvLWpXy2tlb/JIfSEKLSe5w43PBLM6g+hNcWwpL9S62emgcpUAHzGWBbC0vlLBLungt2LOsmwAfhrZ0w==}
 
-  zhi-siyuan-api@2.24.1:
-    resolution: {integrity: sha512-QKudDHWz+xJgPJ3PQh+Y/LHJlwbxuUwHixgD7FqwnseJ7Z5sWx0Uph51NK7u2vUUBzIozPMW53OIqWL5uOjgyQ==}
+  zhi-siyuan-api@2.26.0:
+    resolution: {integrity: sha512-NhANgwBgP//RRjdwqcxWDmXH7wxtaikkbk+ijt4XRGg9D9lePI47vFZdU/YLCOJ8Nz8mgBT5O1+jF3yHXwMIqQ==}
 
 snapshots:
 
@@ -4850,14 +4850,14 @@ snapshots:
 
   yocto-queue@0.1.0: {}
 
-  zhi-blog-api@1.67.1(typescript@5.7.2):
+  zhi-blog-api@1.67.2(typescript@5.7.2):
     dependencies:
-      zhi-common: 1.33.0(typescript@5.7.2)
+      zhi-common: 1.33.1(typescript@5.7.2)
       zhi-lib-base: 0.8.0
     transitivePeerDependencies:
       - typescript
 
-  zhi-common@1.33.0(typescript@5.7.2):
+  zhi-common@1.33.1(typescript@5.7.2):
     dependencies:
       js-yaml: 4.1.0
       shorthash2: 1.0.5
@@ -4869,10 +4869,10 @@ snapshots:
 
   zhi-lib-base@0.8.0: {}
 
-  zhi-siyuan-api@2.24.1(typescript@5.7.2):
+  zhi-siyuan-api@2.26.0(typescript@5.7.2):
     dependencies:
-      zhi-blog-api: 1.67.1(typescript@5.7.2)
-      zhi-common: 1.33.0(typescript@5.7.2)
+      zhi-blog-api: 1.67.2(typescript@5.7.2)
+      zhi-common: 1.33.1(typescript@5.7.2)
       zhi-lib-base: 0.8.0
     transitivePeerDependencies:
       - typescript
