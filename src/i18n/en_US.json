@@ -47,7 +47,10 @@
     "regCode": "Registration code",
     "regCodePlaceholder": "Please enter registration code",
     "regCodeClick": "Click here",
-    "regCodeTip": " to get a registration code, or send an email to youweics@163.com to apply for a trial"
+    "regCodeTip": " to get a registration code, or send an email to youweics@163.com to apply for a trial",
+    "newUI": "Enable New UI",
+    "newUITip": "Enable the new UI, which has separate personalized sharing settings. Left-click to open personalized sharing, right-click to open settings and sharing management, etc. For more details, please see:",
+    "newUITipLink": "https://siyuan.wiki/s/20250114074443-x288x2q"
   },
   "cs": {
     "theme": "Theme",
