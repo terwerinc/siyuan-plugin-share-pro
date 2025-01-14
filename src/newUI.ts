@@ -53,15 +53,63 @@ class NewUI {
   public async startShareForNewUI() {
     const docCheck = this.checkDocId()
     if (docCheck.flag) {
-      // 挂载内容到菜单
-      this.addMenu(
-        ShareUI,
-        {
-          pluginInstance: this.pluginInstance,
-          docId: docCheck.docId,
-        },
-        "share-pro-ui"
-      )
+      const cfg = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
+      const vipInfo = await this.shareService.getVipInfo(cfg?.serviceApiConfig?.token ?? "")
+      if (vipInfo.code === 0) {
+        // 挂载内容到菜单
+        this.addMenu(
+          ShareUI,
+          {
+            pluginInstance: this.pluginInstance,
+            docId: docCheck.docId,
+          },
+          "share-pro-ui"
+        )
+      } else {
+        const menu = new Menu("shareProSettingMenu")
+        menu.addItem({
+          icon: `iconKey`,
+          label: this.pluginInstance.i18n.getLicense,
+          click: () => {
+            const vipTip = vipInfo.msg ?? this.pluginInstance.i18n.unknownError
+            confirm(this.pluginInstance.i18n.tipTitle, vipTip + "，" + this.pluginInstance.i18n.openLicensePage, () => {
+              window.open("https://store.terwer.space/products/share-pro")
+            })
+          },
+        })
+        menu.addSeparator()
+        menu.addItem({
+          icon: `iconSettings`,
+          label: this.pluginInstance.i18n.shareSetting,
+          click: () => {
+            const settingId = "share-pro-setting"
+            const d = new Dialog({
+              title: `${this.pluginInstance.i18n.shareSetting} - ${this.pluginInstance.i18n.sharePro} v${pkg.version}`,
+              content: `<div id="${settingId}"></div>`,
+              width: this.pluginInstance.isMobile ? "92vw" : "61.8vw",
+            })
+            new ShareSetting({
+              target: document.getElementById(settingId) as HTMLElement,
+              props: {
+                pluginInstance: this.pluginInstance,
+                dialog: d,
+                vipInfo: vipInfo,
+              },
+            })
+          },
+        })
+
+        if (this.pluginInstance.isMobile) {
+          menu.fullscreen()
+        } else {
+          const rect = this.topBarElement.getBoundingClientRect()
+          menu.open({
+            x: rect.right,
+            y: rect.bottom,
+            isLeft: true,
+          })
+        }
+      }
     } else {
       showMessage(this.pluginInstance.i18n.msgNotFoundDoc, 7000, "error")
     }
@@ -147,10 +195,10 @@ class NewUI {
 
   private addMenu(content: any, props: any, menuID: string) {
     // 移除旧菜单
-    const elements = document.querySelectorAll('.share-free-edition-menu-content');
-    elements.forEach(element => {
-      element.remove();
-    });
+    const elements = document.querySelectorAll(".share-free-edition-menu-content")
+    elements.forEach((element) => {
+      element.remove()
+    })
 
     if (!this.contentMenu) {
       this.contentMenu = new Menu(menuID)
