@@ -9,7 +9,7 @@
 
 import { ILogger, simpleLogger } from "zhi-lib-base"
 import { isDev, SHARE_PRO_STORE_NAME } from "./Constants"
-import { confirm, Dialog, Menu } from "siyuan"
+import { confirm, Dialog, Menu, showMessage } from "siyuan"
 import ShareProPlugin from "./index"
 import { ShareService } from "./service/ShareService"
 import { ShareProConfig } from "./models/ShareProConfig"
@@ -17,6 +17,7 @@ import { WidgetInvoke } from "./invoke/widgetInvoke"
 import pkg from "../package.json"
 import ShareSetting from "./libs/pages/ShareSetting.svelte"
 import ShareUI from "./libs/pages/ShareUI.svelte"
+import PageUtil from "./utils/pageUtil"
 
 const createBootStrap = (content: any, props: any, container: string | HTMLElement) => {
   new content({
@@ -50,14 +51,20 @@ class NewUI {
   }
 
   public async startShareForNewUI() {
-    // 挂载内容到菜单
-    this.addMenu(
-      ShareUI,
-      {
-        pluginInstance: this.pluginInstance,
-      },
-      "share-pro-ui"
-    )
+    const docCheck = this.checkDocId()
+    if (docCheck.flag) {
+      // 挂载内容到菜单
+      this.addMenu(
+        ShareUI,
+        {
+          pluginInstance: this.pluginInstance,
+          docId: docCheck.docId,
+        },
+        "share-pro-ui"
+      )
+    } else {
+      showMessage(this.pluginInstance.i18n.msgNotFoundDoc, 7000, "error")
+    }
   }
 
   public async settingForNewUI() {
@@ -121,14 +128,37 @@ class NewUI {
     }
   }
 
+  // ================
+  // private function
+  // ================
+
+  private checkDocId() {
+    const docId = PageUtil.getPageId()
+    if (docId.trim() == "") {
+      return {
+        flag: false,
+      }
+    }
+    return {
+      flag: true,
+      docId: docId,
+    }
+  }
+
   private addMenu(content: any, props: any, menuID: string) {
+    // 移除旧菜单
+    const elements = document.querySelectorAll('.share-free-edition-menu-content');
+    elements.forEach(element => {
+      element.remove();
+    });
+
     if (!this.contentMenu) {
       this.contentMenu = new Menu(menuID)
     }
     this.contentMenuElement?.remove()
     const contentWrapper = Object.assign(document.createElement("div"), {
       id: `${menuID}-wrapper`,
-      className: "share-free-edition-menu-content",
+      className: "share-pro-menu-content",
     })
     this.contentMenuElement = this.contentMenu.element.appendChild(contentWrapper)
     if (!this.rect) {
