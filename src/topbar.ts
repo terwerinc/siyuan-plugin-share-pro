@@ -27,6 +27,7 @@ class Topbar {
   private pluginInstance: ShareProPlugin
   private shareService: ShareService
   private widgetInvoke: WidgetInvoke
+  private lock: boolean = false
 
   constructor(pluginInstance: ShareProPlugin) {
     this.logger = simpleLogger("topbar", "share-pro", isDev)
@@ -43,6 +44,11 @@ class Topbar {
       callback: () => {},
     })
     topBarElement.addEventListener("click", async () => {
+      if (this.lock) {
+        this.logger.warn("request is not finished, please wait...")
+        return
+      }
+
       // 初始化菜单
       try {
         await this.addMenu(topBarElement.getBoundingClientRect())
@@ -67,6 +73,7 @@ class Topbar {
   }
 
   private async addMenu(rect: DOMRect) {
+    this.lock = true
     const menu = new Menu("shareProMenu")
 
     const cfg = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
@@ -141,15 +148,15 @@ class Topbar {
           menu.addSeparator()
         }
 
-        // // 个性文档
-        // menu.addItem({
-        //   icon: `iconSparkles`,
-        //   label: this.pluginInstance.i18n.customShare + "<span style='color:red'>new</span>",
-        //   click: async () => {
-        //     alert("custom share")
-        //   },
-        // })
-        // menu.addSeparator()
+        // 个性文档
+        menu.addItem({
+          icon: `iconSparkles`,
+          label: this.pluginInstance.i18n.customShare + "<span style='color:red'>new</span>",
+          click: async () => {
+            alert("custom share")
+          },
+        })
+        menu.addSeparator()
       } else {
         // showMessage(this.pluginInstance.i18n.msgNotFoundDoc, 7000, "error")
       }
@@ -207,6 +214,8 @@ class Topbar {
         isLeft: true,
       })
     }
+
+    this.lock = false
   }
 }
 
