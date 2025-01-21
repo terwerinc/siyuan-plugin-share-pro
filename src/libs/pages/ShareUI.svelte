@@ -48,7 +48,8 @@
     } else {
       // 状态检测
       logger.info("get shared data =>", formData.shareData)
-      if (formData.shareData?.shareStatus !== "COMPLETED") {
+      // 注意 undefined
+      if (formData?.shareData?.shareStatus && formData.shareData.shareStatus !== "COMPLETED") {
         formData.lock = true
         showMessage(pluginInstance.i18n.ui.msgIngError, 3000, "info")
         return
@@ -144,9 +145,11 @@
         </span>
 
         <div class="reshare-container">
-          <span class="reshare-btn" title={pluginInstance.i18n.reShare} on:click={handleReShare}>
-            {@html icons.iconReShare}
-          </span>
+          {#if formData.shared}
+            <span class="reshare-btn" title={pluginInstance.i18n.reShare} on:click={handleReShare}>
+              {@html icons.iconReShare}
+            </span>
+          {/if}
           <input
             title={formData.shared ? pluginInstance.i18n.cancelShare : pluginInstance.i18n.startShare}
             class="b3-switch fn__flex-center share-btn"
