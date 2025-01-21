@@ -15,9 +15,10 @@
   import ShareProPlugin from "../../index"
   import { useSiyuanApi } from "../../composables/useSiyuanApi"
   import { ShareService } from "../../service/ShareService"
-  import { confirm, showMessage } from "siyuan"
+  import { showMessage } from "siyuan"
   import { simpleLogger } from "zhi-lib-base"
   import copy from "copy-to-clipboard"
+  import { icons } from "../../utils/svg"
 
   export let pluginInstance: ShareProPlugin
   export let shareService: ShareService
@@ -60,6 +61,10 @@
         showMessage(pluginInstance.i18n.topbar.cancelError + ret.msg, 7000, "error")
       }
     }
+  }
+
+  const handleReShare = async () => {
+    await shareService.createShare(docId)
   }
 
   const copyWebLink = () => {
@@ -137,12 +142,19 @@
         <span class="setting-label">
           {pluginInstance.i18n.sharePro} - {pluginInstance.i18n.shareProDesc}
         </span>
-        <input
-          class="b3-switch fn__flex-center"
-          type="checkbox"
-          bind:checked={formData.shared}
-          on:change={handleShare}
-        />
+
+        <div class="reshare-container">
+          <span class="reshare-btn" title={pluginInstance.i18n.reShare} on:click={handleReShare}>
+            {@html icons.iconReShare}
+          </span>
+          <input
+            title={formData.shared ? pluginInstance.i18n.cancelShare : pluginInstance.i18n.startShare}
+            class="b3-switch fn__flex-center share-btn"
+            type="checkbox"
+            bind:checked={formData.shared}
+            on:change={handleShare}
+          />
+        </div>
       </div>
     </div>
 
@@ -361,4 +373,26 @@
 
     .info-text
       color #ff7875
+
+/* 重新分享 */
+  .reshare-container
+    display flex
+    align-items center
+    gap 12px
+
+  .reshare-btn
+    display inline-flex
+    cursor pointer
+    transition background-color 0.3s, box-shadow 0.3s
+    font-size 16px
+    line-height 1
+    color #333
+
+  html[data-theme-mode="dark"] &
+    color #e0e3e8
+
+  ::deep .reshare-btn svg
+    width 16px
+    height 16px
+    fill currentColor
 </style>

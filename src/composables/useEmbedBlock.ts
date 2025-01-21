@@ -60,7 +60,6 @@ const useEmbedBlock = (cfg: ShareProConfig) => {
               breadcrumb: false,
             })
 
-            debugger
             const resBlocks = res.blocks || []
             const content = resBlocks.map((block: { block: { content: string } }) => block.block.content).join("")
 

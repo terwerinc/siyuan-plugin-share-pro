@@ -146,6 +146,8 @@
     "copyTitle": "分享链接",
     "copyWebLink": "复制",
     "clickView": "点击查看",
-    "copySuccess": "复制成功"
+    "copySuccess": "复制成功",
+    "reShareSuccess": "重新分享成功",
+    "reShareError": "重新分享失败"
   }
 }

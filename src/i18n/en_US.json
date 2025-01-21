@@ -146,6 +146,8 @@
     "copyTitle": "Share Link",
     "copyWebLink": "Copy",
     "clickView": "Click view",
-    "copySuccess": "Copy success"
+    "copySuccess": "Copy success",
+    "reShareSuccess": "Reshare successful",
+    "reShareError": "Reshare failed"
   }
 }
