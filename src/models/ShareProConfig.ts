@@ -26,6 +26,13 @@ class ShareProConfig {
   serviceApiConfig?: IServiceApiConfig
   appConfig?: AppConfig
   isCustomCssEnabled?: boolean
+  /**
+   * 是否启用新 UI
+   *
+   * @author terwer
+   * @since 1.9.0
+   */
+  isNewUIEnabled?: boolean
   inited: boolean
 }
 

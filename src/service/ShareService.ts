@@ -19,6 +19,9 @@ import { Post } from "zhi-blog-api"
 import { updateStatusBar } from "../statusBar"
 import { ApiUtils } from "../utils/ApiUtils"
 import { ImageUtils } from "../utils/ImageUtils"
+import { useDataTable } from "../composables/useDataTable"
+import { useEmbedBlock } from "../composables/useEmbedBlock"
+import { useFold } from "../composables/useFold"
 
 /**
  * 分享服务
@@ -41,31 +44,24 @@ class ShareService {
     return await this.shareApi.getVipInfo(token)
   }
 
-  public async createShare(docId: string, singleDocSetting?: any) {
+  /**
+   * 创建分享
+   *
+   * @param docId 必传
+   * @param post 传递之后可避免多次查询，个性分享传递
+   */
+  public async createShare(docId: string, post?: Post) {
     try {
       const cfg = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
-      // ===============================================================================================================
-      // 上面是通用配置
-      const { kernelApi } = useSiyuanApi(cfg)
-      // 保存单篇文档的配置
-      if (singleDocSetting) {
-        const { docTreeEnable, docTreeLevel, outlineEnable, outlineLevel } = singleDocSetting
-        cfg.siyuanConfig.preferenceConfig = {
-          ...cfg.siyuanConfig.preferenceConfig,
-          docTreeEnable: docTreeEnable ?? cfg.siyuanConfig.preferenceConfig.docTreeEnable,
-          docTreeLevel: docTreeLevel ?? cfg.siyuanConfig.preferenceConfig.docTreeLevel,
-          outlineEnable: outlineEnable ?? cfg.siyuanConfig.preferenceConfig.outlineEnable,
-          outlineLevel: outlineLevel ?? cfg.siyuanConfig.preferenceConfig.outlineLevel,
-        }
-        await kernelApi.setSingleBlockAttr(docId, "share-pro-setting", JSON.stringify(singleDocSetting))
-      } else {
-        await kernelApi.setSingleBlockAttr(docId, "share-pro-setting", JSON.stringify({}))
+      if (!post) {
+        // 菜单分享
+        const { blogApi } = useSiyuanApi(cfg)
+        post = await blogApi.getPost(docId)
+        this.logger.debug("get post", post)
       }
-      // 在这里可以重写单篇文档
-      // ===============================================================================================================
-      const blogApi = await this.getSiyuanApi(cfg)
-      const post = await blogApi.getPost(docId)
-      this.logger.debug("get post", post)
+      const { getEmbedBlocks } = useEmbedBlock(cfg)
+      const { getDataViews } = useDataTable(cfg)
+      const { getFoldBlocks } = useFold(cfg)
       const sPost = new Post()
       sPost.attrs = post.attrs
       sPost.title = post.title
@@ -80,6 +76,14 @@ class ShareService {
       // 目录大纲
       sPost.outline = post.outline
       sPost.outlineLevel = post.outlineLevel
+      // 嵌入块
+      sPost.embedBlocks = await getEmbedBlocks(post.editorDom, docId)
+      // 数据库
+      const dataViews = await getDataViews(post.editorDom)
+      sPost.dataViews = dataViews
+      this.logger.debug("get dataViews from editorDom", dataViews)
+      // 折叠块（标题）
+      sPost.foldBlocks = await getFoldBlocks(post.editorDom)
       const shareBody = {
         docId: post.postid,
         // slug: post.wp_slug.trim().length == 0 ? post.postid : post.wp_slug,
@@ -149,11 +153,6 @@ class ShareService {
   // ================
   // private function
   // ================
-
-  private async getSiyuanApi(cfg: ShareProConfig) {
-    const { blogApi } = useSiyuanApi(cfg)
-    return blogApi
-  }
 
   private async processShareMedia(docId: string, mediaList: any[]) {
     this.logger.debug(`Processing media for ${docId}`, mediaList)

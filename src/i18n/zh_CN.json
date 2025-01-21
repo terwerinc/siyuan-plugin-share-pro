@@ -1,5 +1,6 @@
 {
   "sharePro": "在线分享专业版",
+  "shareProDesc": "向互联网所有人共享您的笔记",
   "startShare": "一键分享",
   "customShare": "个性分享",
   "viewArticle": "查看文档",
@@ -47,7 +48,10 @@
     "regCode": "注册码",
     "regCodePlaceholder": "请输入注册码",
     "regCodeClick": "点击这里",
-    "regCodeTip": "购买注册码，或者 发邮件到 youweics@163.com 申请试用"
+    "regCodeTip": "购买注册码，或者 发邮件到 youweics@163.com 申请试用",
+    "newUI": "启用新UI",
+    "newUITip": "是否启用新UI，新 UI 有单独个性化分享设置，鼠标左键点击弹出个性分享，右键弹出设置、分享管理等。详情请看：",
+    "newUITipLink": "https://siyuan.wiki/s/20241122131653-nh386o3"
   },
   "cs": {
     "theme": "主题",
@@ -135,5 +139,15 @@
     "setHomeSuccess": "首页设置成功",
     "setHomeError": "首页设置失败=>",
     "actionSetAlready": "已设置"
+  },
+  "ui": {
+    "msgIngError": "图片未处理完成或者失败，建议等待或者重新分享",
+    "shareSuccessError": "分享服务异常，请联系 youweics@163.com：",
+    "copyTitle": "分享链接",
+    "copyWebLink": "复制",
+    "clickView": "点击查看",
+    "copySuccess": "复制成功",
+    "reShareSuccess": "重新分享成功",
+    "reShareError": "重新分享失败"
   }
 }

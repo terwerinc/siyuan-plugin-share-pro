@@ -17,6 +17,7 @@
   import { getRegisterInfo } from "../../../utils/LicenseUtils"
   import { simpleLogger } from "zhi-lib-base"
   import { DefaultAppConfig, syncAppConfig } from "../../../utils/ShareConfigUtils"
+  import { SettingService } from "../../../service/SettingService"
 
   const logger = simpleLogger("basic-setting", "share-pro", isDev)
   export let pluginInstance: ShareProPlugin
@@ -28,13 +29,14 @@
   }
 
   let settingConfig: ShareProConfig = pluginInstance.getDefaultCfg()
+  const settingService = new SettingService(pluginInstance)
 
   const onSaveSetting = async () => {
     if (!settingConfig.appConfig) {
       settingConfig.appConfig ||= DefaultAppConfig
       await pluginInstance.saveData(SHARE_PRO_STORE_NAME, settingConfig)
       try {
-        await syncAppConfig(pluginInstance, settingConfig)
+        await syncAppConfig(settingService, settingConfig)
         showMessage(`${pluginInstance.i18n.settingConfigSaveAndSyncSuccess}`, 2000, "info")
       } catch (e) {
         showMessage(`${pluginInstance.i18n.settingConfigSaveFail},${e}`, 7000, "error")
@@ -105,6 +107,16 @@
       </a>
     </div>
     -->
+
+    <div class="fn__block form-item">
+      {pluginInstance.i18n.bs.newUI}<sup>1.9.0+ <span style="color:red">new</span></sup>
+      <div class="b3-label__text form-item-tip">
+        {pluginInstance.i18n.bs.newUITip}
+        <a href={pluginInstance.i18n.bs.newUITipLink} target="_blank">{pluginInstance.i18n.bs.newUITipLink}</a>
+      </div>
+      <span class="fn__hr" />
+      <input class="b3-switch fn__flex-center" id="newUI" type="checkbox" bind:checked={settingConfig.isNewUIEnabled} />
+    </div>
 
     <div class="fn__block form-item">
       {pluginInstance.i18n.bs.regCode}

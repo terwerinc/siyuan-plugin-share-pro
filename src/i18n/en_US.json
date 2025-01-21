@@ -1,5 +1,6 @@
 {
   "sharePro": "Share pro",
+  "shareProDesc": "Share your notes anytime, anywhere",
   "startShare": "Quick Share",
   "customShare": "Custom Share",
   "viewArticle": "View doc",
@@ -47,7 +48,10 @@
     "regCode": "Registration code",
     "regCodePlaceholder": "Please enter registration code",
     "regCodeClick": "Click here",
-    "regCodeTip": " to get a registration code, or send an email to youweics@163.com to apply for a trial"
+    "regCodeTip": " to get a registration code, or send an email to youweics@163.com to apply for a trial",
+    "newUI": "Enable New UI",
+    "newUITip": "Enable the new UI, which has separate personalized sharing settings. Left-click to open personalized sharing, right-click to open settings and sharing management, etc. For more details, please see:",
+    "newUITipLink": "https://siyuan.wiki/s/20250114074443-x288x2q"
   },
   "cs": {
     "theme": "Theme",
@@ -135,5 +139,15 @@
     "setHomeSuccess": "Home page set successfully",
     "setHomeError": "Home page setting failed=>",
     "actionSetAlready": "Already set"
+  },
+  "ui": {
+    "msgIngError": "The image has not been processed or the process failed, it is recommended to wait or reshare",
+    "shareSuccessError": "There is an exception in the sharing service, please contact youweics@163.com",
+    "copyTitle": "Share Link",
+    "copyWebLink": "Copy",
+    "clickView": "Click view",
+    "copySuccess": "Copy success",
+    "reShareSuccess": "Reshare successful",
+    "reShareError": "Reshare failed"
   }
 }

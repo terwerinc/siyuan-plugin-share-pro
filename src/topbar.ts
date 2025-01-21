@@ -18,6 +18,7 @@ import { ShareService } from "./service/ShareService"
 import PageUtil from "./utils/pageUtil"
 import { WidgetInvoke } from "./invoke/widgetInvoke"
 import pkg from "../package.json"
+import { NewUI } from "./newUI"
 
 /**
  * 顶部按钮
@@ -27,6 +28,8 @@ class Topbar {
   private pluginInstance: ShareProPlugin
   private shareService: ShareService
   private widgetInvoke: WidgetInvoke
+  private lock: boolean = false
+  private contextLock: boolean = false
 
   constructor(pluginInstance: ShareProPlugin) {
     this.logger = simpleLogger("topbar", "share-pro", isDev)
@@ -42,14 +45,45 @@ class Topbar {
       position: "right",
       callback: () => {},
     })
+
+    const newUI = new NewUI(this.pluginInstance, topBarElement)
+
     topBarElement.addEventListener("click", async () => {
-      // 初始化菜单
-      try {
-        await this.addMenu(topBarElement.getBoundingClientRect())
-      } catch (e) {
-        const errMsg = this.pluginInstance.i18n.topbar.shareSuccessError + e
-        showMessage(errMsg, 7000, "error")
+      if (this.lock) {
+        this.logger.warn("request is not finished, please wait...")
+        return
       }
+
+      this.lock = true
+      const settingConfig = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
+      if (settingConfig.isNewUIEnabled) {
+        await newUI.startShareForNewUI()
+      } else {
+        // 初始化菜单
+        try {
+          await this.addMenu(topBarElement.getBoundingClientRect())
+        } catch (e) {
+          const errMsg = this.pluginInstance.i18n.topbar.shareSuccessError + e
+          showMessage(errMsg, 7000, "error")
+        }
+      }
+
+      this.lock = false
+    })
+
+    // 添加右键菜单
+    topBarElement.addEventListener("contextmenu", async () => {
+      if (this.contextLock) {
+        this.logger.warn("request is not finished, please wait...")
+        return
+      }
+
+      this.contextLock = true
+      const settingConfig = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
+      if (settingConfig.isNewUIEnabled) {
+        await newUI.settingForNewUI()
+      }
+      this.contextLock = false
     })
   }
 

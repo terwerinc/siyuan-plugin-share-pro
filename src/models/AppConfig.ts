@@ -50,6 +50,13 @@ interface AppConfig {
     }
   ]
 
+  // add by v5.4.0+
+  themeConfig: {
+    // 导航栏logo
+    logo?: string
+  }
+
+  // pro only
   domains: Array<string>
   domain: string
   basePaths: Array<string>
