@@ -1,30 +1,16 @@
 # Changelog
 
 ## [1.9.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.8.2...share-pro-v1.9.0) (2025-01-21)
-
-
 ### Features
-
-* new UI ([47a51a2](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/47a51a2bd26e4106edada6b7ab82538a6f241883))
-* new UI ([bcb462f](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/bcb462f4eaa3de76fc5355a51621cf22fbe0ae56))
-* new UI ([3122360](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/3122360b4b3f98bec1b1fd1ae41b29b1aeb83a69))
-* new UI ([adeffb0](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/adeffb09cfb586fcb27990d01a06f40fcc245b4e))
-* new UI ([1f53496](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/1f5349694c46e7d837c46497aecd1cdebfce80d8))
-* new UI ([c65314e](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/c65314ee940585c40fa1e9d76b2a0c430d528466))
+* new ui ([c65314e](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/c65314ee940585c40fa1e9d76b2a0c430d528466))
 * update api ([12114ee](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/12114ee73249670a735ed3c79d2a1e03502f362b))
-
-
 ### Bug Fixes
-
 * dev error ([4dc137d](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/4dc137dddd906b067f3e696a75dbd245c283b34b))
 * menu add more than once in slow network ([e160f97](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/e160f97a2f8bfa79d669a11bbfd5ccb780bee69e))
-
 ## [1.8.2](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.8.1...share-pro-v1.8.2) (2024-11-29)
-### Bug Fixes
 * setting error in some cases ([e553342](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/e553342f9bf305f0112d6fdcc5aaba6abbbfd133))
 ## [1.8.1](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.8.0...share-pro-v1.8.1) (2024-11-25)
 ## [1.8.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.7.0...share-pro-v1.8.0) (2024-11-19)
-### Features
 * split setting ([161d2b2](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/161d2b23c46bbeb80a04029d49227f6cc6d22767))
 * support dark mode ([6dbfb2b](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/6dbfb2b568a05ff8a73fefc95b49c3cdfe6e8a79))
 * support lang setting ([30f62de](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/30f62ded923d2d723a3a981e9b3e89ae6d7a522c))
