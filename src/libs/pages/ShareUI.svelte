@@ -11,20 +11,77 @@
   import { Post } from "zhi-blog-api"
   import { onMount } from "svelte"
   import { ShareProConfig } from "../../models/ShareProConfig"
-  import { SHARE_PRO_STORE_NAME } from "../../Constants"
+  import { isDev, SHARE_PRO_STORE_NAME } from "../../Constants"
   import ShareProPlugin from "../../index"
   import { useSiyuanApi } from "../../composables/useSiyuanApi"
+  import { ShareService } from "../../service/ShareService"
+  import { confirm, showMessage } from "siyuan"
+  import { simpleLogger } from "zhi-lib-base"
+  import copy from "copy-to-clipboard"
 
   export let pluginInstance: ShareProPlugin
+  export let shareService: ShareService
   export let docId: string
+
+  const logger = simpleLogger("share-ui", "share-pro", isDev)
   let singleDocSetting: any
 
   let formData = {
     post: Post as any,
     shared: false,
+    shareData: {} as any,
+    lock: false,
+
+    shareLink: "",
   }
 
-  const handleShare = () => {}
+  const handleShare = async () => {
+    if (formData.shared) {
+      // 分享
+      try {
+        await shareService.createShare(docId)
+      } catch (e) {
+        formData.shared = false
+        showMessage(pluginInstance.i18n.ui.shareSuccessError, 3000, "info")
+      }
+    } else {
+      // 状态检测
+      logger.info("get shared data =>", formData.shareData)
+      if (formData.shareData?.shareStatus !== "COMPLETED") {
+        formData.lock = true
+        showMessage(pluginInstance.i18n.ui.msgIngError, 3000, "info")
+        return
+      }
+      // 取消分享
+      const ret = await shareService.deleteDoc(docId)
+      if (ret.code === 0) {
+        showMessage(pluginInstance.i18n.topbar.cancelSuccess, 3000, "info")
+      } else {
+        showMessage(pluginInstance.i18n.topbar.cancelError + ret.msg, 7000, "error")
+      }
+    }
+  }
+
+  const copyWebLink = () => {
+    const copyText = formData.shareLink
+    // const shareTemplate =
+    //         (StrUtil.isEmptyString(formData.setting.shareTemplate) ? formData.shareLink : formData.setting.shareTemplate) ?? formData.shareLink
+    // const copyText = shareTemplate
+    //         .replace(
+    //                 /\[expired]/g,
+    //                 StrUtil.isEmptyString(formData.expiredTime) || formData.expiredTime.toString().trim() === "0"
+    //                         ? "永久"
+    //                         : formData.expiredTime
+    //         )
+    //         .replace(/\[title]/g, formData.post.title)
+    //         .replace(/\[url]/g, formData.shareLink)
+    copy(copyText)
+    showMessage(pluginInstance.i18n.ui.copySuccess, 3000, "info")
+  }
+
+  const viewDoc = () => {
+    window.open(formData.shareLink)
+  }
 
   const initSingleDocSetting = async (cfg: ShareProConfig) => {
     const singleDocSettingKey = "share-pro-setting"
@@ -53,6 +110,14 @@
     // 初始化文档
     const { blogApi } = useSiyuanApi(cfg)
     formData.post = await blogApi.getPost(docId)
+    // 获取分享信息
+    const docInfo = await shareService.getSharedDocInfo(docId)
+    formData.shared = docInfo.code === 0
+    formData.shareData = docInfo?.data ? JSON.parse(docInfo.data) : null
+    // 分享链接
+    const customDomain = "siyuan.wiki"
+    const customPath = "s"
+    formData.shareLink = `https://${customDomain}/${customPath}/${docId}`
   })
 </script>
 
@@ -80,6 +145,25 @@
         />
       </div>
     </div>
+
+    {#if formData.shared && !formData.lock}
+      <div class="share-content">
+        <div class="setting-row">
+          <span class="setting-label">{pluginInstance.i18n.ui.copyTitle}</span>
+          <div class="input-group">
+            <input
+              type="text"
+              bind:value={formData.shareLink}
+              readonly
+              class="share-link-input"
+              on:click={viewDoc}
+              title={pluginInstance.i18n.ui.clickView}
+            />
+            <button on:click={copyWebLink}>{pluginInstance.i18n.ui.copyWebLink}</button>
+          </div>
+        </div>
+      </div>
+    {/if}
   {/if}
 </div>
 
@@ -161,6 +245,9 @@
     color #333333
     box-sizing border-box
     min-width 0
+
+  .input-group input[readonly]
+    color #aaa
 
   /* 防止 flex 布局导致超出容器 */
 

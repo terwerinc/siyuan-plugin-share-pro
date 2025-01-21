@@ -61,6 +61,7 @@ class NewUI {
           ShareUI,
           {
             pluginInstance: this.pluginInstance,
+            shareService: this.shareService,
             docId: docCheck.docId,
           },
           "share-pro-ui"

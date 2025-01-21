@@ -139,5 +139,13 @@
     "setHomeSuccess": "Home page set successfully",
     "setHomeError": "Home page setting failed=>",
     "actionSetAlready": "Already set"
+  },
+  "ui": {
+    "msgIngError": "The image has not been processed or the process failed, it is recommended to wait or reshare",
+    "shareSuccessError": "There is an exception in the sharing service, please contact youweics@163.com",
+    "copyTitle": "Share Link",
+    "copyWebLink": "Copy",
+    "clickView": "Click view",
+    "copySuccess": "Copy success"
   }
 }

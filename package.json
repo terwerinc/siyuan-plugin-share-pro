@@ -41,9 +41,11 @@
     "vitest": "^2.1.6"
   },
   "dependencies": {
-    "zhi-blog-api": "^1.67.2",
+    "cheerio": "^1.0.0",
+    "copy-to-clipboard": "^3.3.3",
+    "zhi-blog-api": "^1.70.0",
     "zhi-lib-base": "^0.8.0",
-    "zhi-siyuan-api": "^2.26.0"
+    "zhi-siyuan-api": "^2.26.3"
   },
   "packageManager": "pnpm@9.9.0"
 }
