@@ -68,7 +68,7 @@
     "fixTitle": "Remove title numbers",
     "fixTitleTip": "Remove numbers from titles like `001.Test title`, resulting in `Test title`",
     "domain": "Custom Domain",
-    "domainTip": "Supports built-in and custom domains, where https://share.terwergreen.com is a domain registered in China with fast access speed for mainland China, while other domains are global CDN domains.",
+    "domainTip": "Supports built-in and custom domains, all domains are global CDN domains.",
     "domainClick": "Click Here",
     "domainApply": "Apply For Custom Domain",
     "docPath": "Custom Document Path",

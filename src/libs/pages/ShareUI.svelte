@@ -121,9 +121,9 @@
     formData.shared = docInfo.code === 0
     formData.shareData = docInfo?.data ? JSON.parse(docInfo.data) : null
     // 分享链接
-    const customDomain = "siyuan.wiki"
-    const customPath = "s"
-    formData.shareLink = `https://${customDomain}/${customPath}/${docId}`
+    const customDomain = cfg?.appConfig?.domain ?? "https://siyuan.wiki"
+    const customPath = cfg?.appConfig?.docPath ?? "s"
+    formData.shareLink = `${customDomain}/${customPath}/${docId}`
   })
 </script>
 
