@@ -23,6 +23,7 @@
   "basicSetting": "基础设置",
   "customSetting": "个性设置",
   "docSetting": "文档设置",
+  "seoSetting": "SEO设置",
   "keyInfo": {
     "notValid": "注册码不合法或尚未注册",
     "registered": "已注册",
@@ -149,5 +150,22 @@
     "copySuccess": "复制成功",
     "reShareSuccess": "重新分享成功",
     "reShareError": "重新分享失败"
+  },
+  "seo": {
+    "saveSuccess": "SEO设置保存并同步成功",
+    "saveFail": "SEO设置保存失败",
+    "siteTitle": "网站标题",
+    "siteTitlePlaceholder": "请输入网站主标题（建议不超过30字）",
+    "siteSlogan": "网站标语",
+    "siteSloganPlaceholder": "请输入网站副标题/标语（建议不超过50字）",
+    "siteDescription": "网站描述",
+    "siteDescriptionPlaceholder": "请输入网站描述（建议150-160字，影响搜索引擎结果）",
+    "customHeader": "自定义头部代码",
+    "customHeaderTip": "可添加自定义CSS/JS代码，会插入到<head>标签末尾",
+    "customFooter": "自定义底部代码",
+    "customFooterTip": "可添加统计代码等，会插入到页面底部</body>之前",
+    "shareTemplate": "分享内容模板",
+    "shareTemplateTip": "使用{{title}}、{{url}}等变量定义分享内容的HTML模板",
+    "shareTemplatePlaceholder": "请输入分享模板，支持HTML和模板变量..."
   }
 }

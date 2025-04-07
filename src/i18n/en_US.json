@@ -23,6 +23,7 @@
   "basicSetting": "Basic setting",
   "customSetting": "Custom setting",
   "docSetting": "Doc setting",
+  "seoSetting": "SEO setting",
   "keyInfo": {
     "notValid": "Registration Code Is Invalid Or Not Registered",
     "registered": "You have already registered ",
@@ -149,5 +150,22 @@
     "copySuccess": "Copy success",
     "reShareSuccess": "Reshare successful",
     "reShareError": "Reshare failed"
+  },
+  "seo": {
+    "saveSuccess": "SEO settings saved and synced successfully",
+    "saveFail": "Failed to save SEO settings",
+    "siteTitle": "Site Title",
+    "siteTitlePlaceholder": "Enter main website title (recommended within 30 characters)",
+    "siteSlogan": "Site Slogan",
+    "siteSloganPlaceholder": "Enter website subtitle/slogan (recommended within 50 characters)",
+    "siteDescription": "Site Description",
+    "siteDescriptionPlaceholder": "Enter website description (150-160 characters recommended, affects SEO)",
+    "customHeader": "Custom Header",
+    "customHeaderTip": "Custom CSS/JS code that will be inserted before closing </head>",
+    "customFooter": "Custom Footer",
+    "customFooterTip": "Analytics code etc. that will be inserted before closing </body>",
+    "shareTemplate": "Share Template",
+    "shareTemplateTip": "HTML template with variables like {{title}}, {{url}} for sharing content",
+    "shareTemplatePlaceholder": "Enter share template (supports HTML and variables like {{title}}, {{url}})..."
   }
 }

@@ -12,11 +12,10 @@
   import { ShareProConfig } from "../../../models/ShareProConfig"
   import { onMount } from "svelte"
   import { DEFAULT_SIYUAN_LANG, isDev, SHARE_PRO_STORE_NAME } from "../../../Constants"
-  import { ApiUtils } from "../../../utils/ApiUtils"
   import { Dialog, showMessage } from "siyuan"
   import { simpleLogger } from "zhi-lib-base"
   import ShareProPlugin from "../../../index"
-  import { DefaultAppConfig, getSupportedThemes, syncAppConfig, versionMap } from "../../../utils/ShareConfigUtils"
+  import { DefaultAppConfig, syncAppConfig } from "../../../utils/ShareConfigUtils"
   import { SettingService } from "../../../service/SettingService"
   import { KeyInfo } from "../../../models/KeyInfo"
 
