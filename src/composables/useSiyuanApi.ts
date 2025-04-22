@@ -23,9 +23,11 @@ export const useSiyuanApi = (cfg: ShareProConfig) => {
     logger.warn("siyuan api url not match, use default")
     cfg.siyuanConfig.apiUrl = window.location.origin
   }
+  cfg.siyuanConfig.token = ""
   const siyuanConfig = new SiyuanConfig(cfg.siyuanConfig.apiUrl, cfg.siyuanConfig.token)
   // 开启了授权码可能不可用
-  siyuanConfig.cookie = cfg.siyuanConfig.cookie
+  siyuanConfig.cookie = ""
+  // siyuanConfig.cookie = cfg.siyuanConfig.cookie
   // 一些常用设置
   siyuanConfig.preferenceConfig.fixTitle = cfg.siyuanConfig?.preferenceConfig?.fixTitle ?? false
   siyuanConfig.preferenceConfig.docTreeEnable = cfg.appConfig?.docTreeEnabled ?? true
