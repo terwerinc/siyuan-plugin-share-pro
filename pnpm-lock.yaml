@@ -76,8 +76,8 @@ importers:
         specifier: ^2.2.0
         version: 2.2.0(vite@5.4.10(@types/node@18.19.67)(stylus@0.64.0))
       vite-tsconfig-paths:
-        specifier: ^5.1.3
-        version: 5.1.3(typescript@5.7.2)(vite@5.4.10(@types/node@18.19.67)(stylus@0.64.0))
+        specifier: ^5.1.4
+        version: 5.1.4(typescript@5.7.2)(vite@5.4.10(@types/node@18.19.67)(stylus@0.64.0))
       vitest:
         specifier: ^2.1.6
         version: 2.1.6(@types/node@18.19.67)(jsdom@25.0.1)(stylus@0.64.0)
@@ -2208,8 +2208,8 @@ packages:
     peerDependencies:
       vite: ^5.0.0 || ^6.0.0
 
-  vite-tsconfig-paths@5.1.3:
-    resolution: {integrity: sha512-0bz+PDlLpGfP2CigeSKL9NFTF1KtXkeHGZSSaGQSuPZH77GhoiQaA8IjYgOaynSuwlDTolSUEU0ErVvju3NURg==}
+  vite-tsconfig-paths@5.1.4:
+    resolution: {integrity: sha512-cYj0LRuLV2c2sMqhqhGpaO3LretdtMn/BVX4cPLanIZuwwrkVl+lK84E/miEXkCHWXuq65rhNN4rXsBcOB3S4w==}
     peerDependencies:
       vite: '*'
     peerDependenciesMeta:
@@ -4815,7 +4815,7 @@ snapshots:
       picocolors: 1.1.1
       vite: 5.4.10(@types/node@18.19.67)(stylus@0.64.0)
 
-  vite-tsconfig-paths@5.1.3(typescript@5.7.2)(vite@5.4.10(@types/node@18.19.67)(stylus@0.64.0)):
+  vite-tsconfig-paths@5.1.4(typescript@5.7.2)(vite@5.4.10(@types/node@18.19.67)(stylus@0.64.0)):
     dependencies:
       debug: 4.3.7
       globrex: 0.1.2
