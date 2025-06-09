@@ -1,10 +1,12 @@
 # Changelog
 
+## [1.10.1](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.10.0...share-pro-v1.10.1) (2025-04-22)
+### Bug Fixes
+* default auth ([95d5ea2](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/95d5ea291f20ee4ccc1a8f736fe60cff50bb66aa))
 ## [1.10.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.9.1...share-pro-v1.10.0) (2025-04-07)
 ### Features
 * support seo ([2789d48](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/2789d48d5855384899f27385195f4b547340e847))
 ## [1.9.1](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.9.0...share-pro-v1.9.1) (2025-02-08)
-### Bug Fixes
 * read custom domain for new ui ([2ecd3c5](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/2ecd3c555912118f4b25bd2b177cf5c76be48b69))
 ## [1.9.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.8.2...share-pro-v1.9.0) (2025-01-21)
 * new ui ([c65314e](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/c65314ee940585c40fa1e9d76b2a0c430d528466))
