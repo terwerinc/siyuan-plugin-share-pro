@@ -6,7 +6,9 @@ share your notes from siyuan-note with one click
 
 ## Features
 
-[View feature introduction](https://siyuan.wiki/s/20250111132959-fv1bjrw)
+[View feature introduction](https://siyuan.wiki/s/20250609174452-v3zltvg)
+
+[Official Announcement](https://siyuan.wiki/s/20241107113435-ypb8vqe)
 
 ## License
 
