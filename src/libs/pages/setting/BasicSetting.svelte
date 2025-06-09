@@ -67,8 +67,11 @@
 
 <div>
   <div class="config__tab-container">
-    {#if vipInfo.code === 1}
-      <div class="fn__block form-item no-register">{pluginInstance.i18n.keyInfo.notValid}</div>
+    {#if vipInfo.code === 1 || vipInfo.code === 403}
+      <div class="fn__block form-item no-register">
+        {pluginInstance.i18n.keyInfo.notValid}！
+        详细信息：{vipInfo.msg}
+      </div>
     {:else}
       <div class="fn__block form-item registered">
         <span>
