@@ -1,22 +1,13 @@
 # Changelog
 
 ## [1.11.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.10.1...share-pro-v1.11.0) (2025-06-09)
-
-
 ### Features
-
 * add echarts support ([b43689a](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/b43689afdeafd329651f80a8d08faa04cfa58c77))
-
-
 ### Bug Fixes
-
-* **setting:** enhance VIP info display and add detailed error message ([c1e3925](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/c1e39259bde6a97dc01fa41955085e4ac8ced133))
-
+* **setting:** enhance vip info display and add detailed error message ([c1e3925](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/c1e39259bde6a97dc01fa41955085e4ac8ced133))
 ## [1.10.1](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.10.0...share-pro-v1.10.1) (2025-04-22)
-### Bug Fixes
 * default auth ([95d5ea2](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/95d5ea291f20ee4ccc1a8f736fe60cff50bb66aa))
 ## [1.10.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.9.1...share-pro-v1.10.0) (2025-04-07)
-### Features
 * support seo ([2789d48](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/2789d48d5855384899f27385195f4b547340e847))
 ## [1.9.1](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.9.0...share-pro-v1.9.1) (2025-02-08)
 * read custom domain for new ui ([2ecd3c5](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/2ecd3c555912118f4b25bd2b177cf5c76be48b69))

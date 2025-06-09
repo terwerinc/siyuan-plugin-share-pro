@@ -6,7 +6,9 @@
 
 ## 功能特性
 
-[查看功能介绍](https://siyuan.wiki/s/20250111132959-fv1bjrw)
+[查看功能介绍](https://siyuan.wiki/s/20250609174452-v3zltvg)
+
+[官方公告](https://siyuan.wiki/s/20241107113435-ypb8vqe)
 
 ## 注册码
 
