@@ -4,6 +4,10 @@
 
 share your notes from siyuan-note with one click
 
+## Features
+
+[View feature introduction](https://siyuan.wiki/s/20250111132959-fv1bjrw)
+
 ## License
 
 https://store.terwer.space/products/share-pro
