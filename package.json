@@ -43,7 +43,7 @@
   "dependencies": {
     "cheerio": "^1.0.0",
     "copy-to-clipboard": "^3.3.3",
-    "zhi-blog-api": "^1.70.0",
+    "zhi-blog-api": "^1.73.1",
     "zhi-lib-base": "^0.8.0",
     "zhi-siyuan-api": "^2.26.3"
   },
