@@ -1,19 +1,11 @@
 # Changelog
 
 ## [1.12.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.11.0...share-pro-v1.12.0) (2025-07-21)
-
-
 ### Features
-
 * **setting:** increase document tree depth options and update related text ([1c2d6d9](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/1c2d6d9103fd1671238bef2c73213b961f8b4c73))
-
-
 ### Code Refactoring
-
-* **ShareUI:** simplify CSS and improve code readability ([92148cb](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/92148cbfba53d04095182066daccd8a594557a31))
-
+* **shareui:** simplify css and improve code readability ([92148cb](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/92148cbfba53d04095182066daccd8a594557a31))
 ## [1.11.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.10.1...share-pro-v1.11.0) (2025-06-09)
-### Features
 * add echarts support ([b43689a](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/b43689afdeafd329651f80a8d08faa04cfa58c77))
 ### Bug Fixes
 * **setting:** enhance vip info display and add detailed error message ([c1e3925](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/c1e39259bde6a97dc01fa41955085e4ac8ced133))
