@@ -30,7 +30,7 @@
 
   let docTreeEnabled = true
   let docTreeLevel = 3
-  let docTreeLevelOptions = [1, 2, 3]
+  let docTreeLevelOptions = [1, 2, 3, 4, 5, 6]
   let outlineEnabled = true
   let outlineLevel = 6
   let outlineLevelOptions = [
