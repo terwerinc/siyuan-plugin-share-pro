@@ -8,16 +8,16 @@
   -->
 
 <script lang="ts">
-  import { Post } from "zhi-blog-api"
+  import copy from "copy-to-clipboard"
+  import { showMessage } from "siyuan"
   import { onMount } from "svelte"
-  import { ShareProConfig } from "../../models/ShareProConfig"
+  import { Post } from "zhi-blog-api"
+  import { simpleLogger } from "zhi-lib-base"
+  import { useSiyuanApi } from "../../composables/useSiyuanApi"
   import { isDev, SHARE_PRO_STORE_NAME } from "../../Constants"
   import ShareProPlugin from "../../index"
-  import { useSiyuanApi } from "../../composables/useSiyuanApi"
+  import { ShareProConfig } from "../../models/ShareProConfig"
   import { ShareService } from "../../service/ShareService"
-  import { showMessage } from "siyuan"
-  import { simpleLogger } from "zhi-lib-base"
-  import copy from "copy-to-clipboard"
   import { icons } from "../../utils/svg"
 
   export let pluginInstance: ShareProPlugin
@@ -183,18 +183,24 @@
 </div>
 
 <style lang="stylus">
-  #share
-    font-family "Open Sans", "LXGW WenKai", "JetBrains Mono", "-apple-system", "Microsoft YaHei", "Times New Roman",
-    "方正北魏楷书_GBK", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans",
-    "Droid Sans", "Helvetica Neue", sans-serif
-    max-width 600px
-    min-width 475px
-    margin auto
-    padding 8px
-    padding-top 10px
-    padding-bottom 0
-    padding-left 14px
-    padding-right 14px
+#share .reshare-btn
+  color #333
+
+html[data-theme-mode="dark"] #share .reshare-btn
+  color #fff
+
+#share
+  font-family "Open Sans", "LXGW WenKai", "JetBrains Mono", "-apple-system", "Microsoft YaHei", "Times New Roman",
+  "方正北魏楷书_GBK", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans",
+  "Droid Sans", "Helvetica Neue", sans-serif
+  max-width 600px
+  min-width 475px
+  margin auto
+  padding 8px
+  padding-top 10px
+  padding-bottom 0
+  padding-left 14px
+  padding-right 14px
 
   .share-header
     font-size 14px
@@ -314,7 +320,7 @@
     transition background-color 0.3s, box-shadow 0.3s
     font-size 16px
     line-height 1
-    color #333
+    /* color 由顶部统一控制 */
 
 //  .info-text
 //    font-size 12px
@@ -383,7 +389,4 @@
 
     button:hover
       background-color #005bb5
-
-    //.reshare-btn
-    // color #fff
 </style>
