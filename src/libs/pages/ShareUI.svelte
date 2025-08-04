@@ -188,13 +188,18 @@
   "方正北魏楷书_GBK", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans",
   "Droid Sans", "Helvetica Neue", sans-serif
   max-width 600px
-  min-width 475px
+  //min-width 475px
+  min-width auto
   margin auto
   padding 8px
   padding-top 10px
   padding-bottom 0
   padding-left 14px
   padding-right 14px
+
+  /* 添加媒体查询，仅在 PC 端应用 min-width */
+  @media (min-width: 768px)
+    min-width 475px
 
   .share-header
     font-size 14px
