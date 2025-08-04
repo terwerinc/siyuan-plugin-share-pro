@@ -8,20 +8,21 @@
  *
  */
 
-import { ILogger, simpleLogger } from "zhi-lib-base"
-import ShareProPlugin from "../index"
-import { isDev, SHARE_PRO_STORE_NAME } from "../Constants"
-import { ServiceResponse, ShareApi } from "../api/share-api"
-import { useSiyuanApi } from "../composables/useSiyuanApi"
-import { ShareProConfig } from "../models/ShareProConfig"
 import { showMessage } from "siyuan"
 import { Post } from "zhi-blog-api"
-import { updateStatusBar } from "../statusBar"
-import { ApiUtils } from "../utils/ApiUtils"
-import { ImageUtils } from "../utils/ImageUtils"
+import { ILogger, simpleLogger } from "zhi-lib-base"
+import { isDev, SHARE_PRO_STORE_NAME } from "../Constants"
+import { ServiceResponse, ShareApi } from "../api/share-api"
 import { useDataTable } from "../composables/useDataTable"
 import { useEmbedBlock } from "../composables/useEmbedBlock"
 import { useFold } from "../composables/useFold"
+import { useSiyuanApi } from "../composables/useSiyuanApi"
+import ShareProPlugin from "../index"
+import { ShareProConfig } from "../models/ShareProConfig"
+import { updateStatusBar } from "../statusBar"
+import { ApiUtils } from "../utils/ApiUtils"
+import { ImageUtils } from "../utils/ImageUtils"
+import { ShareOptions } from "../models/ShareOptions"
 
 /**
  * 分享服务
@@ -49,15 +50,16 @@ class ShareService {
    *
    * @param docId 必传
    * @param post 传递之后可避免多次查询，个性分享传递
+   * @param options 分享选项，包括密码设置
    */
-  public async createShare(docId: string, post?: Post) {
+  public async createShare(docId: string, post?: Post, options?: ShareOptions) {
     try {
       const cfg = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
       if (!post) {
         // 菜单分享
         const { blogApi } = useSiyuanApi(cfg)
         post = await blogApi.getPost(docId)
-        this.logger.debug("get post", post)
+        this.addLog(this.pluginInstance.i18n["shareService"]["getPost"], "info")
       }
       const { getEmbedBlocks } = useEmbedBlock(cfg)
       const { getDataViews } = useDataTable(cfg)
@@ -81,7 +83,7 @@ class ShareService {
       // 数据库
       const dataViews = await getDataViews(post.editorDom)
       sPost.dataViews = dataViews
-      this.logger.debug("get dataViews from editorDom", dataViews)
+      this.addLog(this.pluginInstance.i18n["shareService"]["getDataViews"], "info")
       // 折叠块（标题）
       sPost.foldBlocks = await getFoldBlocks(post.editorDom)
       const shareBody = {
@@ -90,44 +92,41 @@ class ShareService {
         // 暂时不支持别名，后续再支持
         slug: post.postid,
         html: JSON.stringify(sPost),
+        // 密码保护
+        passwordEnabled: options?.passwordEnabled || false,
+        password: options?.password || "",
       }
       const resp = await this.shareApi.createShare(shareBody)
       if (resp.code !== 0) {
-        this.logger.error(
-          this.pluginInstance.i18n.shareService.msgDoc +
-            docId +
-            this.pluginInstance.i18n.shareService.msgShareError +
-            resp.msg
-        )
-        showMessage(this.pluginInstance.i18n.shareService.msgShareError + resp.msg, 7000, "error")
+        const errorMsg =
+          this.pluginInstance.i18n["shareService"]["shareErrorWithDoc"].replace("[param1]", docId) + resp.msg
+        this.addLog(errorMsg, "error")
+        showMessage(this.pluginInstance.i18n["shareService"]["msgShareError"] + resp.msg, 7000, "error")
         return
       }
-      this.logger.info(
-        this.pluginInstance.i18n.shareService.msgDoc +
-          post.title +
-          "[" +
-          docId +
-          "]" +
-          this.pluginInstance.i18n.shareService.msgShareSuccess
-      )
+      // 处理分享选项
+      await this.updateShareOptions(docId, options)
+      const successMsg = this.pluginInstance.i18n["shareService"]["shareSuccessWithDoc"]
+        .replace("[param1]", post.title)
+        .replace("[param2]", "[" + docId + "]")
+      this.addLog(successMsg, "info")
 
       // 处理图片
       const data = resp.data
       const media = data.media
       if (media && media.length > 0) {
-        showMessage(this.pluginInstance.i18n.shareService.msgProcessPic, 7000, "info")
+        showMessage(this.pluginInstance.i18n["shareService"]["msgProcessPic"], 7000, "info")
         // 异步处理图片
-        this.addLog(this.pluginInstance.i18n.shareService.msgStartPicBack, "info")
+        this.addLog(this.pluginInstance.i18n["shareService"]["msgStartPicBack"], "info")
         void this.processShareMedia(docId, media)
-        this.addLog(this.pluginInstance.i18n.shareService.msgEndPicBack, "info")
+        this.addLog(this.pluginInstance.i18n["shareService"]["msgEndPicBack"], "info")
       } else {
-        showMessage(this.pluginInstance.i18n.shareService.msgShareSuccess, 3000, "info")
+        showMessage(this.pluginInstance.i18n["shareService"]["msgShareSuccess"], 3000, "info")
       }
     } catch (e) {
-      this.logger.error(
-        this.pluginInstance.i18n.shareService.msgDoc + docId + this.pluginInstance.i18n.shareService.msgShareError + e
-      )
-      showMessage(this.pluginInstance.i18n.shareService.msgShareError + e, 7000, "error")
+      const exceptionMsg = this.pluginInstance.i18n["shareService"]["shareErrorWithDoc"].replace("[param1]", docId) + e
+      this.addLog(exceptionMsg, "error")
+      showMessage(this.pluginInstance.i18n["shareService"]["msgShareError"] + e, 7000, "error")
     }
   }
 
@@ -137,6 +136,37 @@ class ShareService {
 
   public async deleteDoc(docId: string) {
     return await this.shareApi.deleteDoc(docId)
+  }
+
+  /**
+   * 只更新分享选项（如密码等），不重新上传内容
+   *
+   * @param docId 文档ID
+   * @param options 分享选项
+   */
+  public async updateShareOptions(docId: string, options: ShareOptions) {
+    try {
+      const updateBody = {
+        docId,
+        passwordEnabled: options.passwordEnabled || false,
+        password: options.password || "",
+      }
+      const resp = await this.shareApi.updateShareOptions(updateBody)
+      if (resp.code !== 0) {
+        const errorMsg = this.pluginInstance.i18n["shareService"]["updateOptionsError"] + resp.msg
+        this.addLog(errorMsg, "error")
+        // showMessage(this.pluginInstance.i18n["ui"]["updateOptionsError"] + resp.msg, 7000, "error")
+        return resp
+      }
+      const successMsg = this.pluginInstance.i18n["shareService"]["updateOptionsSuccess"] + "：" + docId
+      this.addLog(successMsg, "info")
+      return resp
+    } catch (e) {
+      const exceptionMsg = this.pluginInstance.i18n["shareService"]["updateOptionsException"] + docId + " => " + e
+      this.addLog(exceptionMsg, "error")
+      // showMessage(this.pluginInstance.i18n["ui"]["updateOptionsError"] + e, 7000, "error")
+      throw e
+    }
   }
 
   public async listDoc(pageNum: number, pageSize: number, order: string, direction: string, search: string) {
@@ -155,7 +185,8 @@ class ShareService {
   // ================
 
   private async processShareMedia(docId: string, mediaList: any[]) {
-    this.logger.debug(`Processing media for ${docId}`, mediaList)
+    const processingMsg = this.pluginInstance.i18n["shareService"]["processingMedia"] + "：" + docId
+    this.addLog(processingMsg, "info")
     const { cfg, kernelApi } = await ApiUtils.getSiyuanKernelApi(this.pluginInstance)
 
     const perReq = 5
@@ -171,7 +202,7 @@ class ShareService {
       const mediaGroup = groupedMedia[i]
       const processedParams = []
 
-      const msgStartGroup = this.pluginInstance.i18n.shareService.msgStartGroup
+      const msgStartGroup = this.pluginInstance.i18n["shareService"]["msgStartGroup"]
       const msgStartGroupWithParam = msgStartGroup
         .replace("[param1]", i + 1)
         .replace("[param2]", groupedMedia.length)
@@ -180,7 +211,7 @@ class ShareService {
       for (const media of mediaGroup) {
         try {
           if (media.type !== "IMAGE") {
-            this.logger.warn("Non-image resource detected, skipping.")
+            this.addLog(this.pluginInstance.i18n["shareService"]["nonImageResource"], "info")
             continue
           }
           totalCount += 1
@@ -198,7 +229,7 @@ class ShareService {
             }
           }
 
-          const msgStartCurrentPic = this.pluginInstance.i18n.shareService.msgStartCurrentPic
+          const msgStartCurrentPic = this.pluginInstance.i18n["shareService"]["msgStartCurrentPic"]
           const msgStartCurrentPicWithParam = msgStartCurrentPic
             .replace("[param1]", totalCount)
             .replace("[param2]", imageUrl)
@@ -206,7 +237,7 @@ class ShareService {
           // const res = await kernelApi.forwardProxy(imageUrl, [], undefined, "GET", undefined, undefined, "base64")
           // 内部请求不必要走代理
           const res = await ImageUtils.fetchBase64WithContentType(imageUrl)
-          this.logger.debug("Image base64 response =>", res)
+          this.addLog(`Image base64 response =>${res}`, "info")
 
           if (res?.status !== 200) {
             errorCount += 1
@@ -225,11 +256,12 @@ class ShareService {
           }
           processedParams.push(params)
         } catch (e) {
-          this.logger.error(this.pluginInstance.i18n.shareService.msgMediaUploadError, e)
-          showMessage(this.pluginInstance.i18n.shareService.msgMediaUploadError + e, 7000, "error")
+          const mediaErrorMsg = this.pluginInstance.i18n["shareService"]["msgMediaUploadError"] + e
+          this.addLog(mediaErrorMsg, "error")
+          showMessage(this.pluginInstance.i18n["shareService"]["msgMediaUploadError"] + e, 7000, "error")
         }
       }
-      const msgGroupProcessSuccess = this.pluginInstance.i18n.shareService.msgGroupProcessSuccess
+      const msgGroupProcessSuccess = this.pluginInstance.i18n["shareService"]["msgGroupProcessSuccess"]
       const msgGroupProcessSuccessWithParam = msgGroupProcessSuccess
         .replace("[param1]", i + 1)
         .replace("[param2]", groupedMedia.length)
@@ -246,23 +278,23 @@ class ShareService {
       }
 
       // 处理上传结果
-      const msgProcessPicBatch = this.pluginInstance.i18n.shareService.msgProcessPicBatch
+      const msgProcessPicBatch = this.pluginInstance.i18n["shareService"]["msgProcessPicBatch"]
       const msgProcessPicBatchWithParam = msgProcessPicBatch.replace("[param1]", i + 1)
       this.addLog(msgProcessPicBatchWithParam, "info")
-      let uploadResult = await this.shareApi.uploadMedia(reqParams)
-      this.addLog(this.pluginInstance.i18n.shareService.msgBatchResult + JSON.stringify(uploadResult), "info")
+      const uploadResult = await this.shareApi.uploadMedia(reqParams)
+      this.addLog(this.pluginInstance.i18n["shareService"]["msgBatchResult"] + JSON.stringify(uploadResult), "info")
       if (uploadResult.code === 0) {
         successCount += processedParams.length
         if (!hasNext) {
           showMessage(
-            this.pluginInstance.i18n.shareService.msgYourDoc +
+            this.pluginInstance.i18n["shareService"]["msgYourDoc"] +
               docId +
-              this.pluginInstance.i18n.shareService.msgSuccessUpdateMedia,
+              this.pluginInstance.i18n["shareService"]["msgSuccessUpdateMedia"],
             3000,
             "info"
           )
         }
-        const msgCurrentMediaSuccess = this.pluginInstance.i18n.shareService.msgCurrentMediaSuccess
+        const msgCurrentMediaSuccess = this.pluginInstance.i18n["shareService"]["msgCurrentMediaSuccess"]
         const msgCurrentMediaSuccessWithParam = msgCurrentMediaSuccess.replace("[param1]", i + 1)
         this.addLog(msgCurrentMediaSuccessWithParam, "info")
       } else {
@@ -271,7 +303,7 @@ class ShareService {
         if (!uploadResult.msg) {
           rtnMsg = (uploadResult as any).message
         }
-        const msgCurrentMediaError = this.pluginInstance.i18n.shareService.msgCurrentMediaError
+        const msgCurrentMediaError = this.pluginInstance.i18n["shareService"]["msgCurrentMediaError"]
         const msgCurrentMediaErrorWithParam = msgCurrentMediaError.replace("[param1]", i + 1)
         const errMsg = msgCurrentMediaErrorWithParam + rtnMsg
         this.addLog(errMsg, "error")
@@ -279,16 +311,16 @@ class ShareService {
       }
     }
 
-    const successPic = this.pluginInstance.i18n.shareService.successPic
+    const successPic = this.pluginInstance.i18n["shareService"]["successPic"]
     const successPicWithParam = successPic
       .replace("[param1]", totalCount)
       .replace("[param2]", successCount)
       .replace("[param3]", errorCount)
     this.addLog(successPicWithParam, "info")
     if (successCount === totalCount) {
-      showMessage(this.pluginInstance.i18n.shareService.success, 3000, "info")
+      showMessage(this.pluginInstance.i18n["shareService"]["success"], 3000, "info")
     } else {
-      const errorPic = this.pluginInstance.i18n.shareService.errorPic
+      const errorPic = this.pluginInstance.i18n["shareService"]["errorPic"]
       const msgWithParam = errorPic.replace("[param1]", errorCount)
       showMessage(msgWithParam, 7000, "error")
     }

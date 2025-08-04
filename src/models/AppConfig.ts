@@ -67,6 +67,10 @@ interface AppConfig {
   outlineEnabled: boolean
   outlineLevel: number
 
+  // 全局密码保护功能
+  passwordEnabled?: boolean
+  showPassword?: boolean
+
   // 加上字符串索引签名，兼容 AppConfigInput 约束
   [key: string]: any
 }

@@ -79,7 +79,12 @@
     "docTreeDepth": "文档树深度",
     "outline": "文档大纲",
     "outlineTip": "是否开启文档大纲，若开启，可设置最大深度，设置为 6，表示最多可获取到 h6，开启关闭实时生效，但是修改深度需要重新分享。",
-    "outlineDepth": "文档大纲深度"
+    "outlineDepth": "文档大纲深度",
+    "passwordEnabled": "密码保护",
+    "passwordEnabledTip": "是否开启密码保护，开启之后默认为每篇文档随机生成分享密码，可更改",
+    "showPassword": "密码显示",
+    "showPasswordTip": "开启密码保护之后生效，是否显示密码，默认密码显示为密文***，需要点击后面眼睛图片切换为明文",
+    "visitPassword": "访问密码："
   },
   "shareService": {
     "msgDoc": "文档",
@@ -100,7 +105,16 @@
     "msgCurrentMediaError": "第[param1]组媒体上传失败=>",
     "success": "恭喜你，图片全部处理成功",
     "successPic": "图片全部处理完毕，总数（[param1]），成功（[param2]），失败（[param3]）",
-    "errorPic": "[param1]张图片处理失败，请查看日志"
+    "errorPic": "[param1]张图片处理失败，请查看日志",
+    "updateOptionsSuccess": "分享选项更新成功",
+    "updateOptionsError": "更新分享选项失败：",
+    "updateOptionsException": "更新分享选项异常：",
+    "shareErrorWithDoc": "文档[param1]分享失败：",
+    "shareSuccessWithDoc": "文档[param1][param2]分享成功",
+    "processingMedia": "正在处理媒体文件",
+    "nonImageResource": "检测到非图片资源，跳过处理",
+    "getPost": "获取文档信息",
+    "getDataViews": "获取数据视图"
   },
   "topbar": {
     "shareSuccessError": "分享服务异常，请联系 youweics@163.com：",
@@ -149,7 +163,16 @@
     "clickView": "点击查看",
     "copySuccess": "复制成功",
     "reShareSuccess": "重新分享成功",
-    "reShareError": "重新分享失败"
+    "reShareError": "重新分享失败",
+    "passwordTitle": "访问密码",
+    "passwordPlaceholder": "请输入访问密码，留空则表示完全公开",
+    "passwordTip": "设置访问密码后，访问者需要输入密码才能查看文档",
+    "passwordEnabled": "启用密码保护",
+    "passwordDisabled": "禁用密码保护",
+    "passwordSetSuccess": "密码设置成功",
+    "passwordSetError": "密码设置失败",
+    "updateOptionsSuccess": "分享选项更新成功",
+    "updateOptionsError": "分享选项更新失败"
   },
   "seo": {
     "saveSuccess": "SEO设置保存并同步成功",

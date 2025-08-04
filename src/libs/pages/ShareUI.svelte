@@ -34,13 +34,19 @@
     lock: false,
 
     shareLink: "",
+    password: "",
+    passwordEnabled: false,
+    showPassword: false
   }
 
   const handleShare = async () => {
     if (formData.shared) {
       // 分享
       try {
-        await shareService.createShare(docId)
+        await shareService.createShare(docId, undefined, {
+          passwordEnabled: formData.passwordEnabled,
+          password: formData.password
+        })
       } catch (e) {
         formData.shared = false
         showMessage(pluginInstance.i18n["ui"]["shareSuccessError"], 3000, "info")
@@ -65,11 +71,28 @@
   }
 
   const handleReShare = async () => {
-    await shareService.createShare(docId)
+    await shareService.createShare(docId, undefined, {
+      passwordEnabled: formData.passwordEnabled,
+      password: formData.password
+    })
+  }
+
+  const handlePasswordChange = async () => {
+    if (formData.shared) {
+      try {
+        await shareService.updateShareOptions(docId, {
+          passwordEnabled: formData.passwordEnabled,
+          password: formData.password
+        })
+        showMessage(pluginInstance.i18n["ui"]["updateOptionsSuccess"], 3000, "info")
+      } catch (e) {
+        showMessage(pluginInstance.i18n["ui"]["updateOptionsError"], 3000, "error")
+      }
+    }
   }
 
   const copyWebLink = () => {
-    const copyText = formData.shareLink
+    let copyText = formData.shareLink
     // const shareTemplate =
     //         (StrUtil.isEmptyString(formData.setting.shareTemplate) ? formData.shareLink : formData.setting.shareTemplate) ?? formData.shareLink
     // const copyText = shareTemplate
@@ -81,6 +104,10 @@
     //         )
     //         .replace(/\[title]/g, formData.post.title)
     //         .replace(/\[url]/g, formData.shareLink)
+      if(formData.passwordEnabled){
+          // copyText = copyText.replace(/\[password]/g, formData.password)
+          copyText = copyText + " " + pluginInstance.i18n["cs"]["visitPassword"] + formData.password
+      }
     copy(copyText)
     showMessage(pluginInstance.i18n["ui"]["copySuccess"], 3000, "info")
   }
@@ -109,6 +136,10 @@
     }
   }
 
+  const getNewRndPassword = ()=>{
+      return Math.random().toString(36).substring(2, 15)
+  }
+
   onMount(async () => {
     // 初始化单篇文档分享设置
     const cfg = await pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
@@ -124,6 +155,17 @@
     const customDomain = cfg?.appConfig?.domain ?? "https://siyuan.wiki"
     const customPath = cfg?.appConfig?.docPath ?? "s"
     formData.shareLink = `${customDomain}/${customPath}/${docId}`
+
+    // 初始化密码设置
+    formData.passwordEnabled = formData.shareData?.passwordEnabled || cfg.appConfig?.passwordEnabled || false
+    formData.showPassword = cfg.appConfig?.showPassword || false
+    if (formData.passwordEnabled) {
+        const rndPassword = getNewRndPassword()
+        formData.password = formData.shareData?.password || rndPassword
+    } else {
+        formData.password = formData.shareData?.password || ""
+    }
+    logger.info(`get password option => passwordEnabled=${formData.passwordEnabled}, showPassword=${formData.showPassword}`)
   })
 </script>
 
@@ -141,17 +183,17 @@
     <div class="share-settings">
       <div class="setting-row">
         <span class="setting-label">
-          {pluginInstance.i18n.sharePro} - {pluginInstance.i18n.shareProDesc}
+          {pluginInstance.i18n["sharePro"]} - {pluginInstance.i18n["shareProDesc"]}
         </span>
 
         <div class="reshare-container">
           {#if formData.shared}
-            <span class="reshare-btn" title={pluginInstance.i18n.reShare} on:click={handleReShare}>
+            <span class="reshare-btn" title={pluginInstance.i18n["reShare"]} on:click={handleReShare}>
               {@html icons.iconReShare}
             </span>
           {/if}
           <input
-            title={formData.shared ? pluginInstance.i18n.cancelShare : pluginInstance.i18n.startShare}
+            title={formData.shared ? pluginInstance.i18n["cancelShare"] : pluginInstance.i18n["startShare"]}
             class="b3-switch fn__flex-center share-btn"
             type="checkbox"
             bind:checked={formData.shared}
@@ -175,6 +217,61 @@
               title={pluginInstance.i18n["ui"]["clickView"]}
             />
             <button on:click={copyWebLink}>{pluginInstance.i18n["ui"]["copyWebLink"]}</button>
+          </div>
+        </div>
+
+        <!-- 密码设置 -->
+        <div class="setting-row">
+          <span class="setting-label">{pluginInstance.i18n["ui"]["passwordTitle"]}</span>
+          <div class="password-container">
+            <input
+              type="checkbox"
+              bind:checked={formData.passwordEnabled}
+              class="b3-switch fn__flex-center password-toggle"
+              title={formData.passwordEnabled ? pluginInstance.i18n["ui"]["passwordDisabled"] : pluginInstance.i18n["ui"]["passwordEnabled"]}
+              on:change={handlePasswordChange}
+            />
+            {#if formData.passwordEnabled}
+              <div class="password-input-container">
+                <input
+                    type={formData.showPassword ? "text" : "password"}
+                    value={formData.password}
+                    placeholder={pluginInstance.i18n["ui"]["passwordPlaceholder"]}
+                    class="password-input"
+                    title={pluginInstance.i18n["ui"]["passwordTip"]}
+                    on:blur={handlePasswordChange}
+                />
+                <button
+                    type="button"
+                    class="password-visibility-toggle"
+                    on:click={(event) => {
+                        event.stopPropagation()
+                        formData.showPassword = !formData.showPassword
+                    }}
+                    title={formData.showPassword ? pluginInstance.i18n["ui"]["hidePassword"] : pluginInstance.i18n["ui"]["showPassword"]}
+                >
+                  {#if formData.showPassword}
+                    <!-- 隐藏密码图标 -->
+                    ***
+                  {:else}
+                    <!-- 显示密码图标 -->
+                    <svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M12 9a3 3 0 0 1 3 3a3 3 0 0 1-3 3a3 3 0 0 1-3-3a3 3 0 0 1 3-3m0-4.5c5 0 9.27 3.11 11 7.5c-1.73 4.39-6 7.5-11 7.5S2.73 16.39 1 12c1.73-4.39 6-7.5 11-7.5M3.18 12a9.821 9.821 0 0 0 17.64 0a9.821 9.821 0 0 0-17.64 0z"/></svg>
+                  {/if}
+                </button>
+                <button
+                    type="button"
+                    class="password-visibility-toggle"
+                    on:click={(event) => {
+                        event.stopPropagation()
+                        formData.password = getNewRndPassword()
+                    }}
+                    title={pluginInstance.i18n["ui"]["refreshPassword"]}
+                >
+                  <!-- 刷新密码图标 -->
+                  <svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M12 9a3 3 0 0 1 3 3a3 3 0 0 1-3 3a3 3 0 0 1-3-3a3 3 0 0 1 3-3m0-4.5c5 0 9.27 3.11 11 7.5c-1.73 4.39-6 7.5-11 7.5S2.73 16.39 1 12c1.73-4.39 6-7.5 11-7.5M3.18 12a9.821 9.821 0 0 0 17.64 0a9.821 9.821 0 0 0-17.64 0z"/></svg>
+                </button>
+              </div>
+            {/if}
           </div>
         </div>
       </div>
@@ -313,6 +410,45 @@
     line-height 1
     color #333
 
+  .password-container
+    display flex
+    align-items center
+    gap 8px
+    width 100%
+
+  .password-input-container
+    position relative
+    flex-grow 1
+    min-width 0
+
+  .password-input
+    width 100%
+    box-sizing border-box
+    height 28px
+    padding 4px 8px
+    border 1px solid #cccccc
+    border-radius 4px
+    font-size 14px
+    background-color #f9f9f9
+    color #333333
+    min-width 0
+
+  .password-visibility-toggle
+    position absolute
+    right 8px
+    top 50%
+    transform translateY(-50%)
+    background none
+    border none
+    cursor pointer
+    padding 0
+    color var(--b3-theme-on-surface)
+    &:hover
+      background none
+      border none
+      color var(--b3-theme-on-surface) !important
+      opacity 0.8
+
 html[data-theme-mode="light"] #share
   //.divider
   //  background-color #e3e3e3
@@ -347,6 +483,16 @@ html[data-theme-mode="dark"] #share
     border-color #444444
 
   .input-group input:not([readonly]):focus
+    border-color #0073e6
+    background-color #3a3a3a
+    box-shadow 0 0 4px rgba(0, 115, 230, 0.5)
+
+  .password-input
+    border-color #444444
+    background-color #2c2c2c
+    color var(--b3-theme-on-background)
+
+  .password-input:focus
     border-color #0073e6
     background-color #3a3a3a
     box-shadow 0 0 4px rgba(0, 115, 230, 0.5)

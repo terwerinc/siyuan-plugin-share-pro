@@ -7,11 +7,11 @@
  *  of this license document, but changing it is not allowed.
  */
 
+import { showMessage } from "siyuan"
+import { ILogger, simpleLogger } from "zhi-lib-base"
 import { isDev, SHARE_PRO_STORE_NAME } from "../Constants"
 import ShareProPlugin from "../index"
 import { ShareProConfig } from "../models/ShareProConfig"
-import { ILogger, simpleLogger } from "zhi-lib-base"
-import { showMessage } from "siyuan"
 
 class ShareApi {
   private logger: ILogger
@@ -92,6 +92,15 @@ class ShareApi {
     return res
   }
 
+  /**
+   * 更新分享选项（如密码等），不重新上传内容
+   */
+  public async updateShareOptions(updateBody: any) {
+    const res = await this.shareServiceRequest(ServiceApiKeys.API_SHARE_UPDATE_OPTIONS, updateBody)
+    this.logger.info("share options updated =>", res)
+    return res
+  }
+
   // ================
   // private function
   // ================
@@ -146,6 +155,7 @@ enum ServiceApiKeys {
   API_SHARE_GET_DOC = "/api/share/getDoc",
   API_SHARE_DELETE_DOC = "/api/share/delete",
   API_SHARE_CREATE = "/api/share/create",
+  API_SHARE_UPDATE_OPTIONS = "/api/share/updateOptions",
   API_LICENSE_VIP_INFO = "/api/license/vipInfo",
   API_UPLOAD_MEDIA = "/api/asset/upload",
   API_LIST_DOC = "/api/share/listDoc",
@@ -160,4 +170,5 @@ class ServiceResponse {
   data: any
 }
 
-export { ShareApi, ServiceResponse }
+export { ServiceResponse, ShareApi }
+
