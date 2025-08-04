@@ -309,12 +309,13 @@
     .share-content
       margin-top 14px
 
+    /* ===== 修改1：调整设置行间距 ===== */
     .setting-row
       display flex
       align-items center
       justify-content space-between
-      margin-bottom 10px
-      gap 8px
+      margin-bottom 8px  /* 从10px减小到8px */
+      gap 6px  /* 从8px减小到6px */
 
     .setting-label
       font-size 14px
@@ -322,13 +323,45 @@
       margin-right 8px
       color var(--b3-theme-on-surface)
 
+    /* ===== 修改2：调整输入框组间距 ===== */
     .input-group
       display flex
       align-items center
-      gap 8px
+      gap 6px  /* 从8px减小到6px */
       flex-grow 1
       width 100%
 
+    /* ===== 修改3：调整按钮尺寸 ===== */
+    button
+      padding 3px 10px  /* 从4px 12px减小 */
+      font-size 13px  /* 从14px减小 */
+      color #ffffff
+      border none
+      border-radius 4px
+      cursor pointer
+      background-color #0073e6
+      transition all 0.2s ease
+      white-space nowrap
+      flex-shrink 0
+      height 26px  /* 从28px减小 */
+      line-height 20px  /* 新增行高控制 */
+
+      &:hover
+        background-color #005bb5
+        box-shadow 0 2px 4px rgba(0, 0, 0, 0.1)
+
+      &:active
+        background-color #004999
+        transform translateY(1px)
+
+    /* ===== 修改4：调整密码输入框间距 ===== */
+    .password-container
+      display flex
+      align-items center
+      gap 6px  /* 从8px减小到6px */
+      width 100%
+
+    /* ===== 以下保持原有样式不变 ===== */
     .input-group input
       flex-grow 1
       height 28px
@@ -366,27 +399,6 @@
       &:hover
         background-color #e6e6e6
 
-    button
-      padding 4px 12px
-      font-size 14px
-      color #ffffff
-      border none
-      border-radius 4px
-      cursor pointer
-      background-color #0073e6
-      transition all 0.2s ease
-      white-space nowrap
-      flex-shrink 0
-      height 28px
-
-      &:hover
-        background-color #005bb5
-        box-shadow 0 2px 4px rgba(0, 0, 0, 0.1)
-
-      &:active
-        background-color #004999
-        transform translateY(1px)
-
     .reshare-container
       display flex
       align-items center
@@ -409,13 +421,6 @@
       svg
         width 16px
         height 16px
-
-    /* 密码输入框专用样式 */
-    .password-container
-      display flex
-      align-items center
-      gap 8px
-      width 100%
 
     .password-input-container
       position relative
@@ -463,7 +468,6 @@
         width 16px
         height 16px
 
-    /* 第二个按钮（刷新图标） */
     .password-visibility-toggle + .password-visibility-toggle
       right 8px
       width 24px
