@@ -138,6 +138,7 @@
         const customPath = cfg?.appConfig?.docPath ?? "s"
         formData.shareLink = `${customDomain}/${customPath}/${docId}`
 
+        // 分享密码
         formData.passwordEnabled = formData.shareData?.passwordEnabled || cfg.appConfig?.passwordEnabled || false
         formData.showPassword = cfg.appConfig?.showPassword || false
         if (formData.passwordEnabled) {
@@ -261,7 +262,7 @@
 
 <style lang="stylus">
   #share
-    /* 保持原有样式不变 */
+    /* 基础样式 */
     font-family "Open Sans", "LXGW WenKai", "JetBrains Mono", "-apple-system", "Microsoft YaHei", "Times New Roman",
     "方正北魏楷书_GBK", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans",
     "Droid Sans", "Helvetica Neue", sans-serif
@@ -309,13 +310,26 @@
     .share-content
       margin-top 14px
 
-    /* ===== 修改1：调整设置行间距 ===== */
+    .input-group input,
+    .password-input
+      &:focus
+        border-color: #1890ff  /* Ant Design主蓝色 */
+        box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2)  /* 标准Ant Design阴影 */
+        outline: none
+        transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1)  /* Ant Design标准过渡 */
+
+    html[data-theme-mode="dark"] #share
+      .input-group input:focus,
+      .password-input:focus
+        border-color: #177ddc  /* 暗色主蓝 */
+        box-shadow: 0 0 0 2px rgba(23, 125, 220, 0.2)  /* 暗色阴影 */
+
     .setting-row
       display flex
       align-items center
       justify-content space-between
-      margin-bottom 8px  /* 从10px减小到8px */
-      gap 6px  /* 从8px减小到6px */
+      margin-bottom 8px
+      gap 6px
 
     .setting-label
       font-size 14px
@@ -323,18 +337,16 @@
       margin-right 8px
       color var(--b3-theme-on-surface)
 
-    /* ===== 修改2：调整输入框组间距 ===== */
     .input-group
       display flex
       align-items center
-      gap 6px  /* 从8px减小到6px */
+      gap 6px
       flex-grow 1
       width 100%
 
-    /* ===== 修改3：调整按钮尺寸 ===== */
     button
-      padding 3px 10px  /* 从4px 12px减小 */
-      font-size 13px  /* 从14px减小 */
+      padding 3px 10px
+      font-size 13px
       color #ffffff
       border none
       border-radius 4px
@@ -343,8 +355,8 @@
       transition all 0.2s ease
       white-space nowrap
       flex-shrink 0
-      height 26px  /* 从28px减小 */
-      line-height 20px  /* 新增行高控制 */
+      height 26px
+      line-height 20px
 
       &:hover
         background-color #005bb5
@@ -354,14 +366,12 @@
         background-color #004999
         transform translateY(1px)
 
-    /* ===== 修改4：调整密码输入框间距 ===== */
     .password-container
       display flex
       align-items center
-      gap 6px  /* 从8px减小到6px */
+      gap 6px
       width 100%
 
-    /* ===== 以下保持原有样式不变 ===== */
     .input-group input
       flex-grow 1
       height 28px
@@ -378,11 +388,6 @@
     .input-group input[readonly]
       color #aaa
       cursor pointer
-
-    .input-group input:focus
-      outline none
-      border-color #0073e6
-      box-shadow 0 0 4px rgba(0, 115, 230, 0.5)
 
     .share-link-input
       height 28px
@@ -472,7 +477,7 @@
       right 8px
       width 24px
 
-    /* 暗色模式适配 */
+    /* 暗色模式 */
     html[data-theme-mode="dark"] #share
       .divider
         background-color #444
