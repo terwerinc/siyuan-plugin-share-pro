@@ -261,6 +261,7 @@
 
 <style lang="stylus">
   #share
+    /* 保持原有样式不变 */
     font-family "Open Sans", "LXGW WenKai", "JetBrains Mono", "-apple-system", "Microsoft YaHei", "Times New Roman",
     "方正北魏楷书_GBK", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans",
     "Droid Sans", "Helvetica Neue", sans-serif
@@ -409,7 +410,7 @@
         width 16px
         height 16px
 
-    /* 密码输入框专用样式 - 修改部分开始 */
+    /* 密码输入框专用样式 */
     .password-container
       display flex
       align-items center
@@ -420,13 +421,14 @@
       position relative
       flex-grow 1
       min-width 0
+      display flex
+      align-items center
 
     .password-input
-      width 100%
-      padding-right 70px !important
-      box-sizing border-box
-      height 28px
-      padding 4px 8px
+      flex-grow 1
+      padding-right 70px
+      height 24px
+      padding-left 4px
       border 1px solid #cccccc
       border-radius 4px
       font-size 14px
@@ -434,22 +436,16 @@
       color #333333
       transition all 0.2s ease
 
-      &:focus
-        outline none
-        border-color #0073e6
-        box-shadow 0 0 4px rgba(0, 115, 230, 0.5)
-
     .password-visibility-toggle
       position absolute
       right 36px
-      top 50%
-      transform translateY(-50%)
+      top 0
+      height 28px
       background none
       border none
       cursor pointer
       padding 0
       width 24px
-      height 24px
       color var(--b3-theme-on-surface)
       z-index 1
       display flex
@@ -457,7 +453,6 @@
       justify-content center
       opacity 0.7
       transition all 0.2s ease
-      border-radius 4px
 
       &:hover
         opacity 1
@@ -472,56 +467,55 @@
     .password-visibility-toggle + .password-visibility-toggle
       right 8px
       width 24px
-      height 24px
 
-  /* 暗色模式适配 */
-  html[data-theme-mode="dark"] #share
-    .divider
-      background-color #444
+    /* 暗色模式适配 */
+    html[data-theme-mode="dark"] #share
+      .divider
+        background-color #444
 
-    .setting-label
-      color var(--b3-theme-on-background)
+      .setting-label
+        color var(--b3-theme-on-background)
 
-    .input-group input
-      border-color #444444
-      background-color #2c2c2c
-      color var(--b3-theme-on-background)
+      .input-group input
+        border-color #444444
+        background-color #2c2c2c
+        color var(--b3-theme-on-background)
 
-    .input-group input[readonly]
-      color #777
+      .input-group input[readonly]
+        color #777
 
-    .share-link-input
-      background-color #333
-      color #999
+      .share-link-input
+        background-color #333
+        color #999
 
-      &:hover
-        background-color #3a3a3a
+        &:hover
+          background-color #3a3a3a
 
-    .password-input
-      border-color #444444
-      background-color #2c2c2c
-      color var(--b3-theme-on-background)
+      .password-input
+        border-color #444444
+        background-color #2c2c2c
+        color var(--b3-theme-on-background)
 
-    .password-visibility-toggle
-      color var(--b3-theme-on-background)
+      .password-visibility-toggle
+        color var(--b3-theme-on-background)
 
-      &:hover
-        color var(--b3-theme-primary)
-        background-color rgba(0, 115, 230, 0.2)
+        &:hover
+          color var(--b3-theme-primary)
+          background-color rgba(0, 115, 230, 0.2)
 
-    .reshare-btn
-      color var(--b3-theme-on-background)
+      .reshare-btn
+        color var(--b3-theme-on-background)
 
-      &:hover
-        color var(--b3-theme-primary)
-        background-color rgba(0, 115, 230, 0.2)
+        &:hover
+          color var(--b3-theme-primary)
+          background-color rgba(0, 115, 230, 0.2)
 
-    .b3-switch.fn__flex-center
-      background-color: #555
+      .b3-switch.fn__flex-center
+        background-color: #555
 
-      &::after
-        background-color: #ddd
+        &::after
+          background-color: #ddd
 
-      &:checked
-        background-color: #0073e6
+        &:checked
+          background-color: #0073e6
 </style>
