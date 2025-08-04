@@ -172,7 +172,10 @@
     "passwordSetSuccess": "密码设置成功",
     "passwordSetError": "密码设置失败",
     "updateOptionsSuccess": "分享选项更新成功",
-    "updateOptionsError": "分享选项更新失败"
+    "updateOptionsError": "分享选项更新失败",
+    "hidePassword": "隐藏密码",
+    "showPassword": "显示密码",
+    "refreshPassword": "刷新密码"
   },
   "seo": {
     "saveSuccess": "SEO设置保存并同步成功",

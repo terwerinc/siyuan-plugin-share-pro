@@ -172,7 +172,10 @@
     "passwordSetSuccess": "Password set successfully",
     "passwordSetError": "Failed to set password",
     "updateOptionsSuccess": "Options updated successfully",
-    "updateOptionsError": "Failed to update options"
+    "updateOptionsError": "Failed to update options",
+    "hidePassword": "Hide password",
+    "showPassword": "Show password",
+    "refreshPassword": "Refresh password"
   },
   "seo": {
     "saveSuccess": "SEO settings saved and synced successfully",
