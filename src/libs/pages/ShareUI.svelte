@@ -473,7 +473,6 @@
       right 8px
       width 24px
       height 24px
-  /* 密码输入框专用样式 - 修改部分结束 */
 
   /* 暗色模式适配 */
   html[data-theme-mode="dark"] #share
