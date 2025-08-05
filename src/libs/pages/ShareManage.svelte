@@ -138,7 +138,7 @@
   // @ts-ignore
   window.cancelShareFromSharePro = async function (docId: string, docTitle: string) {
     confirm(pluginInstance.i18n.tipTitle, pluginInstance.i18n.confirmDelete + "【" + docTitle + "】", async () => {
-      const ret = await shareService.deleteDoc(docId)
+      const ret = await shareService.cancelShare(docId)
       if (ret.code === 0) {
         await updateTable()
         showMessage(pluginInstance.i18n.topbar.cancelSuccess, 3000, "info")

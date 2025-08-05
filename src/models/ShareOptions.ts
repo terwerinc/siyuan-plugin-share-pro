@@ -16,13 +16,11 @@
 class ShareOptions {
   public passwordEnabled?: boolean
   public password?: string
-  /**
-   * 分享有效期（秒），0 表示永久有效
-   *
-   * @author terwer
-   * @since 1.13.0
-   */
-  public expiresTime?: number | string
+
+  public constructor() {
+    this.passwordEnabled = false
+    this.password = ""
+  }
 }
 
 export { ShareOptions }

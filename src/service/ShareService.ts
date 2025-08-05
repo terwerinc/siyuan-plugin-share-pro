@@ -23,6 +23,10 @@ import { ShareProConfig } from "../models/ShareProConfig"
 import { updateStatusBar } from "../statusBar"
 import { ApiUtils } from "../utils/ApiUtils"
 import { ImageUtils } from "../utils/ImageUtils"
+import { SingleDocSetting } from "../models/SingleDocSetting"
+import { SiyuanKernelApi } from "zhi-siyuan-api"
+import { SettingKeys } from "../utils/SettingKeys"
+import { AttrUtils } from "../utils/AttrUtils"
 
 /**
  * 分享服务
@@ -49,18 +53,19 @@ class ShareService {
    * 创建分享
    *
    * @param docId 必传
-   * @param post 传递之后可避免多次查询，个性分享传递
+   * @param settings 文档设置，包括文档树和目录大纲
    * @param options 分享选项，包括密码设置
    */
-  public async createShare(docId: string, post?: Post, options?: Partial<ShareOptions>) {
+  public async createShare(docId: string, settings?: Partial<SingleDocSetting>, options?: Partial<ShareOptions>) {
     try {
+      // 处理文档选项，保存到文档属性
+      await this.updateSingleDocSettings(docId, true, settings)
+      // 获取最新文档详情
       const cfg = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
-      if (!post) {
-        // 菜单分享
-        const { blogApi } = useSiyuanApi(cfg)
-        post = await blogApi.getPost(docId)
-        this.addLog(this.pluginInstance.i18n["shareService"]["getPost"], "info")
-      }
+      const { blogApi } = useSiyuanApi(cfg)
+      const post = await blogApi.getPost(docId)
+      this.addLog(this.pluginInstance.i18n["shareService"]["getPost"], "info")
+      // 处理嵌入块、数据视图、折叠块（标题）
       const { getEmbedBlocks } = useEmbedBlock(cfg)
       const { getDataViews } = useDataTable(cfg)
       const { getFoldBlocks } = useFold(cfg)
@@ -92,6 +97,7 @@ class ShareService {
         // 暂时不支持别名，后续再支持
         slug: post.postid,
         html: JSON.stringify(sPost),
+        docAttrs: settings,
       }
       const resp = await this.shareApi.createShare(shareBody)
       if (resp.code !== 0) {
@@ -131,8 +137,35 @@ class ShareService {
     return await this.shareApi.getDoc(docId)
   }
 
-  public async deleteDoc(docId: string) {
-    return await this.shareApi.deleteDoc(docId)
+  public async cancelShare(docId: string) {
+    const ret = await this.shareApi.deleteDoc(docId)
+    try {
+      // 重置文档选项
+      await this.updateSingleDocSettings(docId, false, {})
+      // 分享选项不用管，会直接删除
+      // share 里面的 docAttrs、options 字段 会自动删除，所以不用管
+    } catch (e) {
+      return {
+        code: -1,
+        msg: e,
+      }
+    }
+    return ret
+  }
+
+  public async updateSingleDocSettings(docId: string, isShare: boolean, settings: Partial<SingleDocSetting>) {
+    const { kernelApi } = await ApiUtils.getSiyuanKernelApi(this.pluginInstance)
+    let toAttrs: Record<string, string> = AttrUtils.toAttrs(settings)
+    if (!isShare) {
+      toAttrs = AttrUtils.toAttrs({})
+    }
+    const attrs = {
+      [SettingKeys.CUSTOM_PUBLISH_TIME]: isShare ? new Date().getTime().toString() : "",
+      ...toAttrs,
+    }
+
+    this.logger.debug("updateSingleDocSettings", attrs)
+    await kernelApi.setBlockAttrs(docId, attrs)
   }
 
   /**
@@ -183,7 +216,7 @@ class ShareService {
   private async processShareMedia(docId: string, mediaList: any[]) {
     const processingMsg = this.pluginInstance.i18n["shareService"]["processingMedia"] + "：" + docId
     this.addLog(processingMsg, "info")
-    const { cfg, kernelApi } = await ApiUtils.getSiyuanKernelApi(this.pluginInstance)
+    const { cfg } = await ApiUtils.getSiyuanKernelApi(this.pluginInstance)
 
     const perReq = 5
     const groupedMedia = []

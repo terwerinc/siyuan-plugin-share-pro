@@ -7,6 +7,8 @@
  *  of this license document, but changing it is not allowed.
  */
 
+import { SettingKeys } from "../utils/SettingKeys"
+
 /**
  * 文档级别设置
  *
@@ -45,6 +47,14 @@ class SingleDocSetting {
    * @since 1.13.0
    */
   public outlineLevel?: number
+
+  /**
+   * 分享有效期（秒），0 表示永久有效
+   *
+   * @author terwer
+   * @since 1.13.0
+   */
+  public expiresTime?: number | string
 }
 
 export { SingleDocSetting }

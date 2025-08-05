@@ -127,7 +127,7 @@ class Topbar {
                   showMessage(this.pluginInstance.i18n["msgNotFoundDoc"], 7000, "error")
                   return
                 }
-                const ret = await this.shareService.deleteDoc(docCheck.docId)
+                const ret = await this.shareService.cancelShare(docCheck.docId)
                 if (ret.code === 0) {
                   showMessage(this.pluginInstance.i18n["topbar"]["cancelSuccess"], 3000, "info")
                 } else {
@@ -139,10 +139,7 @@ class Topbar {
                 showMessage(this.pluginInstance.i18n["msgNotFoundDoc"], 7000, "error")
                 return
               }
-              await this.shareService.createShare(docCheck.docId, undefined, {
-                passwordEnabled: false,
-                password: "",
-              })
+              await this.shareService.createShare(docCheck.docId)
             }
           },
         })
@@ -157,10 +154,7 @@ class Topbar {
                 showMessage(this.pluginInstance.i18n["msgNotFoundDoc"], 7000, "error")
                 return
               }
-              await this.shareService.createShare(docCheck.docId, undefined, {
-                passwordEnabled: false,
-                password: "",
-              })
+              await this.shareService.createShare(docCheck.docId)
             },
           })
           menu.addSeparator()

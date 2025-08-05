@@ -23,16 +23,14 @@
     import {PasswordUtils} from "../../utils/PasswordUtils"
     import {icons} from "../../utils/svg"
     import {SiyuanKernelApi} from "zhi-siyuan-api"
-    import {safeParse} from "../../utils/utils"
+    import {SettingKeys} from "../../utils/SettingKeys";
+    import {AttrUtils} from "../../utils/AttrUtils";
 
     export let pluginInstance: ShareProPlugin
     export let shareService: ShareService
     export let docId: string
 
     const logger = simpleLogger("share-ui", "share-pro", isDev)
-    // @deprecated
-    const singleDocSettingKeyFallback = "share-pro-setting"
-    const singleDocSettingKey = "custom-share-pro-setting"
 
     let formData = {
         post: Post as any,
@@ -40,6 +38,7 @@
         shareData: {} as any,
         lock: false,
         shareLink: "",
+        kernelApi: SiyuanKernelApi,
         
         // 全局用户偏好设置（非文档级别）
         userPreferences: {
@@ -51,15 +50,15 @@
             docTreeEnable: false,    // 是否显示文档树
             docTreeLevel: 3,         // 文档树层级
             outlineEnable: false,    // 是否显示大纲
-            outlineLevel: 6          // 大纲层级
-        } as unknown as SingleDocSetting,
+            outlineLevel: 6,          // 大纲层级
+            expiresTime: ""
+        } as SingleDocSetting,
         
         // 2、shareOptions，有敏感信息，服务端存储，例如分享密码
         shareOptions: {
             password: "",
             passwordEnabled: false,
-            expiresTime: ""
-        } 
+        } as ShareOptions
     }
 
     const handleShare = async () => {
@@ -71,10 +70,12 @@
                     shareOptions.passwordEnabled = formData.shareOptions.passwordEnabled
                     shareOptions.password = formData.shareOptions.password
                 }
-                if (formData.shareOptions.expiresTime && formData.shareOptions.expiresTime !== "") {
-                    shareOptions.expiresTime = Number(formData.shareOptions.expiresTime)
+                if (formData.singleDocSetting.expiresTime && formData.singleDocSetting.expiresTime !== "") {
+                    formData.singleDocSetting.expiresTime = formData.singleDocSetting.expiresTime.toString()
+                }else{
+                    formData.singleDocSetting.expiresTime = "0"
                 }
-                await shareService.createShare(docId, undefined, shareOptions)
+                await shareService.createShare(docId, formData.singleDocSetting, shareOptions)
             } catch (e) {
                 formData.shared = false
                 showMessage(pluginInstance.i18n["ui"]["shareSuccessError"], 3000, "info")
@@ -89,7 +90,7 @@
                 return
             }
             // 取消分享
-            const ret = await shareService.deleteDoc(docId)
+            const ret = await shareService.cancelShare(docId)
             if (ret.code === 0) {
                 showMessage(pluginInstance.i18n["topbar"]["cancelSuccess"], 3000, "info")
             } else {
@@ -99,15 +100,24 @@
     }
 
     const handleReShare = async () => {
+        // == 文档属性 ==
+        // 有效期
+        let expiredTime = Number(formData.singleDocSetting.expiresTime)
+        if (isNaN(expiredTime) || expiredTime < 0 ) {
+            expiredTime = 0;
+        }
+        formData.singleDocSetting.expiresTime = expiredTime
+
+        // == 分享选项 ==
+        // 分享密码
         const shareOptions: Partial<ShareOptions> = {}
         if (formData.shareOptions.passwordEnabled) {
             shareOptions.passwordEnabled = formData.shareOptions.passwordEnabled
             shareOptions.password = formData.shareOptions.password
         }
-        if (formData.shareOptions.expiresTime && formData.shareOptions.expiresTime !== "") {
-            shareOptions.expiresTime = Number(formData.shareOptions.expiresTime)
-        }
-        await shareService.createShare(docId, undefined, shareOptions)
+
+        // 重新分享
+        await shareService.createShare(docId, formData.singleDocSetting, shareOptions)
     }
 
     const handlePasswordChange = async () => {
@@ -125,38 +135,8 @@
     }
 
     const handleExpiresTime = async () => {
-        // 处理空字符串或无效输入
-        if (!formData.shareOptions.expiresTime || formData.shareOptions.expiresTime === "") {
-            // 空值表示永久有效
-            if (formData.shared) {
-                try {
-                    await shareService.updateShareOptions(docId, {
-                        expiresTime: 0
-                    })
-                    showMessage(pluginInstance.i18n["ui"]["updateOptionsSuccess"], 3000, "info")
-                } catch (e) {
-                    showMessage(pluginInstance.i18n["ui"]["updateOptionsError"], 3000, "error")
-                }
-            }
-            return
-        }
-        
-        const expiredTime = Number(formData.shareOptions.expiresTime)
-        if (isNaN(expiredTime) || expiredTime < 0 || expiredTime > 7 * 24 * 60 * 60) {
-            showMessage(pluginInstance.i18n["ui"]["expiresError"], 7000, "error")
-            return
-        }
-        
-        if (formData.shared) {
-            try {
-                await shareService.updateShareOptions(docId, {
-                    expiresTime: expiredTime
-                })
-                showMessage(pluginInstance.i18n["ui"]["updateOptionsSuccess"], 3000, "info")
-            } catch (e) {
-                showMessage(pluginInstance.i18n["ui"]["updateOptionsError"], 3000, "error")
-            }
-        }
+        await handleReShare()
+        showMessage(pluginInstance.i18n["ui"]["updateSettingSuccess"], 3000, "info")
     }
 
     const copyWebLink = () => {
@@ -173,25 +153,12 @@
     }
 
     const initSingleDocSetting = async (cfg: ShareProConfig) => {
-        const { kernelApi } = useSiyuanApi(cfg)
-        let singleDocSettingStr = await kernelApi.getSingleBlockAttr(docId, singleDocSettingKey)
-        // =======================
-        // 本次修改了 key，要想后兼容
-        if(!singleDocSettingStr){
-            singleDocSettingStr = await kernelApi.getSingleBlockAttr(docId, singleDocSettingKeyFallback)
-        }
-        if (!singleDocSettingStr) {
-            await kernelApi.setSingleBlockAttr(docId, singleDocSettingKey, JSON.stringify({}))
-        }
-        // 本次修改了 key，要想后兼容
-        // =======================
-        const parsed = safeParse<SingleDocSetting>(singleDocSettingStr)
-        formData.singleDocSetting = {
-            ...formData.singleDocSetting,
-            ...parsed
-        }
         // 文档级别优先级最高
-        const { docTreeEnable, docTreeLevel, outlineEnable, outlineLevel } = formData.singleDocSetting
+        const  docTreeEnable = await AttrUtils.getBool(pluginInstance,docId, SettingKeys.CUSTOM_DOC_TREE_ENABLE)
+        const docTreeLevel = await AttrUtils.getInt(pluginInstance,docId, SettingKeys.CUSTOM_DOC_TREE_LEVEL)
+        const outlineEnable = await AttrUtils.getBool(pluginInstance,docId, SettingKeys.CUSTOM_OUTLINE_ENABLE)
+        const outlineLevel = await AttrUtils.getInt(pluginInstance,docId, SettingKeys.CUSTOM_OUTLINE_LEVEL)
+        // 适配配置
         cfg.siyuanConfig.preferenceConfig = {
             ...cfg.siyuanConfig.preferenceConfig,
             docTreeEnable: docTreeEnable ?? cfg.siyuanConfig?.preferenceConfig?.docTreeEnable ?? false,
@@ -199,6 +166,14 @@
             outlineEnable: outlineEnable ?? cfg.siyuanConfig?.preferenceConfig?.outlineEnable ?? false,
             outlineLevel: outlineLevel ?? cfg.siyuanConfig?.preferenceConfig?.outlineLevel ?? 6,
         }
+        // 文档树、文档大纲
+        formData.singleDocSetting.docTreeEnable = cfg.siyuanConfig.preferenceConfig.docTreeEnable
+        formData.singleDocSetting.docTreeLevel = cfg.siyuanConfig.preferenceConfig.docTreeLevel
+        formData.singleDocSetting.outlineEnable = cfg.siyuanConfig.preferenceConfig.outlineEnable
+        formData.singleDocSetting.outlineLevel = cfg.siyuanConfig.preferenceConfig.outlineLevel
+        // 分享有效期 - 界面上留空，只有实际有值时才显示
+        const expiresTime = await AttrUtils.getInt(pluginInstance, docId, SettingKeys.CUSTOM_EXPIRES)
+        formData.singleDocSetting.expiresTime = expiresTime > 0 ? expiresTime.toString() : ""
         logger.debug(`get single doc setting => ${JSON.stringify(formData.singleDocSetting)}`)
     }
 
@@ -213,12 +188,7 @@
             formData.shareOptions.password = formData.shareData?.password || ""
         }
         
-        // 分享有效期 - 界面上留空，只有实际有值时才显示
-        const expiresTime = formData.shareData?.expiresTime || 0
-        formData.shareOptions.expiresTime = expiresTime > 0 ? expiresTime.toString() : ""
-        
         logger.info(`get password option => passwordEnabled=${formData.shareOptions.passwordEnabled}, showPassword=${formData.userPreferences.showPassword}`)
-        logger.info(`get expires option => expiresTime=${formData.shareOptions.expiresTime}`)
         logger.debug(`get share options => ${JSON.stringify(formData.shareOptions)}`)
     }
 
@@ -356,7 +326,7 @@
           <div class="input-group">
             <input
                     type="number"
-                    bind:value={formData.shareOptions.expiresTime}
+                    bind:value={formData.singleDocSetting.expiresTime}
                     min="0"
                     max="604800"
                     step="1"
