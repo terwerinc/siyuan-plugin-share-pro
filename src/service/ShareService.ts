@@ -133,8 +133,8 @@ class ShareService {
     }
   }
 
-  public async getSharedDocInfo(docId: string) {
-    return await this.shareApi.getDoc(docId)
+  public async getSharedDocInfo(docId: string, token?: string) {
+    return await this.shareApi.getDoc(docId, token)
   }
 
   public async cancelShare(docId: string) {

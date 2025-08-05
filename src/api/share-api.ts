@@ -22,11 +22,14 @@ class ShareApi {
     this.logger = simpleLogger("share-service-api", "share-pro", isDev)
   }
 
-  public async getDoc(docId: string) {
+  public async getDoc(docId: string, token?: string) {
+    const headers = {
+      Authorization: `${token}`,
+    }
     const body = {
       fdId: docId,
     }
-    const res = await this.shareServiceRequest(ServiceApiKeys.API_SHARE_GET_DOC, body)
+    const res = await this.shareServiceRequest(ServiceApiKeys.API_SHARE_GET_DOC, body, headers)
     this.logger.info("get doc info =>", res)
     return res
   }
@@ -171,4 +174,3 @@ class ServiceResponse {
 }
 
 export { ServiceResponse, ShareApi }
-

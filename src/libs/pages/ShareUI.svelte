@@ -56,8 +56,8 @@
         
         // 2、shareOptions，有敏感信息，服务端存储，例如分享密码
         shareOptions: {
-            password: "",
             passwordEnabled: false,
+            password: "",
         } as ShareOptions
     }
 
@@ -184,13 +184,13 @@
 
     const initShareOptions = async (cfg: ShareProConfig) => {
         // 分享密码
-        formData.shareOptions.passwordEnabled = formData.shareData?.passwordEnabled || cfg.appConfig?.passwordEnabled || false
-        formData.userPreferences.showPassword = cfg.appConfig?.showPassword || false
+        formData.shareOptions.passwordEnabled = formData.shareData?.passwordEnabled ?? cfg.appConfig?.passwordEnabled ?? false
+        formData.userPreferences.showPassword = cfg.appConfig?.showPassword ?? false
         if (formData.shareOptions.passwordEnabled) {
             const rndPassword = PasswordUtils.getNewRndPassword()
-            formData.shareOptions.password = formData.shareData?.password || rndPassword
+            formData.shareOptions.password = formData.shareData?.password ?? rndPassword
         } else {
-            formData.shareOptions.password = formData.shareData?.password || ""
+            formData.shareOptions.password = formData.shareData?.password ?? ""
         }
         
         logger.info(`get password option => passwordEnabled=${formData.shareOptions.passwordEnabled}, showPassword=${formData.userPreferences.showPassword}`)
@@ -208,7 +208,7 @@
         // 初始化基本信息
         const { blogApi } = useSiyuanApi(cfg)
         formData.post = await blogApi.getPost(docId)
-        const docInfo = await shareService.getSharedDocInfo(docId)
+        const docInfo = await shareService.getSharedDocInfo(docId, cfg?.serviceApiConfig?.token)
         formData.shared = docInfo.code === 0
         formData.shareData = docInfo?.data ? JSON.parse(docInfo.data) : null
         const customDomain = cfg?.appConfig?.domain ?? "https://siyuan.wiki"
