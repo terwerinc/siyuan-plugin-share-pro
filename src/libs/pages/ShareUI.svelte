@@ -73,9 +73,11 @@
                 if (formData.singleDocSetting.expiresTime && formData.singleDocSetting.expiresTime !== "") {
                     formData.singleDocSetting.expiresTime = formData.singleDocSetting.expiresTime.toString()
                 }else{
-                    formData.singleDocSetting.expiresTime = "0"
+                    formData.singleDocSetting.expiresTime = ""
                 }
                 await shareService.createShare(docId, formData.singleDocSetting, shareOptions)
+                // 初始化
+                await initPage()
             } catch (e) {
                 formData.shared = false
                 showMessage(pluginInstance.i18n["ui"]["shareSuccessError"], 3000, "info")
@@ -92,6 +94,8 @@
             // 取消分享
             const ret = await shareService.cancelShare(docId)
             if (ret.code === 0) {
+                // 初始化
+                await initPage()
                 showMessage(pluginInstance.i18n["topbar"]["cancelSuccess"], 3000, "info")
             } else {
                 showMessage(pluginInstance.i18n["topbar"]["cancelError"] + ret.msg, 7000, "error")
@@ -118,6 +122,8 @@
 
         // 重新分享
         await shareService.createShare(docId, formData.singleDocSetting, shareOptions)
+        // 初始化
+        await initPage()
     }
 
     const handlePasswordChange = async () => {
@@ -136,7 +142,6 @@
 
     const handleExpiresTime = async () => {
         await handleReShare()
-        showMessage(pluginInstance.i18n["ui"]["updateSettingSuccess"], 3000, "info")
     }
 
     const copyWebLink = () => {
@@ -154,7 +159,7 @@
 
     const initSingleDocSetting = async (cfg: ShareProConfig) => {
         // 文档级别优先级最高
-        const  docTreeEnable = await AttrUtils.getBool(pluginInstance,docId, SettingKeys.CUSTOM_DOC_TREE_ENABLE)
+        const docTreeEnable = await AttrUtils.getBool(pluginInstance,docId, SettingKeys.CUSTOM_DOC_TREE_ENABLE)
         const docTreeLevel = await AttrUtils.getInt(pluginInstance,docId, SettingKeys.CUSTOM_DOC_TREE_LEVEL)
         const outlineEnable = await AttrUtils.getBool(pluginInstance,docId, SettingKeys.CUSTOM_OUTLINE_ENABLE)
         const outlineLevel = await AttrUtils.getInt(pluginInstance,docId, SettingKeys.CUSTOM_OUTLINE_LEVEL)
@@ -192,9 +197,7 @@
         logger.debug(`get share options => ${JSON.stringify(formData.shareOptions)}`)
     }
 
-
-
-    onMount(async () => {
+    const initPage = async () => {
         // 文档级别的两种 settings 标准
         // 1、singleDocSetting，无敏感信息的，只在文档属性存储，例如文档大纲、文档有效期、文档状态
         // 2、shareOptions，有敏感信息，服务端存储，例如分享密码
@@ -213,6 +216,10 @@
         formData.shareLink = `${customDomain}/${customPath}/${docId}`
         // 初始化分享选项
         await initShareOptions(cfg)
+    }
+
+    onMount(async () => {
+        await initPage()
     })
 </script>
 
@@ -266,6 +273,8 @@
             <button on:click={copyWebLink}>{pluginInstance.i18n["ui"]["copyWebLink"]}</button>
           </div>
         </div>
+
+        <div class="divider" />
 
         <div class="setting-row">
           <span class="setting-label">{pluginInstance.i18n["ui"]["passwordTitle"]}</span>

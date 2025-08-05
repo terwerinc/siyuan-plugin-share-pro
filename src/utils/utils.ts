@@ -22,4 +22,8 @@ const safeParse = <T>(str: string) => {
   }
 }
 
-export { safeParse }
+const isEmptyString = (str: string) => {
+  return str === undefined || str === null || str === "" || str.trim().length === 0
+}
+
+export { safeParse, isEmptyString }

@@ -176,7 +176,7 @@
     "hidePassword": "Hide password",
     "showPassword": "Show password",
     "refreshPassword": "Refresh password",
-    "expiresTitle": "Share Expiration",
+    "expiresTitle": "Share Expiration(s)",
     "expiresPlaceholder": "Enter expiration time in seconds (0 for permanent)",
     "expiresTip": "Set the expiration time for the share link (in seconds). 0 means permanent.",
     "expiresError": "Invalid expiration time. Please enter a number between 0 and 604800 (7 days).",

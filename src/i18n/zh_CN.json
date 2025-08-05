@@ -180,7 +180,7 @@
     "hidePassword": "隐藏密码",
     "showPassword": "显示密码",
     "refreshPassword": "刷新密码",
-    "expiresTitle": "分享有效期",
+    "expiresTitle": "分享有效期（秒）",
     "expiresPlaceholder": "输入有效期秒数（留空表示永久有效）",
     "expiresTip": "设置分享链接的有效期（秒）。留空表示永久有效",
     "expiresError": "无效的有效期。请输入0到604800（7天）之间的数字。",
