@@ -18,11 +18,11 @@ import { useEmbedBlock } from "../composables/useEmbedBlock"
 import { useFold } from "../composables/useFold"
 import { useSiyuanApi } from "../composables/useSiyuanApi"
 import ShareProPlugin from "../index"
+import { ShareOptions } from "../models/ShareOptions"
 import { ShareProConfig } from "../models/ShareProConfig"
 import { updateStatusBar } from "../statusBar"
 import { ApiUtils } from "../utils/ApiUtils"
 import { ImageUtils } from "../utils/ImageUtils"
-import { ShareOptions } from "../models/ShareOptions"
 
 /**
  * 分享服务
@@ -52,7 +52,7 @@ class ShareService {
    * @param post 传递之后可避免多次查询，个性分享传递
    * @param options 分享选项，包括密码设置
    */
-  public async createShare(docId: string, post?: Post, options?: ShareOptions) {
+  public async createShare(docId: string, post?: Post, options?: Partial<ShareOptions>) {
     try {
       const cfg = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
       if (!post) {
@@ -92,9 +92,6 @@ class ShareService {
         // 暂时不支持别名，后续再支持
         slug: post.postid,
         html: JSON.stringify(sPost),
-        // 密码保护
-        passwordEnabled: options?.passwordEnabled || false,
-        password: options?.password || "",
       }
       const resp = await this.shareApi.createShare(shareBody)
       if (resp.code !== 0) {
@@ -144,12 +141,11 @@ class ShareService {
    * @param docId 文档ID
    * @param options 分享选项
    */
-  public async updateShareOptions(docId: string, options: ShareOptions) {
+  public async updateShareOptions(docId: string, options: Partial<ShareOptions>) {
     try {
       const updateBody = {
         docId,
-        passwordEnabled: options.passwordEnabled || false,
-        password: options.password || "",
+        options,
       }
       const resp = await this.shareApi.updateShareOptions(updateBody)
       if (resp.code !== 0) {

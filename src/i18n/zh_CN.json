@@ -156,8 +156,8 @@
     "actionSetAlready": "已设置"
   },
   "ui": {
-    "msgIngError": "图片未处理完成或者失败，建议等待或者重新分享",
-    "shareSuccessError": "分享服务异常，请联系 youweics@163.com：",
+    "msgIngError": "图片未处理或处理失败，建议等待或重新分享",
+    "shareSuccessError": "分享服务异常，请联系 youweics@163.com",
     "copyTitle": "分享链接",
     "copyWebLink": "复制",
     "clickView": "点击查看",
@@ -165,17 +165,22 @@
     "reShareSuccess": "重新分享成功",
     "reShareError": "重新分享失败",
     "passwordTitle": "访问密码",
-    "passwordPlaceholder": "请输入访问密码，留空则表示完全公开",
-    "passwordTip": "设置访问密码后，访问者需要输入密码才能查看文档",
+    "passwordPlaceholder": "输入访问密码（可选）",
+    "passwordTip": "设置访问密码后，访客需要输入密码才能查看文档",
     "passwordEnabled": "启用密码保护",
     "passwordDisabled": "禁用密码保护",
     "passwordSetSuccess": "密码设置成功",
     "passwordSetError": "密码设置失败",
-    "updateOptionsSuccess": "分享选项更新成功",
-    "updateOptionsError": "分享选项更新失败",
+    "updateOptionsSuccess": "选项更新成功",
+    "updateOptionsError": "选项更新失败",
     "hidePassword": "隐藏密码",
     "showPassword": "显示密码",
-    "refreshPassword": "刷新密码"
+    "refreshPassword": "刷新密码",
+    "expiresTitle": "分享有效期",
+    "expiresPlaceholder": "输入有效期秒数（留空表示永久有效）",
+    "expiresTip": "设置分享链接的有效期（秒）。留空表示永久有效",
+    "expiresError": "无效的有效期。请输入0到604800（7天）之间的数字。",
+    "saveExpires": "保存"
   },
   "seo": {
     "saveSuccess": "SEO设置保存并同步成功",

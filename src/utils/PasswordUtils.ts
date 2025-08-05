@@ -8,21 +8,20 @@
  */
 
 /**
- * 分享选项
+ * 密码工具类
  *
  * @author terwer
- * @since 1.12.0
+ * @since 1.13.0
  */
-class ShareOptions {
-  public passwordEnabled?: boolean
-  public password?: string
+export class PasswordUtils {
   /**
-   * 分享有效期（秒），0 表示永久有效
-   *
+   * 生成随机密码
+   * 
+   * @returns 随机密码字符串
    * @author terwer
    * @since 1.13.0
    */
-  public expiresTime?: number | string
-}
-
-export { ShareOptions }
+  static getNewRndPassword(): string {
+    return Math.random().toString(36).substring(2, 15)
+  }
+} 

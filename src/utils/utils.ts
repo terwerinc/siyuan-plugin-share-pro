@@ -6,3 +6,20 @@
  *  Everyone is permitted to copy and distribute verbatim copies
  *  of this license document, but changing it is not allowed.
  */
+
+/**
+ * 安全解析字符串
+ *
+ * @param str
+ * @author terwer
+ * @version 1.13.0
+ */
+const safeParse = <T>(str: string) => {
+  try {
+    return JSON.parse(str)
+  } catch (e) {
+    return {} as T
+  }
+}
+
+export { safeParse }

@@ -9,44 +9,72 @@
 
 <script lang="ts">
     import copy from "copy-to-clipboard"
-    import { showMessage } from "siyuan"
-    import { onMount } from "svelte"
-    import { Post } from "zhi-blog-api"
-    import { simpleLogger } from "zhi-lib-base"
-    import { useSiyuanApi } from "../../composables/useSiyuanApi"
-    import { isDev, SHARE_PRO_STORE_NAME } from "../../Constants"
+    import {showMessage} from "siyuan"
+    import {onMount} from "svelte"
+    import {Post} from "zhi-blog-api"
+    import {simpleLogger} from "zhi-lib-base"
+    import {useSiyuanApi} from "../../composables/useSiyuanApi"
+    import {isDev, SHARE_PRO_STORE_NAME} from "../../Constants"
     import ShareProPlugin from "../../index"
-    import { ShareProConfig } from "../../models/ShareProConfig"
-    import { ShareService } from "../../service/ShareService"
-    import { icons } from "../../utils/svg"
+    import {ShareOptions} from "../../models/ShareOptions"
+    import {ShareProConfig} from "../../models/ShareProConfig"
+    import {SingleDocSetting} from "../../models/SingleDocSetting"
+    import {ShareService} from "../../service/ShareService"
+    import {PasswordUtils} from "../../utils/PasswordUtils"
+    import {icons} from "../../utils/svg"
+    import {SiyuanKernelApi} from "zhi-siyuan-api"
+    import {safeParse} from "../../utils/utils"
 
     export let pluginInstance: ShareProPlugin
     export let shareService: ShareService
     export let docId: string
 
     const logger = simpleLogger("share-ui", "share-pro", isDev)
-    let singleDocSetting: any
+    // @deprecated
+    const singleDocSettingKeyFallback = "share-pro-setting"
+    const singleDocSettingKey = "custom-share-pro-setting"
 
     let formData = {
         post: Post as any,
         shared: false,
         shareData: {} as any,
         lock: false,
-
         shareLink: "",
-        password: "",
-        passwordEnabled: false,
-        showPassword: false
+        
+        // 全局用户偏好设置（非文档级别）
+        userPreferences: {
+            showPassword: false
+        },
+        
+        // 1、singleDocSetting，无敏感信息的，只在文档属性存储，例如文档大纲、文档有效期、文档状态
+        singleDocSetting: {
+            docTreeEnable: false,    // 是否显示文档树
+            docTreeLevel: 3,         // 文档树层级
+            outlineEnable: false,    // 是否显示大纲
+            outlineLevel: 6          // 大纲层级
+        } as unknown as SingleDocSetting,
+        
+        // 2、shareOptions，有敏感信息，服务端存储，例如分享密码
+        shareOptions: {
+            password: "",
+            passwordEnabled: false,
+            expiresTime: ""
+        } 
     }
 
     const handleShare = async () => {
         if (formData.shared) {
             // 分享
             try {
-                await shareService.createShare(docId, undefined, {
-                    passwordEnabled: formData.passwordEnabled,
-                    password: formData.password
-                })
+                const shareOptions: Partial<ShareOptions> = {}
+                if (formData.shareOptions.passwordEnabled) {
+                    shareOptions.passwordEnabled = formData.shareOptions.passwordEnabled
+                    shareOptions.password = formData.shareOptions.password
+                }
+                if (formData.shareOptions.expiresTime && formData.shareOptions.expiresTime !== "") {
+                    shareOptions.expiresTime = Number(formData.shareOptions.expiresTime)
+                }
+                await shareService.createShare(docId, undefined, shareOptions)
             } catch (e) {
                 formData.shared = false
                 showMessage(pluginInstance.i18n["ui"]["shareSuccessError"], 3000, "info")
@@ -71,18 +99,58 @@
     }
 
     const handleReShare = async () => {
-        await shareService.createShare(docId, undefined, {
-            passwordEnabled: formData.passwordEnabled,
-            password: formData.password
-        })
+        const shareOptions: Partial<ShareOptions> = {}
+        if (formData.shareOptions.passwordEnabled) {
+            shareOptions.passwordEnabled = formData.shareOptions.passwordEnabled
+            shareOptions.password = formData.shareOptions.password
+        }
+        if (formData.shareOptions.expiresTime && formData.shareOptions.expiresTime !== "") {
+            shareOptions.expiresTime = Number(formData.shareOptions.expiresTime)
+        }
+        await shareService.createShare(docId, undefined, shareOptions)
     }
 
     const handlePasswordChange = async () => {
         if (formData.shared) {
             try {
                 await shareService.updateShareOptions(docId, {
-                    passwordEnabled: formData.passwordEnabled,
-                    password: formData.password
+                    passwordEnabled: formData.shareOptions.passwordEnabled,
+                    password: formData.shareOptions.password
+                })
+                showMessage(pluginInstance.i18n["ui"]["updateOptionsSuccess"], 3000, "info")
+            } catch (e) {
+                showMessage(pluginInstance.i18n["ui"]["updateOptionsError"], 3000, "error")
+            }
+        }
+    }
+
+    const handleExpiresTime = async () => {
+        // 处理空字符串或无效输入
+        if (!formData.shareOptions.expiresTime || formData.shareOptions.expiresTime === "") {
+            // 空值表示永久有效
+            if (formData.shared) {
+                try {
+                    await shareService.updateShareOptions(docId, {
+                        expiresTime: 0
+                    })
+                    showMessage(pluginInstance.i18n["ui"]["updateOptionsSuccess"], 3000, "info")
+                } catch (e) {
+                    showMessage(pluginInstance.i18n["ui"]["updateOptionsError"], 3000, "error")
+                }
+            }
+            return
+        }
+        
+        const expiredTime = Number(formData.shareOptions.expiresTime)
+        if (isNaN(expiredTime) || expiredTime < 0 || expiredTime > 7 * 24 * 60 * 60) {
+            showMessage(pluginInstance.i18n["ui"]["expiresError"], 7000, "error")
+            return
+        }
+        
+        if (formData.shared) {
+            try {
+                await shareService.updateShareOptions(docId, {
+                    expiresTime: expiredTime
                 })
                 showMessage(pluginInstance.i18n["ui"]["updateOptionsSuccess"], 3000, "info")
             } catch (e) {
@@ -93,8 +161,8 @@
 
     const copyWebLink = () => {
         let copyText = formData.shareLink
-        if(formData.passwordEnabled){
-            copyText = copyText + " " + pluginInstance.i18n["cs"]["visitPassword"] + formData.password
+        if(formData.shareOptions.passwordEnabled){
+            copyText = copyText + " " + pluginInstance.i18n["cs"]["visitPassword"] + formData.shareOptions.password
         }
         copy(copyText)
         showMessage(pluginInstance.i18n["ui"]["copySuccess"], 3000, "info")
@@ -105,14 +173,25 @@
     }
 
     const initSingleDocSetting = async (cfg: ShareProConfig) => {
-        const singleDocSettingKey = "share-pro-setting"
         const { kernelApi } = useSiyuanApi(cfg)
-        singleDocSetting = await kernelApi.getSingleBlockAttr(docId, singleDocSettingKey)
-        if (!singleDocSetting) {
-            singleDocSetting = {}
+        let singleDocSettingStr = await kernelApi.getSingleBlockAttr(docId, singleDocSettingKey)
+        // =======================
+        // 本次修改了 key，要想后兼容
+        if(!singleDocSettingStr){
+            singleDocSettingStr = await kernelApi.getSingleBlockAttr(docId, singleDocSettingKeyFallback)
+        }
+        if (!singleDocSettingStr) {
             await kernelApi.setSingleBlockAttr(docId, singleDocSettingKey, JSON.stringify({}))
         }
-        const { docTreeEnable, docTreeLevel, outlineEnable, outlineLevel } = singleDocSetting
+        // 本次修改了 key，要想后兼容
+        // =======================
+        const parsed = safeParse<SingleDocSetting>(singleDocSettingStr)
+        formData.singleDocSetting = {
+            ...formData.singleDocSetting,
+            ...parsed
+        }
+        // 文档级别优先级最高
+        const { docTreeEnable, docTreeLevel, outlineEnable, outlineLevel } = formData.singleDocSetting
         cfg.siyuanConfig.preferenceConfig = {
             ...cfg.siyuanConfig.preferenceConfig,
             docTreeEnable: docTreeEnable ?? cfg.siyuanConfig?.preferenceConfig?.docTreeEnable ?? false,
@@ -120,15 +199,40 @@
             outlineEnable: outlineEnable ?? cfg.siyuanConfig?.preferenceConfig?.outlineEnable ?? false,
             outlineLevel: outlineLevel ?? cfg.siyuanConfig?.preferenceConfig?.outlineLevel ?? 6,
         }
+        logger.debug(`get single doc setting => ${JSON.stringify(formData.singleDocSetting)}`)
     }
 
-    const getNewRndPassword = ()=>{
-        return Math.random().toString(36).substring(2, 15)
+    const initShareOptions = async (cfg: ShareProConfig) => {
+        // 分享密码
+        formData.shareOptions.passwordEnabled = formData.shareData?.passwordEnabled || cfg.appConfig?.passwordEnabled || false
+        formData.userPreferences.showPassword = cfg.appConfig?.showPassword || false
+        if (formData.shareOptions.passwordEnabled) {
+            const rndPassword = PasswordUtils.getNewRndPassword()
+            formData.shareOptions.password = formData.shareData?.password || rndPassword
+        } else {
+            formData.shareOptions.password = formData.shareData?.password || ""
+        }
+        
+        // 分享有效期 - 界面上留空，只有实际有值时才显示
+        const expiresTime = formData.shareData?.expiresTime || 0
+        formData.shareOptions.expiresTime = expiresTime > 0 ? expiresTime.toString() : ""
+        
+        logger.info(`get password option => passwordEnabled=${formData.shareOptions.passwordEnabled}, showPassword=${formData.userPreferences.showPassword}`)
+        logger.info(`get expires option => expiresTime=${formData.shareOptions.expiresTime}`)
+        logger.debug(`get share options => ${JSON.stringify(formData.shareOptions)}`)
     }
+
+
 
     onMount(async () => {
+        // 文档级别的两种 settings 标准
+        // 1、singleDocSetting，无敏感信息的，只在文档属性存储，例如文档大纲、文档有效期、文档状态
+        // 2、shareOptions，有敏感信息，服务端存储，例如分享密码
+
+        // 初始化单文档设置
         const cfg = await pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
         await initSingleDocSetting(cfg)
+        // 初始化基本信息
         const { blogApi } = useSiyuanApi(cfg)
         formData.post = await blogApi.getPost(docId)
         const docInfo = await shareService.getSharedDocInfo(docId)
@@ -137,17 +241,8 @@
         const customDomain = cfg?.appConfig?.domain ?? "https://siyuan.wiki"
         const customPath = cfg?.appConfig?.docPath ?? "s"
         formData.shareLink = `${customDomain}/${customPath}/${docId}`
-
-        // 分享密码
-        formData.passwordEnabled = formData.shareData?.passwordEnabled || cfg.appConfig?.passwordEnabled || false
-        formData.showPassword = cfg.appConfig?.showPassword || false
-        if (formData.passwordEnabled) {
-            const rndPassword = getNewRndPassword()
-            formData.password = formData.shareData?.password || rndPassword
-        } else {
-            formData.password = formData.shareData?.password || ""
-        }
-        logger.info(`get password option => passwordEnabled=${formData.passwordEnabled}, showPassword=${formData.showPassword}`)
+        // 初始化分享选项
+        await initShareOptions(cfg)
     })
 </script>
 
@@ -207,16 +302,16 @@
           <div class="password-container">
             <input
                     type="checkbox"
-                    bind:checked={formData.passwordEnabled}
+                    bind:checked={formData.shareOptions.passwordEnabled}
                     class="b3-switch fn__flex-center password-toggle"
-                    title={formData.passwordEnabled ? pluginInstance.i18n["ui"]["passwordDisabled"] : pluginInstance.i18n["ui"]["passwordEnabled"]}
+                    title={formData.shareOptions.passwordEnabled ? pluginInstance.i18n["ui"]["passwordDisabled"] : pluginInstance.i18n["ui"]["passwordEnabled"]}
                     on:change={handlePasswordChange}
             />
-            {#if formData.passwordEnabled}
+            {#if formData.shareOptions.passwordEnabled}
               <div class="password-input-container">
                 <input
-                        type={formData.showPassword ? "text" : "password"}
-                        value={formData.password}
+                        type={formData.userPreferences.showPassword ? "text" : "password"}
+                        value={formData.shareOptions.password}
                         placeholder={pluginInstance.i18n["ui"]["passwordPlaceholder"]}
                         class="password-input"
                         title={pluginInstance.i18n["ui"]["passwordTip"]}
@@ -227,12 +322,12 @@
                         class="password-visibility-toggle"
                         on:click={(event) => {
                         event.stopPropagation()
-                        formData.showPassword = !formData.showPassword
+                        formData.userPreferences.showPassword = !formData.userPreferences.showPassword
                     }}
-                        title={formData.showPassword ? pluginInstance.i18n["ui"]["hidePassword"] : pluginInstance.i18n["ui"]["showPassword"]}
+                        title={formData.userPreferences.showPassword ? pluginInstance.i18n["ui"]["hidePassword"] : pluginInstance.i18n["ui"]["showPassword"]}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24">
-                    {#if formData.showPassword}
+                    {#if formData.userPreferences.showPassword}
                       <path fill="currentColor" d="M11.83 9L15 12.16V12a3 3 0 0 0-3-3h-.17m-4.3.8l1.55 1.55c-.05.21-.08.42-.08.65a3 3 0 0 0 3 3c.22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53a5 5 0 0 1-5-5c0-.79.2-1.53.53-2.2M2 4.27l2.28 2.28l.45.45C3.08 8.3 1.78 10 1 12c1.73 4.39 6 7.5 11 7.5c1.55 0 3.03-.3 4.38-.84l.43.42L19.73 22 21 20.73 3.27 3M12 7a5 5 0 0 1 5 5c0 .64-.13 1.26-.36 1.82l2.93 2.93c1.5-1.25 2.7-2.89 3.43-4.75c-1.73-4.39-6-7.5-11-7.5c-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7Z"/>
                     {:else}
                       <path fill="currentColor" d="M12 9a3 3 0 0 1 3 3a3 3 0 0 1-3 3a3 3 0 0 1-3-3a3 3 0 0 1 3-3m0-4.5c5 0 9.27 3.11 11 7.5c-1.73 4.39-6 7.5-11 7.5S2.73 16.39 1 12c1.73-4.39 6-7.5 11-7.5M3.18 12a9.821 9.821 0 0 0 17.64 0a9.821 9.821 0 0 0-17.64 0z"/>
@@ -244,7 +339,7 @@
                         class="password-visibility-toggle"
                         on:click={(event) => {
                         event.stopPropagation()
-                        formData.password = getNewRndPassword()
+                        formData.shareOptions.password = PasswordUtils.getNewRndPassword()
                         handlePasswordChange()
                     }}
                         title={pluginInstance.i18n["ui"]["refreshPassword"]}
@@ -253,6 +348,23 @@
                 </button>
               </div>
             {/if}
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <span class="setting-label">{pluginInstance.i18n["ui"]["expiresTitle"]}</span>
+          <div class="input-group">
+            <input
+                    type="number"
+                    bind:value={formData.shareOptions.expiresTime}
+                    min="0"
+                    max="604800"
+                    step="1"
+                    class="share-expired-input"
+                    placeholder={pluginInstance.i18n["ui"]["expiresPlaceholder"]}
+                    title={pluginInstance.i18n["ui"]["expiresTip"]}
+            />
+            <button on:click={handleExpiresTime}>{pluginInstance.i18n["ui"]["saveExpires"]}</button>
           </div>
         </div>
       </div>
@@ -311,7 +423,8 @@
       margin-top 14px
 
     .input-group input,
-    .password-input
+    .password-input,
+    .share-expired-input
       &:focus
         border-color: #1890ff  /* Ant Design主蓝色 */
         box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2)  /* 标准Ant Design阴影 */
@@ -320,7 +433,8 @@
 
     html[data-theme-mode="dark"] #share
       .input-group input:focus,
-      .password-input:focus
+      .password-input:focus,
+      .share-expired-input:focus
         border-color: #177ddc  /* 暗色主蓝 */
         box-shadow: 0 0 0 2px rgba(23, 125, 220, 0.2)  /* 暗色阴影 */
 
@@ -446,6 +560,19 @@
       color #333333
       transition all 0.2s ease
 
+    .share-expired-input
+      flex-grow 1
+      height 28px
+      padding 4px 8px
+      border 1px solid #cccccc
+      border-radius 4px
+      font-size 14px
+      background-color #f9f9f9
+      color #333333
+      box-sizing border-box
+      min-width 0
+      transition all 0.2s ease
+
     .password-visibility-toggle
       position absolute
       right 36px
@@ -501,6 +628,11 @@
           background-color #3a3a3a
 
       .password-input
+        border-color #444444
+        background-color #2c2c2c
+        color var(--b3-theme-on-background)
+
+      .share-expired-input
         border-color #444444
         background-color #2c2c2c
         color var(--b3-theme-on-background)
