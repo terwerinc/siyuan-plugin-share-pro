@@ -59,6 +59,8 @@
       value: 6,
     },
   ]
+  let passwordEnabled = false
+  let showPassword = false
 
   let settingConfig: ShareProConfig = pluginInstance.getDefaultCfg()
   const settingService = new SettingService(pluginInstance)
@@ -86,6 +88,9 @@
     // 文档大纲
     settingConfig.appConfig.outlineEnabled = outlineEnabled
     settingConfig.appConfig.outlineLevel = outlineLevel
+    // 全局密码保护
+    settingConfig.appConfig.passwordEnabled = passwordEnabled
+    settingConfig.appConfig.showPassword = showPassword
     return settingConfig
   }
 
@@ -104,6 +109,8 @@
     docTreeLevel = sAppConfig?.docTreeLevel ?? docTreeLevel
     outlineEnabled = sAppConfig?.outlineEnabled ?? outlineEnabled
     outlineLevel = sAppConfig?.outlineLevel ?? outlineLevel
+    passwordEnabled = sAppConfig?.passwordEnabled ?? passwordEnabled
+    showPassword = sAppConfig?.showPassword ?? showPassword
   })
 </script>
 
@@ -137,6 +144,20 @@
           {/each}
         </select>
       {/if}
+    </div>
+
+    <div class="fn__block form-item">
+      {pluginInstance.i18n.cs.passwordEnabled}
+      <div class="b3-label__text form-item-tip">{pluginInstance.i18n.cs.passwordEnabledTip}</div>
+      <span class="fn__hr" />
+      <input class="b3-switch fn__flex-center" id="passwordEnabled" type="checkbox" bind:checked={passwordEnabled} />
+    </div>
+
+    <div class="fn__block form-item">
+      {pluginInstance.i18n.cs.showPassword}
+      <div class="b3-label__text form-item-tip">{pluginInstance.i18n.cs.showPasswordTip}</div>
+      <span class="fn__hr" />
+      <input class="b3-switch fn__flex-center" id="showPassword" type="checkbox" bind:checked={showPassword} />
     </div>
 
     <div class="b3-dialog__action">

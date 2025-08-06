@@ -7,18 +7,18 @@
  *  of this license document, but changing it is not allowed.
  */
 
-import ShareProPlugin from "./index"
-import { ILogger, simpleLogger } from "zhi-lib-base"
-import { isDev, SHARE_PRO_STORE_NAME } from "./Constants"
-import { icons } from "./utils/svg"
 import { confirm, Dialog, Menu, showMessage } from "siyuan"
-import { ShareProConfig } from "./models/ShareProConfig"
+import { ILogger, simpleLogger } from "zhi-lib-base"
+import pkg from "../package.json"
+import { isDev, SHARE_PRO_STORE_NAME } from "./Constants"
+import ShareProPlugin from "./index"
+import { WidgetInvoke } from "./invoke/widgetInvoke"
 import ShareSetting from "./libs/pages/ShareSetting.svelte"
+import { ShareProConfig } from "./models/ShareProConfig"
+import { NewUI } from "./newUI"
 import { ShareService } from "./service/ShareService"
 import PageUtil from "./utils/pageUtil"
-import { WidgetInvoke } from "./invoke/widgetInvoke"
-import pkg from "../package.json"
-import { NewUI } from "./newUI"
+import { icons } from "./utils/svg"
 
 /**
  * 顶部按钮
@@ -28,8 +28,8 @@ class Topbar {
   private pluginInstance: ShareProPlugin
   private shareService: ShareService
   private widgetInvoke: WidgetInvoke
-  private lock: boolean = false
-  private contextLock: boolean = false
+  private lock = false
+  private contextLock = false
 
   constructor(pluginInstance: ShareProPlugin) {
     this.logger = simpleLogger("topbar", "share-pro", isDev)
@@ -41,7 +41,7 @@ class Topbar {
   public initTopbar() {
     const topBarElement = this.pluginInstance.addTopBar({
       icon: icons.iconShare,
-      title: this.pluginInstance.i18n.sharePro,
+      title: this.pluginInstance.i18n["sharePro"],
       position: "right",
       callback: () => {},
     })
@@ -63,7 +63,7 @@ class Topbar {
         try {
           await this.addMenu(topBarElement.getBoundingClientRect())
         } catch (e) {
-          const errMsg = this.pluginInstance.i18n.topbar.shareSuccessError + e
+          const errMsg = this.pluginInstance.i18n["topbar"]["shareSuccessError"] + e
           showMessage(errMsg, 7000, "error")
         }
       }
@@ -114,29 +114,29 @@ class Topbar {
         if (shareData) {
           this.logger.info("get shared data =>", shareData)
           if (shareData.shareStatus !== "COMPLETED") {
-            alert(this.pluginInstance.i18n.topbar.msgIngError)
+            alert(this.pluginInstance.i18n["topbar"]["msgIngError"])
           }
         }
         menu.addItem({
           icon: isShared ? `iconCloseRound` : `iconRiffCard`,
-          label: isShared ? this.pluginInstance.i18n.cancelShare : this.pluginInstance.i18n.startShare,
+          label: isShared ? this.pluginInstance.i18n["cancelShare"] : this.pluginInstance.i18n["startShare"],
           click: async () => {
             if (isShared) {
-              confirm(this.pluginInstance.i18n.tipTitle, this.pluginInstance.i18n.confirmDelete, async () => {
+              confirm(this.pluginInstance.i18n["tipTitle"], this.pluginInstance.i18n["confirmDelete"], async () => {
                 if (!docCheck.flag) {
-                  showMessage(this.pluginInstance.i18n.msgNotFoundDoc, 7000, "error")
+                  showMessage(this.pluginInstance.i18n["msgNotFoundDoc"], 7000, "error")
                   return
                 }
-                const ret = await this.shareService.deleteDoc(docCheck.docId)
+                const ret = await this.shareService.cancelShare(docCheck.docId)
                 if (ret.code === 0) {
-                  showMessage(this.pluginInstance.i18n.topbar.cancelSuccess, 3000, "info")
+                  showMessage(this.pluginInstance.i18n["topbar"]["cancelSuccess"], 3000, "info")
                 } else {
-                  showMessage(this.pluginInstance.i18n.topbar.cancelError + ret.msg, 7000, "error")
+                  showMessage(this.pluginInstance.i18n["topbar"]["cancelError"] + ret.msg, 7000, "error")
                 }
               })
             } else {
               if (!docCheck.flag) {
-                showMessage(this.pluginInstance.i18n.msgNotFoundDoc, 7000, "error")
+                showMessage(this.pluginInstance.i18n["msgNotFoundDoc"], 7000, "error")
                 return
               }
               await this.shareService.createShare(docCheck.docId)
@@ -148,10 +148,10 @@ class Topbar {
           // 重新分享
           menu.addItem({
             icon: `iconTransform`,
-            label: this.pluginInstance.i18n.reShare,
+            label: this.pluginInstance.i18n["reShare"],
             click: async () => {
               if (!docCheck.flag) {
-                showMessage(this.pluginInstance.i18n.msgNotFoundDoc, 7000, "error")
+                showMessage(this.pluginInstance.i18n["msgNotFoundDoc"], 7000, "error")
                 return
               }
               await this.shareService.createShare(docCheck.docId)
@@ -162,10 +162,10 @@ class Topbar {
           // 查看文档
           menu.addItem({
             icon: `iconEye`,
-            label: this.pluginInstance.i18n.viewArticle,
+            label: this.pluginInstance.i18n["viewArticle"],
             click: async () => {
               if (!shareData) {
-                const noShareMsg = this.pluginInstance.i18n.topbar.msgNoShare + docInfo.msg
+                const noShareMsg = this.pluginInstance.i18n["topbar"]["msgNoShare"] + docInfo.msg
                 showMessage(noShareMsg, 7000, "error")
                 return
               }
@@ -191,7 +191,7 @@ class Topbar {
       // 分享管理
       menu.addItem({
         icon: `iconDock`,
-        label: this.pluginInstance.i18n.manageDoc,
+        label: this.pluginInstance.i18n["manageDoc"],
         click: () => {
           this.widgetInvoke.showShareManageTab(vipInfo.data)
         },
@@ -200,12 +200,16 @@ class Topbar {
     } else {
       menu.addItem({
         icon: `iconKey`,
-        label: this.pluginInstance.i18n.getLicense,
+        label: this.pluginInstance.i18n["getLicense"],
         click: () => {
-          const vipTip = vipInfo.msg ?? this.pluginInstance.i18n.unknownError
-          confirm(this.pluginInstance.i18n.tipTitle, vipTip + "，" + this.pluginInstance.i18n.openLicensePage, () => {
-            window.open("https://store.terwer.space/products/share-pro")
-          })
+          const vipTip = vipInfo.msg ?? this.pluginInstance.i18n["unknownError"]
+          confirm(
+            this.pluginInstance.i18n["tipTitle"],
+            vipTip + "，" + this.pluginInstance.i18n["openLicensePage"],
+            () => {
+              window.open("https://store.terwer.space/products/share-pro")
+            }
+          )
         },
       })
       menu.addSeparator()
@@ -213,11 +217,11 @@ class Topbar {
 
     menu.addItem({
       icon: `iconSettings`,
-      label: this.pluginInstance.i18n.shareSetting,
+      label: this.pluginInstance.i18n["shareSetting"],
       click: () => {
         const settingId = "share-pro-setting"
         const d = new Dialog({
-          title: `${this.pluginInstance.i18n.shareSetting} - ${this.pluginInstance.i18n.sharePro} v${pkg.version}`,
+          title: `${this.pluginInstance.i18n["shareSetting"]} - ${this.pluginInstance.i18n["sharePro"]} v${pkg.version}`,
           content: `<div id="${settingId}"></div>`,
           width: this.pluginInstance.isMobile ? "92vw" : "61.8vw",
         })
