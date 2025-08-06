@@ -1,9 +1,14 @@
 # Changelog
 
-## [1.12.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.11.0...share-pro-v1.12.0) (2025-07-21)
+## [1.13.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.12.0...share-pro-v1.13.0) (2025-08-06)
 ### Features
-* **setting:** increase document tree depth options and update related text ([1c2d6d9](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/1c2d6d9103fd1671238bef2c73213b961f8b4c73))
+* add share password and share timeout ([f62000d](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/f62000d6e114c184483a7de9479d562ce6245e39))
+* **setting:** add password protection ([591b52b](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/591b52bc6058dd39504650a8150172ebb714b117))
+* **share:** add expiration time feature for share links ([6d1c237](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/6d1c2376d2a0427ee6afa967458dd67134763c18))
 ### Code Refactoring
+* **shareui:** adjust min-width for better mobile responsiveness ([2a44076](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/2a440766a535da2b58da311e1f93970977620025))
+## [1.12.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.11.0...share-pro-v1.12.0) (2025-07-21)
+* **setting:** increase document tree depth options and update related text ([1c2d6d9](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/1c2d6d9103fd1671238bef2c73213b961f8b4c73))
 * **shareui:** simplify css and improve code readability ([92148cb](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/92148cbfba53d04095182066daccd8a594557a31))
 ## [1.11.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.10.1...share-pro-v1.11.0) (2025-06-09)
 * add echarts support ([b43689a](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/b43689afdeafd329651f80a8d08faa04cfa58c77))
