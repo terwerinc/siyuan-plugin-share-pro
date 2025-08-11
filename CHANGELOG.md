@@ -1,12 +1,8 @@
 # Changelog
 
 ## [1.13.1](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.13.0...share-pro-v1.13.1) (2025-08-11)
-
-
 ### Bug Fixes
-
-* **ShareUI:** improve password input handling ([fabfa42](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/fabfa42d43bd867b294825551685e1148af72223))
-
+* **shareui:** improve password input handling ([fabfa42](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/fabfa42d43bd867b294825551685e1148af72223))
 ## [1.13.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.12.0...share-pro-v1.13.0) (2025-08-06)
 ### Features
 * add share password and share timeout ([f62000d](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/f62000d6e114c184483a7de9479d562ce6245e39))
@@ -19,7 +15,6 @@
 * **shareui:** simplify css and improve code readability ([92148cb](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/92148cbfba53d04095182066daccd8a594557a31))
 ## [1.11.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.10.1...share-pro-v1.11.0) (2025-06-09)
 * add echarts support ([b43689a](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/b43689afdeafd329651f80a8d08faa04cfa58c77))
-### Bug Fixes
 * **setting:** enhance vip info display and add detailed error message ([c1e3925](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/c1e39259bde6a97dc01fa41955085e4ac8ced133))
 ## [1.10.1](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.10.0...share-pro-v1.10.1) (2025-04-22)
 * default auth ([95d5ea2](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/95d5ea291f20ee4ccc1a8f736fe60cff50bb66aa))
