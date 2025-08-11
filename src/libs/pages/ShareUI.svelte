@@ -288,14 +288,27 @@
             />
             {#if formData.shareOptions.passwordEnabled}
               <div class="password-input-container">
-                <input
-                        type={formData.userPreferences.showPassword ? "text" : "password"}
-                        value={formData.shareOptions.password}
-                        placeholder={pluginInstance.i18n["ui"]["passwordPlaceholder"]}
-                        class="password-input"
-                        title={pluginInstance.i18n["ui"]["passwordTip"]}
-                        on:blur={handlePasswordChange}
-                />
+                {#if formData.userPreferences.showPassword}
+                  <input
+                          type="text"
+                          bind:value={formData.shareOptions.password}
+                          placeholder={pluginInstance.i18n["ui"]["passwordPlaceholder"]}
+                          class="password-input"
+                          title={pluginInstance.i18n["ui"]["passwordTip"]}
+                          on:blur={handlePasswordChange}
+                          on:keydown={(e) => e.key === 'Enter' && handlePasswordChange()}
+                  />
+                {:else}
+                  <input
+                          type="password"
+                          bind:value={formData.shareOptions.password}
+                          placeholder={pluginInstance.i18n["ui"]["passwordPlaceholder"]}
+                          class="password-input"
+                          title={pluginInstance.i18n["ui"]["passwordTip"]}
+                          on:blur={handlePasswordChange}
+                          on:keydown={(e) => e.key === 'Enter' && handlePasswordChange()}
+                  />
+                {/if}
                 <button
                         type="button"
                         class="password-visibility-toggle"
