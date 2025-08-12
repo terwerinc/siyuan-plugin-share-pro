@@ -86,8 +86,14 @@ class AttrUtils {
 
     // 处理每个字段
     fieldMappings.forEach(({ objectKey, settingKey, isNumber }) => {
+      // 首先检查 from 是否存在
+      if (!from || typeof from !== "object") {
+        attrs[settingKey] = ""
+        return attrs
+      }
       // 1. 获取原始值（直接从接口键名获取）
-      const value = from[objectKey]
+      // const value = from[objectKey]
+      const value = Object.prototype.hasOwnProperty.call(from, objectKey) ? from[objectKey] : undefined
 
       // 2. 验证逻辑（完全拆解版）
       // 2.1 检查值是否已定义

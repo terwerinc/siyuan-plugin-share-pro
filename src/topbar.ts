@@ -108,7 +108,7 @@ class Topbar {
     if (vipInfo.code === 0) {
       const docCheck = this.checkDocId()
       if (docCheck.flag) {
-        const docInfo = await this.shareService.getSharedDocInfo(docCheck.docId)
+        const docInfo = await this.shareService.getSharedDocInfo(docCheck.docId, cfg?.serviceApiConfig?.token ?? "")
         const isShared = docInfo.code === 0
         const shareData = docInfo?.data ? JSON.parse(docInfo.data) : null
         if (shareData) {
