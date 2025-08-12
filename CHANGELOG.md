@@ -1,7 +1,9 @@
 # Changelog
 
-## [1.13.1](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.13.0...share-pro-v1.13.1) (2025-08-11)
+## [1.13.2](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.13.1...share-pro-v1.13.2) (2025-08-12)
 ### Bug Fixes
+* **utils:** fix share error for old ui ([5036748](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/50367486edd3c6746fab5c546e392e8c6f410b59))
+## [1.13.1](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.13.0...share-pro-v1.13.1) (2025-08-11)
 * **shareui:** improve password input handling ([fabfa42](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/fabfa42d43bd867b294825551685e1148af72223))
 ## [1.13.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.12.0...share-pro-v1.13.0) (2025-08-06)
 ### Features
