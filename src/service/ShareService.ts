@@ -114,8 +114,10 @@ class ShareService {
         .replace("[param2]", "[" + docId + "]")
       this.addLog(successMsg, "info")
 
-      // 处理图片
+      // 处理图片和DataViews媒体资源
       const data = resp.data
+      
+      // 处理常规媒体资源
       const media = data.media
       if (media && media.length > 0) {
         showMessage(this.pluginInstance.i18n["shareService"]["msgProcessPic"], 7000, "info")
@@ -123,7 +125,19 @@ class ShareService {
         this.addLog(this.pluginInstance.i18n["shareService"]["msgStartPicBack"], "info")
         void this.processShareMedia(docId, media)
         this.addLog(this.pluginInstance.i18n["shareService"]["msgEndPicBack"], "info")
-      } else {
+      }
+      
+      // 处理数据库媒体资源
+      const dataViewMedia = data.dataViewMedia
+      if (dataViewMedia && dataViewMedia.length > 0) {
+        showMessage(this.pluginInstance.i18n["shareService"]["msgProcessPic"], 7000, "info")
+        // 异步处理数据库媒体资源
+        this.addLog(this.pluginInstance.i18n["shareService"]["msgStartDataViewMediaBack"], "info")
+        void this.processDataViewMedia(docId, dataViewMedia)
+        this.addLog(this.pluginInstance.i18n["shareService"]["msgEndDataViewMediaBack"], "info")
+      }
+      
+      if (!media || media.length === 0) {
         showMessage(this.pluginInstance.i18n["shareService"]["msgShareSuccess"], 3000, "info")
       }
     } catch (e) {
@@ -350,6 +364,147 @@ class ShareService {
       showMessage(this.pluginInstance.i18n["shareService"]["success"], 3000, "info")
     } else {
       const errorPic = this.pluginInstance.i18n["shareService"]["errorPic"]
+      const msgWithParam = errorPic.replace("[param1]", errorCount)
+      showMessage(msgWithParam, 7000, "error")
+    }
+  }
+
+  /**
+   * 处理数据库媒体资源
+   * @param docId 文档ID
+   * @param mediaList 数据库媒体资源列表
+   */
+  private async processDataViewMedia(docId: string, mediaList: any[]) {
+    const processingMsg = this.pluginInstance.i18n["shareService"]["processingDataViewMedia"] + "：" + docId
+    this.addLog(processingMsg, "info")
+    const { cfg } = await ApiUtils.getSiyuanKernelApi(this.pluginInstance)
+
+    const perReq = 5
+    const groupedMedia = []
+    for (let i = 0; i < mediaList.length; i += perReq) {
+      groupedMedia.push(mediaList.slice(i, i + perReq))
+    }
+
+    let errorCount = 0
+    let successCount = 0
+    let totalCount = 0
+    for (let i = 0; i < groupedMedia.length; i++) {
+      const mediaGroup = groupedMedia[i]
+      const processedParams = []
+
+      const msgStartGroup = this.pluginInstance.i18n["shareService"]["msgStartGroup"]
+      const msgStartGroupWithParam = msgStartGroup
+        .replace("[param1]", i + 1)
+        .replace("[param2]", groupedMedia.length)
+        .replace("[param3]", perReq)
+      this.addLog(msgStartGroupWithParam, "info")
+      for (const media of mediaGroup) {
+        try {
+          totalCount += 1
+
+          const originalUrl = media.originalUrl ?? ""
+          let imageUrl = originalUrl
+          const alt = media.alt
+          const title = media.title
+
+          if (!imageUrl.startsWith("http")) {
+            if (cfg.serviceApiConfig.apiUrl.endsWith("/")) {
+              imageUrl = cfg.siyuanConfig.apiUrl + imageUrl
+            } else {
+              imageUrl = cfg.siyuanConfig.apiUrl + "/" + imageUrl
+            }
+          }
+
+          const msgStartCurrentPic = this.pluginInstance.i18n["shareService"]["msgStartCurrentDataViewMedia"]
+          const msgStartCurrentPicWithParam = msgStartCurrentPic
+            .replace("[param1]", totalCount)
+            .replace("[param2]", imageUrl)
+          this.addLog(msgStartCurrentPicWithParam, "info")
+          
+          const res = await ImageUtils.fetchBase64WithContentType(imageUrl)
+          this.addLog(`DataView image base64 response =>${res}`, "info")
+
+          if (res?.status !== 200) {
+            errorCount += 1
+            this.addLog(`DataView image retrieval error: ${res.msg}`, "error")
+            continue
+          }
+
+          const base64 = res.body
+          const type = res.contentType
+          const params = {
+            file: base64,
+            originalUrl: originalUrl,
+            alt: alt,
+            title: title,
+            type: type,
+            source: "dataviews" // 标识资源来源为DataView
+          }
+          processedParams.push(params)
+        } catch (e) {
+          const mediaErrorMsg = this.pluginInstance.i18n["shareService"]["msgDataViewMediaUploadError"] + e
+          this.addLog(mediaErrorMsg, "error")
+          showMessage(this.pluginInstance.i18n["shareService"]["msgDataViewMediaUploadError"] + e, 7000, "error")
+        }
+      }
+      const msgGroupProcessSuccess = this.pluginInstance.i18n["shareService"]["msgGroupProcessSuccess"]
+      const msgGroupProcessSuccessWithParam = msgGroupProcessSuccess
+        .replace("[param1]", i + 1)
+        .replace("[param2]", groupedMedia.length)
+        .replace("[param3]", perReq)
+      this.addLog(msgGroupProcessSuccessWithParam, "info")
+
+      const hasNext = i < groupedMedia.length - 1
+      const reqParams = {
+        docId: docId,
+        medias: processedParams,
+        hasNext: hasNext,
+      }
+
+      // 处理上传结果
+      const msgProcessPicBatch = this.pluginInstance.i18n["shareService"]["msgProcessDataViewMediaBatch"]
+      const msgProcessPicBatchWithParam = msgProcessPicBatch.replace("[param1]", i + 1)
+      this.addLog(msgProcessPicBatchWithParam, "info")
+      const uploadResult = await this.shareApi.uploadDataViewMedia(reqParams)
+      this.addLog(this.pluginInstance.i18n["shareService"]["msgBatchResult"] + JSON.stringify(uploadResult), "info")
+      if (uploadResult.code === 0) {
+        successCount += processedParams.length
+        if (!hasNext) {
+          showMessage(
+            this.pluginInstance.i18n["shareService"]["msgYourDoc"] +
+              docId +
+              this.pluginInstance.i18n["shareService"]["msgSuccessUpdateDataViewMedia"],
+            3000,
+            "info"
+          )
+        }
+        const msgCurrentMediaSuccess = this.pluginInstance.i18n["shareService"]["msgCurrentDataViewMediaSuccess"]
+        const msgCurrentMediaSuccessWithParam = msgCurrentMediaSuccess.replace("[param1]", i + 1)
+        this.addLog(msgCurrentMediaSuccessWithParam, "info")
+      } else {
+        errorCount += processedParams.length
+        let rtnMsg = uploadResult.msg
+        if (!uploadResult.msg) {
+          rtnMsg = (uploadResult as any).message
+        }
+        const msgCurrentMediaError = this.pluginInstance.i18n["shareService"]["msgCurrentDataViewMediaError"]
+        const msgCurrentMediaErrorWithParam = msgCurrentMediaError.replace("[param1]", i + 1)
+        const errMsg = msgCurrentMediaErrorWithParam + rtnMsg
+        this.addLog(errMsg, "error")
+        showMessage(errMsg, 7000, "error")
+      }
+    }
+
+    const successPic = this.pluginInstance.i18n["shareService"]["successDataViewMedia"]
+    const successPicWithParam = successPic
+      .replace("[param1]", totalCount)
+      .replace("[param2]", successCount)
+      .replace("[param3]", errorCount)
+    this.addLog(successPicWithParam, "info")
+    if (successCount === totalCount) {
+      showMessage(this.pluginInstance.i18n["shareService"]["success"], 3000, "info")
+    } else {
+      const errorPic = this.pluginInstance.i18n["shareService"]["errorDataViewMedia"]
       const msgWithParam = errorPic.replace("[param1]", errorCount)
       showMessage(msgWithParam, 7000, "error")
     }

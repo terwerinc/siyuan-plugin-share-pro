@@ -64,6 +64,12 @@ class ShareApi {
     return res
   }
 
+  public async uploadDataViewMedia(shareBody: any) {
+    const res = await this.shareServiceRequest(ServiceApiKeys.API_UPLOAD_DATA_VIEW_MEDIA, shareBody)
+    this.logger.info("data view media uploaded =>", res)
+    return res
+  }
+
   public async listDoc(params: any) {
     const res = await this.shareServiceRequest(ServiceApiKeys.API_LIST_DOC, params)
     this.logger.info("get share list =>", res)
@@ -161,6 +167,7 @@ enum ServiceApiKeys {
   API_SHARE_UPDATE_OPTIONS = "/api/share/updateOptions",
   API_LICENSE_VIP_INFO = "/api/license/vipInfo",
   API_UPLOAD_MEDIA = "/api/asset/upload",
+  API_UPLOAD_DATA_VIEW_MEDIA = "/api/asset/uploadDataView",
   API_LIST_DOC = "/api/share/listDoc",
   API_GET_SETTING = "/api/settings/share",
   API_GET_SETTING_BY_AUTHOR = "/api/settings/byAuthor",
