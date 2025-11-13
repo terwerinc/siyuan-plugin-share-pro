@@ -500,6 +500,7 @@ class ShareService {
         dataViewMedia
       )}`
     )
+
     // 先处理常规媒体资源
     if (media && media.length > 0) {
       showMessage(this.pluginInstance.i18n["shareService"]["msgProcessPic"], 7000, "info")
@@ -510,7 +511,7 @@ class ShareService {
 
     // 再处理DataViews媒体资源
     if (dataViewMedia && dataViewMedia.length > 0) {
-      showMessage(this.pluginInstance.i18n["shareService"]["msgProcessPic"], 7000, "info")
+      showMessage(this.pluginInstance.i18n["shareService"]["msgDataViewProcessPic"], 7000, "info")
       this.addLog(this.pluginInstance.i18n["shareService"]["msgStartDataViewMediaBack"], "info")
       await this.processDataViewMedia(docId, dataViewMedia)
       this.addLog(this.pluginInstance.i18n["shareService"]["msgEndDataViewMediaBack"], "info")
