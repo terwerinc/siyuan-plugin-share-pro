@@ -494,6 +494,7 @@ class ShareService {
    * 避免并发执行导致的后端处理混乱
    */
   private async processAllMediaResources(docId: string, media: any[], dataViewMedia: any[]) {
+    this.logger.debug(`process all media resources => docId: ${docId}, media: ${JSON.stringify(media)}, dataViewMedia: ${JSON.stringify(dataViewMedia)}`)
     // 先处理常规媒体资源
     if (media && media.length > 0) {
       showMessage(this.pluginInstance.i18n["shareService"]["msgProcessPic"], 7000, "info")
