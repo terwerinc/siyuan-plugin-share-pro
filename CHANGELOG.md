@@ -1,39 +1,25 @@
 # Changelog
 
 ## [1.14.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.13.2...share-pro-v1.14.0) (2025-11-13)
-
-
 ### Features
-
-* compress icon images ([eea4f78](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/eea4f7806cfa43c7ad994e2209963b117c90cac5))
 * compress icon images ([91c05c5](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/91c05c509e1da5144d47a668b2119304e1294212))
-* **dataviews:** add resource handling for DataViews components ([425c1b2](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/425c1b281452e9f98a46d02d80fb585414b823d5))
+* **dataviews:** add resource handling for dataviews components ([425c1b2](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/425c1b281452e9f98a46d02d80fb585414b823d5))
 * **share-service:** add dataviews resource handling support ([e820b06](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/e820b06d8b7d08f3ba4f49567e981110e49e3483))
 * **share:** add data view media upload support ([decc56a](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/decc56aa13e09cc89ade4e38434bee42bff27d3e))
-* support image assets in databaase ([260e862](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/260e8628328c47bc837cb6b3e6bf1fe38fc7e9ee))
 * support image assets in databaase ([ef663c2](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/ef663c22e25d17c4ce92c16fed7ed9aa6753867d))
-
-
 ### Code Refactoring
-
-* **ShareService:** consolidate media processing into single method ([56e95b0](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/56e95b02c1ed1fbccac0857d067f4cdd5b2a850a))
-
-
+* **shareservice:** consolidate media processing into single method ([56e95b0](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/56e95b02c1ed1fbccac0857d067f4cdd5b2a850a))
 ### Performance Improvements
-
-* **ShareService:** add debug log for media resource processing ([ef65321](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/ef65321619199c23bc559c516b42382c7265832b))
-
+* **shareservice:** add debug log for media resource processing ([ef65321](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/ef65321619199c23bc559c516b42382c7265832b))
 ## [1.13.2](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.13.1...share-pro-v1.13.2) (2025-08-12)
 ### Bug Fixes
 * **utils:** fix share error for old ui ([5036748](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/50367486edd3c6746fab5c546e392e8c6f410b59))
 ## [1.13.1](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.13.0...share-pro-v1.13.1) (2025-08-11)
 * **shareui:** improve password input handling ([fabfa42](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/fabfa42d43bd867b294825551685e1148af72223))
 ## [1.13.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.12.0...share-pro-v1.13.0) (2025-08-06)
-### Features
 * add share password and share timeout ([f62000d](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/f62000d6e114c184483a7de9479d562ce6245e39))
 * **setting:** add password protection ([591b52b](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/591b52bc6058dd39504650a8150172ebb714b117))
 * **share:** add expiration time feature for share links ([6d1c237](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/6d1c2376d2a0427ee6afa967458dd67134763c18))
-### Code Refactoring
 * **shareui:** adjust min-width for better mobile responsiveness ([2a44076](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/2a440766a535da2b58da311e1f93970977620025))
 ## [1.12.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.11.0...share-pro-v1.12.0) (2025-07-21)
 * **setting:** increase document tree depth options and update related text ([1c2d6d9](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/1c2d6d9103fd1671238bef2c73213b961f8b4c73))
