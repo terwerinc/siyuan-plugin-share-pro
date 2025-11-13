@@ -116,7 +116,7 @@ class ShareService {
 
       // 处理图片和DataViews媒体资源
       const data = resp.data
-      
+
       // 异步处理所有媒体资源，确保按顺序执行
       void this.processAllMediaResources(docId, data.media, data.dataViewMedia)
     } catch (e) {
@@ -399,7 +399,7 @@ class ShareService {
             .replace("[param1]", totalCount)
             .replace("[param2]", imageUrl)
           this.addLog(msgStartCurrentPicWithParam, "info")
-          
+
           const res = await ImageUtils.fetchBase64WithContentType(imageUrl)
           this.addLog(`DataView image base64 response =>${res}`, "info")
 
@@ -417,7 +417,7 @@ class ShareService {
             alt: alt,
             title: title,
             type: type,
-            source: "dataviews" // 标识资源来源为DataView
+            source: "dataviews", // 标识资源来源为DataView
           }
           processedParams.push(params)
         } catch (e) {
@@ -501,7 +501,7 @@ class ShareService {
       await this.processShareMedia(docId, media)
       this.addLog(this.pluginInstance.i18n["shareService"]["msgEndPicBack"], "info")
     }
-    
+
     // 再处理DataViews媒体资源
     if (dataViewMedia && dataViewMedia.length > 0) {
       showMessage(this.pluginInstance.i18n["shareService"]["msgProcessPic"], 7000, "info")
@@ -509,7 +509,7 @@ class ShareService {
       await this.processDataViewMedia(docId, dataViewMedia)
       this.addLog(this.pluginInstance.i18n["shareService"]["msgEndDataViewMediaBack"], "info")
     }
-    
+
     // 只有在没有媒体资源的情况下显示分享成功消息
     // 如果有媒体资源，成功消息会在各自的处理方法中显示
     if ((!media || media.length === 0) && (!dataViewMedia || dataViewMedia.length === 0)) {
