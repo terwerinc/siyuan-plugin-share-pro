@@ -117,29 +117,8 @@ class ShareService {
       // 处理图片和DataViews媒体资源
       const data = resp.data
       
-      // 处理常规媒体资源
-      const media = data.media
-      if (media && media.length > 0) {
-        showMessage(this.pluginInstance.i18n["shareService"]["msgProcessPic"], 7000, "info")
-        // 异步处理图片
-        this.addLog(this.pluginInstance.i18n["shareService"]["msgStartPicBack"], "info")
-        void this.processShareMedia(docId, media)
-        this.addLog(this.pluginInstance.i18n["shareService"]["msgEndPicBack"], "info")
-      }
-      
-      // 处理数据库媒体资源
-      const dataViewMedia = data.dataViewMedia
-      if (dataViewMedia && dataViewMedia.length > 0) {
-        showMessage(this.pluginInstance.i18n["shareService"]["msgProcessPic"], 7000, "info")
-        // 异步处理数据库媒体资源
-        this.addLog(this.pluginInstance.i18n["shareService"]["msgStartDataViewMediaBack"], "info")
-        void this.processDataViewMedia(docId, dataViewMedia)
-        this.addLog(this.pluginInstance.i18n["shareService"]["msgEndDataViewMediaBack"], "info")
-      }
-      
-      if (!media || media.length === 0) {
-        showMessage(this.pluginInstance.i18n["shareService"]["msgShareSuccess"], 3000, "info")
-      }
+      // 异步处理所有媒体资源，确保按顺序执行
+      void this.processAllMediaResources(docId, data.media, data.dataViewMedia)
     } catch (e) {
       const exceptionMsg = this.pluginInstance.i18n["shareService"]["shareErrorWithDoc"].replace("[param1]", docId) + e
       this.addLog(exceptionMsg, "error")
@@ -507,6 +486,34 @@ class ShareService {
       const errorPic = this.pluginInstance.i18n["shareService"]["errorDataViewMedia"]
       const msgWithParam = errorPic.replace("[param1]", errorCount)
       showMessage(msgWithParam, 7000, "error")
+    }
+  }
+
+  /**
+   * 顺序处理所有媒体资源，先处理常规媒体资源，再处理DataViews媒体资源
+   * 避免并发执行导致的后端处理混乱
+   */
+  private async processAllMediaResources(docId: string, media: any[], dataViewMedia: any[]) {
+    // 先处理常规媒体资源
+    if (media && media.length > 0) {
+      showMessage(this.pluginInstance.i18n["shareService"]["msgProcessPic"], 7000, "info")
+      this.addLog(this.pluginInstance.i18n["shareService"]["msgStartPicBack"], "info")
+      await this.processShareMedia(docId, media)
+      this.addLog(this.pluginInstance.i18n["shareService"]["msgEndPicBack"], "info")
+    }
+    
+    // 再处理DataViews媒体资源
+    if (dataViewMedia && dataViewMedia.length > 0) {
+      showMessage(this.pluginInstance.i18n["shareService"]["msgProcessPic"], 7000, "info")
+      this.addLog(this.pluginInstance.i18n["shareService"]["msgStartDataViewMediaBack"], "info")
+      await this.processDataViewMedia(docId, dataViewMedia)
+      this.addLog(this.pluginInstance.i18n["shareService"]["msgEndDataViewMediaBack"], "info")
+    }
+    
+    // 只有在没有媒体资源的情况下显示分享成功消息
+    // 如果有媒体资源，成功消息会在各自的处理方法中显示
+    if ((!media || media.length === 0) && (!dataViewMedia || dataViewMedia.length === 0)) {
+      showMessage(this.pluginInstance.i18n["shareService"]["msgShareSuccess"], 3000, "info")
     }
   }
 
