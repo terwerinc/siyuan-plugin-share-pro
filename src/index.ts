@@ -124,4 +124,11 @@ export default class ShareProPlugin extends Plugin {
       }
     }
   }
+
+  /**
+   * 显示增量分享UI
+   */
+  public showIncrementalShareUI() {
+    this.main.showIncrementalShareUI()
+  }
 }

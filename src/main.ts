@@ -21,6 +21,13 @@ class Main {
   public start() {
     this.topbar.initTopbar()
   }
+
+  /**
+   * 显示增量分享UI
+   */
+  public showIncrementalShareUI() {
+    this.topbar.showIncrementalShareUI()
+  }
 }
 
 export { Main }

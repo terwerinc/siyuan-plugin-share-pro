@@ -19,6 +19,7 @@
   import CustomSetting from "./setting/CustomSetting.svelte"
   import DocSetting from "./setting/DocSetting.svelte"
   import SeoSetting from "./setting/SeoSetting.svelte"
+  import BlacklistSetting from "./setting/BlacklistSetting.svelte"
 
   const logger = simpleLogger("share-main", "share-pro", isDev)
   export let pluginInstance: ShareProPlugin
@@ -71,6 +72,17 @@
     tabData.push({
       label: pluginInstance.i18n.seoSetting,
       content: SeoSetting,
+      props: {
+        pluginInstance: pluginInstance,
+        dialog: dialog,
+        vipInfo: vipInfo,
+      },
+    })
+
+    // 黑名单管理
+    tabData.push({
+      label: pluginInstance.i18n.incrementalShare?.blacklistManage || 'Blacklist Management',
+      content: BlacklistSetting,
       props: {
         pluginInstance: pluginInstance,
         dialog: dialog,
