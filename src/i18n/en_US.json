@@ -229,6 +229,7 @@
     "shareStatus": "Share Status",
     "shared": "Shared",
     "notShared": "Not Shared",
+    "blacklistManage": "Blacklist Management",
     "blacklist": {
       "title": "Blacklist Management",
       "add": "Add Blacklist",

@@ -234,6 +234,7 @@
     "shareStatus": "分享状态",
     "shared": "已分享",
     "notShared": "未分享",
+    "blacklistManage": "黑名单管理",
     "blacklist": {
       "title": "黑名单管理",
       "add": "添加黑名单",
