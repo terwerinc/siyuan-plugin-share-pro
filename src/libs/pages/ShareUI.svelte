@@ -352,14 +352,14 @@
             title={pluginInstance.i18n["incrementalShare"]["title"]}
             on:click={() => pluginInstance.showIncrementalShareUI()}
           >
-            {@html icons.iconRefresh}
+            {@html icons.iconIncremental}
           </span>
           <span
             class="action-btn"
             title={pluginInstance.i18n["manageDoc"]}
             on:click={() => showManageTab()}
           >
-            {@html icons.iconList}
+            {@html icons.iconManage}
           </span>
           <span
             class="action-btn"

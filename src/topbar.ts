@@ -202,7 +202,7 @@ class Topbar {
 
       // 增量分享
       menu.addItem({
-        iconHTML: icons.iconRefresh,
+        icon: `iconAdd`,
         label: this.pluginInstance.i18n?.incrementalShare?.title,
         click: async () => {
           await this.showIncrementalShareUI()
