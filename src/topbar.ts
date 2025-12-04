@@ -14,6 +14,7 @@ import { isDev, SHARE_PRO_STORE_NAME } from "./Constants"
 import ShareProPlugin from "./index"
 import { WidgetInvoke } from "./invoke/widgetInvoke"
 import ShareSetting from "./libs/pages/ShareSetting.svelte"
+import IncrementalShareUI from "./libs/pages/IncrementalShareUI.svelte"
 import { ShareProConfig } from "./models/ShareProConfig"
 import { NewUI } from "./newUI"
 import { ShareService } from "./service/ShareService"
@@ -41,7 +42,7 @@ class Topbar {
   public initTopbar() {
     const topBarElement = this.pluginInstance.addTopBar({
       icon: icons.iconShare,
-      title: this.pluginInstance.i18n["sharePro"],
+      title: this.pluginInstance.i18n?.sharePro,
       position: "right",
       callback: () => {},
     })
@@ -55,17 +56,21 @@ class Topbar {
       }
 
       this.lock = true
-      const settingConfig = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
-      if (settingConfig.isNewUIEnabled) {
-        await newUI.startShareForNewUI()
-      } else {
-        // 初始化菜单
-        try {
+      try {
+        const settingConfig = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
+        if (settingConfig.isNewUIEnabled === false) {
+          // 明确禁止新UI才使用菜单模式，历史原因
           await this.addMenu(topBarElement.getBoundingClientRect())
-        } catch (e) {
-          const errMsg = this.pluginInstance.i18n["topbar"]["shareSuccessError"] + e
-          showMessage(errMsg, 7000, "error")
+        } else {
+          // 主推新UI
+          await newUI.startShareForNewUI()
         }
+      } catch (e) {
+        const errMsg = this.pluginInstance.i18n?.topbar?.shareSuccessError + e
+        showMessage(errMsg, 7000, "error")
+      } finally {
+        // 无论是不是不都应该释放，否则失败一次之后将永远无法点击
+        this.lock = false
       }
 
       this.lock = false
@@ -79,9 +84,15 @@ class Topbar {
       }
 
       this.contextLock = true
-      const settingConfig = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
-      if (settingConfig.isNewUIEnabled) {
-        await newUI.settingForNewUI()
+      try {
+        const settingConfig = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
+        if (settingConfig.isNewUIEnabled) {
+          await newUI.settingForNewUI()
+        }
+      } catch (e) {
+        this.logger.error("settingForNewUI error", e)
+      } finally {
+        this.contextLock = false
       }
       this.contextLock = false
     })
@@ -114,29 +125,39 @@ class Topbar {
         if (shareData) {
           this.logger.info("get shared data =>", shareData)
           if (shareData.shareStatus !== "COMPLETED") {
-            alert(this.pluginInstance.i18n["topbar"]["msgIngError"])
+            alert(this.pluginInstance.i18n?.topbar?.msgIngError || "分享正在进行中，请稍后再试")
           }
         }
         menu.addItem({
           icon: isShared ? `iconCloseRound` : `iconRiffCard`,
-          label: isShared ? this.pluginInstance.i18n["cancelShare"] : this.pluginInstance.i18n["startShare"],
+          label: isShared
+            ? this.pluginInstance.i18n?.cancelShare || "取消分享"
+            : this.pluginInstance.i18n?.startShare || "开始分享",
           click: async () => {
             if (isShared) {
-              confirm(this.pluginInstance.i18n["tipTitle"], this.pluginInstance.i18n["confirmDelete"], async () => {
-                if (!docCheck.flag) {
-                  showMessage(this.pluginInstance.i18n["msgNotFoundDoc"], 7000, "error")
-                  return
+              confirm(
+                this.pluginInstance.i18n?.tipTitle || "提示",
+                this.pluginInstance.i18n?.confirmDelete || "确定要删除吗？",
+                async () => {
+                  if (!docCheck.flag) {
+                    showMessage(this.pluginInstance.i18n?.msgNotFoundDoc || "未找到文档", 7000, "error")
+                    return
+                  }
+                  const ret = await this.shareService.cancelShare(docCheck.docId)
+                  if (ret.code === 0) {
+                    showMessage(this.pluginInstance.i18n?.topbar?.cancelSuccess || "取消分享成功", 3000, "info")
+                  } else {
+                    showMessage(
+                      this.pluginInstance.i18n?.topbar?.cancelError + ret.msg || "取消分享失败" + ret.msg,
+                      7000,
+                      "error"
+                    )
+                  }
                 }
-                const ret = await this.shareService.cancelShare(docCheck.docId)
-                if (ret.code === 0) {
-                  showMessage(this.pluginInstance.i18n["topbar"]["cancelSuccess"], 3000, "info")
-                } else {
-                  showMessage(this.pluginInstance.i18n["topbar"]["cancelError"] + ret.msg, 7000, "error")
-                }
-              })
+              )
             } else {
               if (!docCheck.flag) {
-                showMessage(this.pluginInstance.i18n["msgNotFoundDoc"], 7000, "error")
+                showMessage(this.pluginInstance.i18n?.msgNotFoundDoc || "未找到文档", 7000, "error")
                 return
               }
               await this.shareService.createShare(docCheck.docId)
@@ -144,28 +165,31 @@ class Topbar {
           },
         })
         menu.addSeparator()
+
         if (isShared) {
           // 重新分享
           menu.addItem({
             icon: `iconTransform`,
-            label: this.pluginInstance.i18n["reShare"],
+            label: this.pluginInstance.i18n?.reShare || "重新分享",
             click: async () => {
               if (!docCheck.flag) {
-                showMessage(this.pluginInstance.i18n["msgNotFoundDoc"], 7000, "error")
+                showMessage(this.pluginInstance.i18n?.msgNotFoundDoc || "未找到文档", 7000, "error")
                 return
               }
               await this.shareService.createShare(docCheck.docId)
             },
           })
+
           menu.addSeparator()
 
           // 查看文档
           menu.addItem({
             icon: `iconEye`,
-            label: this.pluginInstance.i18n["viewArticle"],
+            label: this.pluginInstance.i18n?.viewArticle || "查看文档",
             click: async () => {
               if (!shareData) {
-                const noShareMsg = this.pluginInstance.i18n["topbar"]["msgNoShare"] + docInfo.msg
+                const noShareMsg =
+                  this.pluginInstance.i18n?.topbar?.msgNoShare + docInfo.msg || "文档未分享" + docInfo.msg
                 showMessage(noShareMsg, 7000, "error")
                 return
               }
@@ -188,10 +212,21 @@ class Topbar {
         // showMessage(this.pluginInstance.i18n.msgNotFoundDoc, 7000, "error")
       }
 
+      // 增量分享
+      menu.addItem({
+        iconHTML: icons.iconRefresh,
+        label: this.pluginInstance.i18n?.incrementalShare?.title,
+        click: async () => {
+          await this.showIncrementalShareUI()
+        },
+      })
+
+      menu.addSeparator()
+
       // 分享管理
       menu.addItem({
         icon: `iconDock`,
-        label: this.pluginInstance.i18n["manageDoc"],
+        label: this.pluginInstance.i18n?.manageDoc,
         click: () => {
           this.widgetInvoke.showShareManageTab(vipInfo.data)
         },
@@ -200,16 +235,12 @@ class Topbar {
     } else {
       menu.addItem({
         icon: `iconKey`,
-        label: this.pluginInstance.i18n["getLicense"],
+        label: this.pluginInstance.i18n?.getLicense,
         click: () => {
-          const vipTip = vipInfo.msg ?? this.pluginInstance.i18n["unknownError"]
-          confirm(
-            this.pluginInstance.i18n["tipTitle"],
-            vipTip + "，" + this.pluginInstance.i18n["openLicensePage"],
-            () => {
-              window.open("https://store.terwer.space/products/share-pro")
-            }
-          )
+          const vipTip = vipInfo.msg ?? this.pluginInstance.i18n?.unknownError
+          confirm(this.pluginInstance.i18n?.tipTitle, vipTip + "，" + this.pluginInstance.i18n?.openLicensePage, () => {
+            window.open("https://store.terwer.space/products/share-pro")
+          })
         },
       })
       menu.addSeparator()
@@ -217,11 +248,11 @@ class Topbar {
 
     menu.addItem({
       icon: `iconSettings`,
-      label: this.pluginInstance.i18n["shareSetting"],
+      label: this.pluginInstance.i18n?.shareSetting,
       click: () => {
         const settingId = "share-pro-setting"
         const d = new Dialog({
-          title: `${this.pluginInstance.i18n["shareSetting"]} - ${this.pluginInstance.i18n["sharePro"]} v${pkg.version}`,
+          title: `${this.pluginInstance.i18n?.shareSetting} - ${this.pluginInstance.i18n?.sharePro} v${pkg.version}`,
           content: `<div id="${settingId}"></div>`,
           width: this.pluginInstance.isMobile ? "92vw" : "61.8vw",
         })
@@ -245,6 +276,39 @@ class Topbar {
         isLeft: true,
       })
     }
+  }
+
+  /**
+   * 显示增量分享UI
+   */
+  public async showIncrementalShareUI() {
+    const cfg = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
+    const vipInfo = await this.shareService.getVipInfo(cfg?.serviceApiConfig?.token ?? "")
+
+    if (vipInfo.code !== 0) {
+      const vipTip = vipInfo.msg ?? this.pluginInstance.i18n?.unknownError
+      confirm(this.pluginInstance.i18n?.tipTitle, vipTip + "，" + this.pluginInstance.i18n?.openLicensePage, () => {
+        window.open("https://store.terwer.space/products/share-pro")
+      })
+      return
+    }
+
+    const incrementalShareId = "incremental-share-ui"
+    // const d = new Dialog({
+    new Dialog({
+      title: `${this.pluginInstance.i18n?.incrementalShare?.title} - ${this.pluginInstance.i18n?.sharePro} v${pkg.version}`,
+      content: `<div id="${incrementalShareId}"></div>`,
+      width: this.pluginInstance.isMobile ? "95vw" : "80vw",
+      height: this.pluginInstance.isMobile ? "90vh" : "80vh",
+    })
+
+    new IncrementalShareUI({
+      target: document.getElementById(incrementalShareId) as HTMLElement,
+      props: {
+        pluginInstance: this.pluginInstance,
+        // dialog: d
+      },
+    })
   }
 }
 
