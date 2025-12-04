@@ -11,5 +11,7 @@
  * 统一导出所有类型定义
  */
 export * from "./service-api"
+export * from "./service-dto"
 export * from "./share-history"
 export * from "./share-blacklist"
+export * from "./blacklist-api"
