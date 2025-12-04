@@ -7,7 +7,7 @@
  *  of this license document, but changing it is not allowed.
  */
 
-import { App, getFrontend, IObject, Plugin } from "siyuan"
+import { App, Dialog, getFrontend, IObject, Plugin, showMessage } from "siyuan"
 import { ILogger, simpleLogger } from "zhi-lib-base"
 
 import "../index.styl"
@@ -23,12 +23,16 @@ import {
 import { Main } from "./main"
 import { ShareProConfig } from "./models/ShareProConfig"
 import { initStatusBar } from "./statusBar"
+import ShareSetting from "./libs/pages/ShareSetting.svelte"
+import { ShareService } from "./service/ShareService"
+import pkg from "../package.json"
 
 export default class ShareProPlugin extends Plugin {
   private logger: ILogger
   public isMobile: boolean
   public statusBarElement: any
   private main: Main
+  private shareService: ShareService
 
   constructor(options: { app: App; id: string; name: string; i18n: IObject }) {
     super(options)
@@ -37,6 +41,7 @@ export default class ShareProPlugin extends Plugin {
     const frontEnd = getFrontend()
     this.isMobile = frontEnd === "mobile" || frontEnd === "browser-mobile"
     this.main = new Main(this)
+    this.shareService = new ShareService(this)
   }
 
   async onload() {
@@ -49,6 +54,30 @@ export default class ShareProPlugin extends Plugin {
 
   onunload() {
     this.logger.info("Share pro unloaded")
+  }
+
+  async openSetting() {
+    try {
+      const cfg = await this.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
+      const vipInfo = await this.shareService.getVipInfo(cfg?.serviceApiConfig?.token ?? "")
+      const settingId = "share-pro-setting"
+      const d = new Dialog({
+        title: `${this.i18n?.shareSetting} - ${this.i18n?.sharePro} v${pkg.version}`,
+        content: `<div id="${settingId}"></div>`,
+        width: this.isMobile ? "92vw" : "61.8vw",
+      })
+      new ShareSetting({
+        target: document.getElementById(settingId) as HTMLElement,
+        props: {
+          pluginInstance: this,
+          dialog: d,
+          vipInfo: vipInfo,
+        },
+      })
+    } catch (e) {
+      this.logger.error("Share pro open setting error", e)
+      showMessage("Share pro open setting error=>" + e, 7000, "error")
+    }
   }
 
   // ================
@@ -123,5 +152,12 @@ export default class ShareProPlugin extends Plugin {
         this.logger.info("Share pro updated for dev mode")
       }
     }
+  }
+
+  /**
+   * 显示增量分享UI
+   */
+  public showIncrementalShareUI() {
+    this.main.showIncrementalShareUI()
   }
 }

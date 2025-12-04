@@ -13,7 +13,6 @@ import pkg from "../package.json"
 import { isDev, SHARE_PRO_STORE_NAME } from "./Constants"
 import ShareProPlugin from "./index"
 import { WidgetInvoke } from "./invoke/widgetInvoke"
-import ShareSetting from "./libs/pages/ShareSetting.svelte"
 import IncrementalShareUI from "./libs/pages/IncrementalShareUI.svelte"
 import { ShareProConfig } from "./models/ShareProConfig"
 import { NewUI } from "./newUI"
@@ -125,39 +124,29 @@ class Topbar {
         if (shareData) {
           this.logger.info("get shared data =>", shareData)
           if (shareData.shareStatus !== "COMPLETED") {
-            alert(this.pluginInstance.i18n?.topbar?.msgIngError || "分享正在进行中，请稍后再试")
+            alert(this.pluginInstance.i18n?.topbar?.msgIngError)
           }
         }
         menu.addItem({
           icon: isShared ? `iconCloseRound` : `iconRiffCard`,
-          label: isShared
-            ? this.pluginInstance.i18n?.cancelShare || "取消分享"
-            : this.pluginInstance.i18n?.startShare || "开始分享",
+          label: isShared ? this.pluginInstance.i18n?.cancelShare : this.pluginInstance.i18n?.startShare,
           click: async () => {
             if (isShared) {
-              confirm(
-                this.pluginInstance.i18n?.tipTitle || "提示",
-                this.pluginInstance.i18n?.confirmDelete || "确定要删除吗？",
-                async () => {
-                  if (!docCheck.flag) {
-                    showMessage(this.pluginInstance.i18n?.msgNotFoundDoc || "未找到文档", 7000, "error")
-                    return
-                  }
-                  const ret = await this.shareService.cancelShare(docCheck.docId)
-                  if (ret.code === 0) {
-                    showMessage(this.pluginInstance.i18n?.topbar?.cancelSuccess || "取消分享成功", 3000, "info")
-                  } else {
-                    showMessage(
-                      this.pluginInstance.i18n?.topbar?.cancelError + ret.msg || "取消分享失败" + ret.msg,
-                      7000,
-                      "error"
-                    )
-                  }
+              confirm(this.pluginInstance.i18n?.tipTitle, this.pluginInstance.i18n?.confirmDelete, async () => {
+                if (!docCheck.flag) {
+                  showMessage(this.pluginInstance.i18n?.msgNotFoundDoc, 7000, "error")
+                  return
                 }
-              )
+                const ret = await this.shareService.cancelShare(docCheck.docId)
+                if (ret.code === 0) {
+                  showMessage(this.pluginInstance.i18n?.topbar?.cancelSuccess, 3000, "info")
+                } else {
+                  showMessage(this.pluginInstance.i18n?.topbar?.cancelError + ret.msg + ret.msg, 7000, "error")
+                }
+              })
             } else {
               if (!docCheck.flag) {
-                showMessage(this.pluginInstance.i18n?.msgNotFoundDoc || "未找到文档", 7000, "error")
+                showMessage(this.pluginInstance.i18n?.msgNotFoundDoc, 7000, "error")
                 return
               }
               await this.shareService.createShare(docCheck.docId)
@@ -170,10 +159,10 @@ class Topbar {
           // 重新分享
           menu.addItem({
             icon: `iconTransform`,
-            label: this.pluginInstance.i18n?.reShare || "重新分享",
+            label: this.pluginInstance.i18n?.reShare,
             click: async () => {
               if (!docCheck.flag) {
-                showMessage(this.pluginInstance.i18n?.msgNotFoundDoc || "未找到文档", 7000, "error")
+                showMessage(this.pluginInstance.i18n?.msgNotFoundDoc, 7000, "error")
                 return
               }
               await this.shareService.createShare(docCheck.docId)
@@ -185,11 +174,10 @@ class Topbar {
           // 查看文档
           menu.addItem({
             icon: `iconEye`,
-            label: this.pluginInstance.i18n?.viewArticle || "查看文档",
+            label: this.pluginInstance.i18n?.viewArticle,
             click: async () => {
               if (!shareData) {
-                const noShareMsg =
-                  this.pluginInstance.i18n?.topbar?.msgNoShare + docInfo.msg || "文档未分享" + docInfo.msg
+                const noShareMsg = this.pluginInstance.i18n?.topbar?.msgNoShare + docInfo.msg + docInfo.msg
                 showMessage(noShareMsg, 7000, "error")
                 return
               }
@@ -250,20 +238,7 @@ class Topbar {
       icon: `iconSettings`,
       label: this.pluginInstance.i18n?.shareSetting,
       click: () => {
-        const settingId = "share-pro-setting"
-        const d = new Dialog({
-          title: `${this.pluginInstance.i18n?.shareSetting} - ${this.pluginInstance.i18n?.sharePro} v${pkg.version}`,
-          content: `<div id="${settingId}"></div>`,
-          width: this.pluginInstance.isMobile ? "92vw" : "61.8vw",
-        })
-        new ShareSetting({
-          target: document.getElementById(settingId) as HTMLElement,
-          props: {
-            pluginInstance: this.pluginInstance,
-            dialog: d,
-            vipInfo: vipInfo,
-          },
-        })
+        this.pluginInstance.openSetting()
       },
     })
 
