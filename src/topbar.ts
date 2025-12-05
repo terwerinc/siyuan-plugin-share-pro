@@ -18,6 +18,7 @@ import { NewUI } from "./newUI"
 import { ShareService } from "./service/ShareService"
 import PageUtil from "./utils/pageUtil"
 import { icons } from "./utils/svg"
+import IncrementalShareUI from "./libs/pages/IncrementalShareUI.svelte"
 
 /**
  * 顶部按钮
@@ -271,21 +272,20 @@ class Topbar {
     }
 
     const incrementalShareId = "incremental-share-ui"
-    // const d = new Dialog({
-    new Dialog({
+    const d = new Dialog({
       title: `${this.pluginInstance.i18n?.incrementalShare?.title} - ${this.pluginInstance.i18n?.sharePro} v${pkg.version}`,
       content: `<div id="${incrementalShareId}"></div>`,
       width: this.pluginInstance.isMobile ? "95vw" : "80vw",
       height: this.pluginInstance.isMobile ? "90vh" : "80vh",
     })
 
-    // new IncrementalShareUI({
-    //   target: document.getElementById(incrementalShareId) as HTMLElement,
-    //   props: {
-    //     pluginInstance: this.pluginInstance,
-    //     // dialog: d
-    //   },
-    // })
+    new IncrementalShareUI({
+      target: document.getElementById(incrementalShareId) as HTMLElement,
+      props: {
+        pluginInstance: this.pluginInstance,
+        // dialog: d
+      },
+    })
   }
 }
 

@@ -26,6 +26,8 @@ import { initStatusBar } from "./statusBar"
 import ShareSetting from "./libs/pages/ShareSetting.svelte"
 import { ShareService } from "./service/ShareService"
 import { SettingService } from "./service/SettingService"
+import { IncrementalShareService } from "./service/IncrementalShareService"
+import { BlacklistService } from "./service/BlacklistService"
 import pkg from "../package.json"
 
 export default class ShareProPlugin extends Plugin {
@@ -34,6 +36,8 @@ export default class ShareProPlugin extends Plugin {
   public statusBarElement: any
   private main: Main
   private shareService: ShareService
+  private settingService: SettingService
+  public incrementalShareService: IncrementalShareService
 
   constructor(options: { app: App; id: string; name: string; i18n: IObject }) {
     super(options)
@@ -43,6 +47,14 @@ export default class ShareProPlugin extends Plugin {
     this.isMobile = frontEnd === "mobile" || frontEnd === "browser-mobile"
     this.main = new Main(this)
     this.shareService = new ShareService(this)
+    this.settingService = new SettingService(this)
+    const blacklistService = new BlacklistService(this)
+    this.incrementalShareService = new IncrementalShareService(
+      this,
+      this.shareService,
+      this.settingService,
+      blacklistService
+    )
   }
 
   async onload() {

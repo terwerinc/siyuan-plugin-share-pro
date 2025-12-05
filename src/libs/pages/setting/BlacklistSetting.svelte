@@ -13,14 +13,14 @@
   import ShareProPlugin from "../../../index"
   import { Dialog, showMessage } from "siyuan"
   import { onMount } from "svelte"
-  import { ShareService } from "../../../service/ShareService"
+  import { BlacklistService } from "../../../service/BlacklistService"
   import type { BlacklistDTO, BlacklistType, AddBlacklistRequest } from "../../../types"
 
   const logger = simpleLogger("blacklist-setting", "share-pro", isDev)
   export let pluginInstance: ShareProPlugin
   export let dialog: Dialog
 
-  let shareService: ShareService
+  let blacklistService: BlacklistService
   let isLoading = false
   let blacklistItems: BlacklistDTO[] = []
   let filteredItems: BlacklistDTO[] = []
@@ -46,162 +46,29 @@
   }
 
   onMount(async () => {
-    shareService = new ShareService(pluginInstance)
+    blacklistService = new BlacklistService(pluginInstance)
     await loadBlacklist()
   })
 
-  // 加载黑名单（带 Mock 数据）
+  // 加载黑名单（从 Java 后端）
   const loadBlacklist = async () => {
     isLoading = true
     try {
-      // TODO: 等待后端实现后启用
-      // const typeFilter = filterType === "all" ? undefined : filterType
-      // const response = await shareService.getBlacklistList(currentPage, pageSize, searchTerm || undefined)
-      // blacklistItems = response.data
-      // totalItems = response.total
-      // totalPages = response.totalPages
+      // 调用 Java 后端 API
+      const allItems = await blacklistService.getAllItems()
+      
+      // 转换为 DTO 格式
+      blacklistItems = allItems.map((item) => ({
+        id: item.dbId || 0,
+        type: item.type === "notebook" ? "NOTEBOOK" : "DOCUMENT",
+        targetId: item.id,
+        targetName: item.name,
+        note: item.note,
+        createdAt: new Date(item.addedTime).toISOString(),
+        updatedAt: new Date(item.addedTime).toISOString(),
+      }))
 
-      // Mock 数据
-      const mockData: BlacklistDTO[] = [
-        {
-          id: 1,
-          type: "DOCUMENT",
-          targetId: "20231201-mock001",
-          targetName: "测试文档1",
-          note: "这是一个测试文档",
-          createdAt: "2024-01-15T10:30:00",
-          updatedAt: "2024-01-15T10:30:00"
-        },
-        {
-          id: 2,
-          type: "NOTEBOOK",
-          targetId: "20231202-notebook01",
-          targetName: "私密笔记本",
-          note: "不希望被分享",
-          createdAt: "2024-01-16T14:20:00",
-          updatedAt: "2024-01-16T14:20:00"
-        },
-        {
-          id: 3,
-          type: "DOCUMENT",
-          targetId: "20231203-mock003",
-          targetName: "草稿文档",
-          note: "",
-          createdAt: "2024-01-17T09:15:00",
-          updatedAt: "2024-01-17T09:15:00"
-        },
-        {
-          id: 4,
-          type: "DOCUMENT",
-          targetId: "20231204-mock004",
-          targetName: "临时笔记",
-          note: "临时记录，不需要分享",
-          createdAt: "2024-01-18T16:45:00",
-          updatedAt: "2024-01-18T16:45:00"
-        },
-        {
-          id: 5,
-          type: "NOTEBOOK",
-          targetId: "20231205-notebook02",
-          targetName: "工作日志",
-          note: "内部工作记录",
-          createdAt: "2024-01-19T11:00:00",
-          updatedAt: "2024-01-19T11:00:00"
-        },
-        {
-          id: 6,
-          type: "DOCUMENT",
-          targetId: "20231206-mock006",
-          targetName: "个人笔记",
-          note: "个人使用，不公开",
-          createdAt: "2024-01-20T08:30:00",
-          updatedAt: "2024-01-20T08:30:00"
-        },
-        {
-          id: 7,
-          type: "NOTEBOOK",
-          targetId: "20231207-notebook03",
-          targetName: "项目文档",
-          note: "内部项目资料",
-          createdAt: "2024-01-21T10:15:00",
-          updatedAt: "2024-01-21T10:15:00"
-        },
-        {
-          id: 8,
-          type: "DOCUMENT",
-          targetId: "20231208-mock008",
-          targetName: "会议记录",
-          note: "公司内部会议",
-          createdAt: "2024-01-22T14:00:00",
-          updatedAt: "2024-01-22T14:00:00"
-        },
-        {
-          id: 9,
-          type: "DOCUMENT",
-          targetId: "20231209-mock009",
-          targetName: "学习笔记",
-          note: "",
-          createdAt: "2024-01-23T09:20:00",
-          updatedAt: "2024-01-23T09:20:00"
-        },
-        {
-          id: 10,
-          type: "NOTEBOOK",
-          targetId: "20231210-notebook04",
-          targetName: "读书笔记本",
-          note: "阅读摘录",
-          createdAt: "2024-01-24T15:30:00",
-          updatedAt: "2024-01-24T15:30:00"
-        },
-        {
-          id: 11,
-          type: "DOCUMENT",
-          targetId: "20231211-mock011",
-          targetName: "待办事项",
-          note: "个人任务清单",
-          createdAt: "2024-01-25T11:45:00",
-          updatedAt: "2024-01-25T11:45:00"
-        },
-        {
-          id: 12,
-          type: "DOCUMENT",
-          targetId: "20231212-mock012",
-          targetName: "技术方案",
-          note: "技术设计文档",
-          createdAt: "2024-01-26T13:10:00",
-          updatedAt: "2024-01-26T13:10:00"
-        },
-        {
-          id: 13,
-          type: "NOTEBOOK",
-          targetId: "20231213-notebook05",
-          targetName: "代码片段",
-          note: "常用代码收集",
-          createdAt: "2024-01-27T16:20:00",
-          updatedAt: "2024-01-27T16:20:00"
-        },
-        {
-          id: 14,
-          type: "DOCUMENT",
-          targetId: "20231214-mock014",
-          targetName: "产品需求",
-          note: "需求分析文档",
-          createdAt: "2024-01-28T10:00:00",
-          updatedAt: "2024-01-28T10:00:00"
-        },
-        {
-          id: 15,
-          type: "DOCUMENT",
-          targetId: "20231215-mock015",
-          targetName: "测试报告",
-          note: "测试结果记录",
-          createdAt: "2024-01-29T14:50:00",
-          updatedAt: "2024-01-29T14:50:00"
-        }
-      ]
-
-      blacklistItems = mockData
-      totalItems = mockData.length
+      totalItems = blacklistItems.length
       totalPages = Math.ceil(totalItems / pageSize)
 
       updateFilteredResults()
@@ -277,8 +144,14 @@
         note: formData.note.trim() || undefined,
       }
 
-      // TODO: 等待后端实现后启用
-      // await shareService.addBlacklist(request)
+      // 调用 Java 后端 API
+      await blacklistService.addItem({
+        id: request.targetId,
+        name: request.targetName,
+        type: request.type === "NOTEBOOK" ? "notebook" : "document",
+        addedTime: Date.now(),
+        note: request.note,
+      })
 
       showMessage(pluginInstance.i18n?.incrementalShare?.blacklist?.addSuccess || "添加成功", 3000, "info")
       showAddForm = false
@@ -303,10 +176,13 @@
 
     isLoading = true
     try {
-      // TODO: 等待后端实现后启用
-      // for (const id of selectedItems) {
-      //     await shareService.deleteBlacklist({ id })
-      // }
+      // 调用 Java 后端 API
+      for (const dbId of selectedItems) {
+        const item = blacklistItems.find((i) => i.id === dbId)
+        if (item) {
+          await blacklistService.removeItem(item.targetId)
+        }
+      }
 
       showMessage(pluginInstance.i18n?.incrementalShare?.blacklist?.deleteSuccess || "删除成功", 3000, "info")
       selectedItems.clear()

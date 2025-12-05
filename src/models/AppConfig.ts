@@ -76,6 +76,7 @@ interface AppConfig {
   // 专业版专属配置
   incrementalShareConfig?: {
     enabled: boolean
+    lastShareTime?: number
   }
 
   // 加上字符串索引签名，兼容 AppConfigInput 约束
