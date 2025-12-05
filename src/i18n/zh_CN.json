@@ -207,6 +207,8 @@
   },
   "incrementalShare": {
     "title": "增量分享",
+    "enabled": "启用增量分享",
+    "enabledTip": "启用后将自动检测文档变更并提供批量分享功能",
     "detectChanges": "检测变更",
     "bulkShare": "批量分享",
     "shareStats": "分享统计",

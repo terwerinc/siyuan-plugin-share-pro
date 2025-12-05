@@ -25,18 +25,6 @@ class ShareProConfig {
   }
   serviceApiConfig?: IServiceApiConfig
   appConfig?: AppConfig
-  /**
-   * 增量分享配置
-   *
-   * @author terwer
-   * @since 1.15.0
-   */
-  incrementalShareConfig?: {
-    /**
-     * 是否启用增量分享功能
-     */
-    enabled: boolean
-  }
   isCustomCssEnabled?: boolean
   /**
    * 是否启用新 UI

@@ -71,6 +71,13 @@ interface AppConfig {
   passwordEnabled?: boolean
   showPassword?: boolean
 
+  // 增量分享配置
+  // add by v1.15.0+
+  // 专业版专属配置
+  incrementalShareConfig?: {
+    enabled: boolean
+  }
+
   // 加上字符串索引签名，兼容 AppConfigInput 约束
   [key: string]: any
 }

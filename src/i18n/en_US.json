@@ -202,6 +202,8 @@
   },
   "incrementalShare": {
     "title": "Incremental Share",
+    "enabled": "Enable Incremental Share",
+    "enabledTip": "Automatically detect document changes and provide bulk sharing functionality",
     "detectChanges": "Detect Changes",
     "bulkShare": "Bulk Share",
     "shareStats": "Share Statistics",

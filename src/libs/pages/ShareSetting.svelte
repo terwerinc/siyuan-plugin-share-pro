@@ -20,6 +20,7 @@
   import DocSetting from "./setting/DocSetting.svelte"
   import SeoSetting from "./setting/SeoSetting.svelte"
   import BlacklistSetting from "./setting/BlacklistSetting.svelte"
+  import IncrementalShareSetting from "./setting/IncrementalShareSetting.svelte"
 
   const logger = simpleLogger("share-main", "share-pro", isDev)
   export let pluginInstance: ShareProPlugin
@@ -72,6 +73,17 @@
     tabData.push({
       label: pluginInstance.i18n.seoSetting,
       content: SeoSetting,
+      props: {
+        pluginInstance: pluginInstance,
+        dialog: dialog,
+        vipInfo: vipInfo,
+      },
+    })
+
+    // 增量分享设置
+    tabData.push({
+      label: pluginInstance.i18n.incrementalShare?.title,
+      content: IncrementalShareSetting,
       props: {
         pluginInstance: pluginInstance,
         dialog: dialog,

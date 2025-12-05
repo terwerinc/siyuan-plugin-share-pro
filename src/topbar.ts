@@ -13,7 +13,6 @@ import pkg from "../package.json"
 import { isDev, SHARE_PRO_STORE_NAME } from "./Constants"
 import ShareProPlugin from "./index"
 import { WidgetInvoke } from "./invoke/widgetInvoke"
-import IncrementalShareUI from "./libs/pages/IncrementalShareUI.svelte"
 import { ShareProConfig } from "./models/ShareProConfig"
 import { NewUI } from "./newUI"
 import { ShareService } from "./service/ShareService"
@@ -277,13 +276,13 @@ class Topbar {
       height: this.pluginInstance.isMobile ? "90vh" : "80vh",
     })
 
-    new IncrementalShareUI({
-      target: document.getElementById(incrementalShareId) as HTMLElement,
-      props: {
-        pluginInstance: this.pluginInstance,
-        // dialog: d
-      },
-    })
+    // new IncrementalShareUI({
+    //   target: document.getElementById(incrementalShareId) as HTMLElement,
+    //   props: {
+    //     pluginInstance: this.pluginInstance,
+    //     // dialog: d
+    //   },
+    // })
   }
 }
 
