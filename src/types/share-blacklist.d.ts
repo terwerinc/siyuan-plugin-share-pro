@@ -40,6 +40,11 @@ export interface BlacklistItem {
    * 备注信息
    */
   note?: string
+
+  /**
+   * 数据库ID（用于删除操作）
+   */
+  dbId?: number
 }
 
 /**

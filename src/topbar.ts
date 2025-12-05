@@ -13,12 +13,12 @@ import pkg from "../package.json"
 import { isDev, SHARE_PRO_STORE_NAME } from "./Constants"
 import ShareProPlugin from "./index"
 import { WidgetInvoke } from "./invoke/widgetInvoke"
-import IncrementalShareUI from "./libs/pages/IncrementalShareUI.svelte"
 import { ShareProConfig } from "./models/ShareProConfig"
 import { NewUI } from "./newUI"
 import { ShareService } from "./service/ShareService"
 import PageUtil from "./utils/pageUtil"
 import { icons } from "./utils/svg"
+import IncrementalShareUI from "./libs/pages/IncrementalShareUI.svelte"
 
 /**
  * 顶部按钮
@@ -201,15 +201,18 @@ class Topbar {
       }
 
       // 增量分享
-      menu.addItem({
-        icon: `iconAdd`,
-        label: this.pluginInstance.i18n?.incrementalShare?.title,
-        click: async () => {
-          await this.showIncrementalShareUI()
-        },
-      })
+      const appConfig = cfg?.appConfig
+      if (appConfig?.incrementalShareConfig?.enabled) {
+        menu.addItem({
+          icon: `iconAdd`,
+          label: this.pluginInstance.i18n?.incrementalShare?.title,
+          click: async () => {
+            await this.showIncrementalShareUI()
+          },
+        })
 
-      menu.addSeparator()
+        menu.addSeparator()
+      }
 
       // 分享管理
       menu.addItem({
@@ -269,8 +272,7 @@ class Topbar {
     }
 
     const incrementalShareId = "incremental-share-ui"
-    // const d = new Dialog({
-    new Dialog({
+    const d = new Dialog({
       title: `${this.pluginInstance.i18n?.incrementalShare?.title} - ${this.pluginInstance.i18n?.sharePro} v${pkg.version}`,
       content: `<div id="${incrementalShareId}"></div>`,
       width: this.pluginInstance.isMobile ? "95vw" : "80vw",
