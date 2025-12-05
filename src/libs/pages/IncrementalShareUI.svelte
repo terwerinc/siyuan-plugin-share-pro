@@ -11,6 +11,7 @@
   import { showMessage } from "siyuan"
   import { onMount } from "svelte"
   import { simpleLogger } from "zhi-lib-base"
+  import VirtualList from "svelte-virtual-list"
   import { isDev, SHARE_PRO_STORE_NAME } from "../../Constants"
   import ShareProPlugin from "../../index"
   import { ShareProConfig } from "../../models/ShareProConfig"
@@ -36,6 +37,11 @@
   let filteredUnchangedDocs: any[] = []
   let selectAllNew = false
   let selectAllUpdated = false
+  
+  // 虚拟滚动配置
+  const ITEM_HEIGHT = 45 // 每个文档项的高度（像素）
+  const MAX_VISIBLE_ITEMS = 100 // 每页显示的最大项数
+  
   const formatTime = (timestamp: number) => {
     if (!timestamp || timestamp === 0) return "从未分享"
     try {
@@ -274,19 +280,22 @@
                 {pluginInstance.i18n.incrementalShare.noNewDocuments}
               </div>
             {:else}
-              {#each filteredNewDocs as doc}
-                <div class="document-item">
-                  <label class="document-checkbox">
-                    <input
-                      type="checkbox"
-                      checked={selectedNewDocs.has(doc.docId)}
-                      on:change={() => toggleDocSelection(doc.docId, "new")}
-                    />
-                    <span class="document-title">{doc.docTitle}</span>
-                  </label>
-                  <span class="document-time">{formatTime(doc.shareTime)}</span>
-                </div>
-              {/each}
+              <!-- 使用虚拟滚动 -->
+              <div class="virtual-list-container" style="height: {Math.min(filteredNewDocs.length, MAX_VISIBLE_ITEMS) * ITEM_HEIGHT}px;">
+                <VirtualList items={filteredNewDocs} let:item height="{Math.min(filteredNewDocs.length, MAX_VISIBLE_ITEMS) * ITEM_HEIGHT}px">
+                  <div class="document-item">
+                    <label class="document-checkbox">
+                      <input
+                        type="checkbox"
+                        checked={selectedNewDocs.has(item.docId)}
+                        on:change={() => toggleDocSelection(item.docId, "new")}
+                      />
+                      <span class="document-title">{item.docTitle}</span>
+                    </label>
+                    <span class="document-time">{formatTime(item.shareTime)}</span>
+                  </div>
+                </VirtualList>
+              </div>
             {/if}
           </div>
         {/if}
@@ -314,23 +323,24 @@
                 {pluginInstance.i18n.incrementalShare.noUpdatedDocuments}
               </div>
             {:else}
-              {#each filteredUpdatedDocs as doc}
-                <div class="document-item">
-                  <label class="document-checkbox">
-                    <input
-                      type="checkbox"
-                      checked={selectedUpdatedDocs.has(doc.docId)}
-                      on:change={() => toggleDocSelection(doc.docId, "updated")}
-                    />
-                    <span class="document-title">{doc.docTitle}</span>
-                  </label>
-                  <span class="document-time"
-                    >{pluginInstance.i18n.incrementalShare.lastShared}: {formatTime(
-                      doc.shareTime
-                    )}</span
-                  >
-                </div>
-              {/each}
+              <!-- 使用虚拟滚动 -->
+              <div class="virtual-list-container" style="height: {Math.min(filteredUpdatedDocs.length, MAX_VISIBLE_ITEMS) * ITEM_HEIGHT}px;">
+                <VirtualList items={filteredUpdatedDocs} let:item height="{Math.min(filteredUpdatedDocs.length, MAX_VISIBLE_ITEMS) * ITEM_HEIGHT}px">
+                  <div class="document-item">
+                    <label class="document-checkbox">
+                      <input
+                        type="checkbox"
+                        checked={selectedUpdatedDocs.has(item.docId)}
+                        on:change={() => toggleDocSelection(item.docId, "updated")}
+                      />
+                      <span class="document-title">{item.docTitle}</span>
+                    </label>
+                    <span class="document-time">
+                      {pluginInstance.i18n.incrementalShare.lastShared}: {formatTime(item.shareTime)}
+                    </span>
+                  </div>
+                </VirtualList>
+              </div>
             {/if}
           </div>
         {/if}
@@ -352,16 +362,17 @@
                 {pluginInstance.i18n.incrementalShare.noUnchangedDocuments}
               </div>
             {:else}
-              {#each filteredUnchangedDocs as doc}
-                <div class="document-item no-select">
-                  <span class="document-title">{doc.docTitle}</span>
-                  <span class="document-time"
-                    >{pluginInstance.i18n.incrementalShare.lastShared}: {formatTime(
-                      doc.shareTime
-                    )}</span
-                  >
-                </div>
-              {/each}
+              <!-- 使用虚拟滚动 -->
+              <div class="virtual-list-container" style="height: {Math.min(filteredUnchangedDocs.length, MAX_VISIBLE_ITEMS) * ITEM_HEIGHT}px;">
+                <VirtualList items={filteredUnchangedDocs} let:item height="{Math.min(filteredUnchangedDocs.length, MAX_VISIBLE_ITEMS) * ITEM_HEIGHT}px">
+                  <div class="document-item no-select">
+                    <span class="document-title">{item.docTitle}</span>
+                    <span class="document-time">
+                      {pluginInstance.i18n.incrementalShare.lastShared}: {formatTime(item.shareTime)}
+                    </span>
+                  </div>
+                </VirtualList>
+              </div>
             {/if}
           </div>
         {/if}
@@ -607,6 +618,12 @@
 
   .group-content {
     padding: 0;
+  }
+
+  .virtual-list-container {
+    width: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .document-item {
