@@ -1,5 +1,35 @@
 # Changelog
 
+## [1.15.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.14.0...share-pro-v1.15.0) (2025-12-05)
+
+
+### Features
+
+* **blacklist:** add blacklist management page with search and pagination ([33bbad9](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/33bbad9c81a7de668f9121a35450679c437833ee))
+* **blacklist:** design and add blacklist management API and types ([8d6300b](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/8d6300bd7f4b82a9f65eb78818ab9fe912e7ff16))
+* **config:** add incremental share configuration option ([60c1055](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/60c1055cc8d48c563fede47f2844f9d40b4539fa))
+* **core:** add incremental sharing service with settings integration ([db70668](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/db70668d4b718835bbab37cfafb3d1bdd7fb7bc2))
+* **incremental-share:** implement incremental share with blacklist filtering and UI ([e5bddcd](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/e5bddcdf9cc2f1021dd57b98dfdfa654c5a5f174))
+* **incrementalShare:** add incremental share feature and setting page ([bcb3857](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/bcb3857058a57c075c2951d7b4ff3ec4612c79a2))
+* **share-ui:** enhance share UI with single and non-single doc modes ([978c3d5](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/978c3d5c5bfe679075eba420d2d7b0227bb02f6b))
+* **share:** add blacklist management tab to share settings ([1b502eb](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/1b502eb46b2fd4ab63e9be0e852cb21b3c84aa10))
+* **share:** add incremental, referenced, and subdocument sharing proposal ([578c6a9](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/578c6a9b122a02dd3ee71c5f0e53d06f781ba276))
+* **share:** implement layered incremental share configuration ([d814ef8](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/d814ef88e6ce1b03790282bed2590a3b345e557b))
+* **topbar:** add incremental share UI and improve i18n safety ([8407231](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/840723193a5dc13d0fc6118fcec76f55e902f9db))
+* **types:** add exports for service-dto and blacklist-api ([d8a6d9d](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/d8a6d9d533b49daa5b3c87597071d0d8f2284c4e))
+* **types:** add initial type definitions for share and service API ([2a34a84](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/2a34a844e4d0b84a7b0588a8624b3f32fb4489c9))
+* **ui:** update incremental share and manage icons in UI ([41a5881](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/41a588173a3f0c176d29639842c298fcde970d00))
+
+
+### Code Refactoring
+
+* **share:** clean up share service and remove mock blacklist ([d5e1819](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/d5e1819aa61dee9dec4b0e8c4e3164c024639d42))
+
+
+### Miscellaneous
+
+* revert WIP commit from main branch ([bc7b8ac](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/bc7b8ace04767c2e067107e379903b6329deb098))
+
 ## [1.14.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.13.2...share-pro-v1.14.0) (2025-11-13)
 ### Features
 * compress icon images ([91c05c5](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/91c05c509e1da5144d47a668b2119304e1294212))
