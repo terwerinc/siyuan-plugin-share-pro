@@ -219,23 +219,29 @@ export class IncrementalShareService {
   }
 
   /**
-   * 检测文档变更（带缓存）
+   * 单页检测文档变更（真正的分页实现）
+   * @param getDocumentsPageFn 获取文档的分页函数
+   * @param pageNum 页码
+   * @param pageSize 每页大小
+   * @param totalCount 文档总数（可选，用于进度显示）
    */
-  public async detectChangedDocuments(
-    allDocuments: Array<{
-      docId: string
-      docTitle: string
-      modifiedTime: number
-      notebookId?: string
-      notebookName?: string
-    }>
+  public async detectChangedDocumentsSinglePage(
+    getDocumentsPageFn: (
+      pageNum: number,
+      pageSize: number
+    ) => Promise<
+      Array<{
+        docId: string
+        docTitle: string
+        modifiedTime: number
+        notebookId?: string
+        notebookName?: string
+      }>
+    >,
+    pageNum: number,
+    pageSize: number,
+    totalCount?: number
   ): Promise<ChangeDetectionResult> {
-    // 检查缓存是否有效
-    if (this.isCacheValid()) {
-      this.logger.info("使用缓存的变更检测结果")
-      return this.detectionCache!
-    }
-
     const result: ChangeDetectionResult = {
       newDocuments: [],
       updatedDocuments: [],
@@ -243,36 +249,38 @@ export class IncrementalShareService {
       blacklistedCount: 0,
     }
 
-    if (!allDocuments || allDocuments.length === 0) {
-      return result
-    }
-
     try {
-      const docIds = allDocuments.map((doc) => doc.docId)
-      
-      // 分页检查黑名单，避免一次性查询过多文档给服务端造成压力
-      const blacklistStatus = await this.checkBlacklistPaged(docIds)
-
+      // 获取分享历史（已经是分页的）
       const allHistory = await this.getAllShareHistory()
 
-      // 提取黑名单中的文档ID
+      // 获取当前页的文档
+      const pageDocuments = await getDocumentsPageFn(pageNum, pageSize)
+
+      if (!pageDocuments || pageDocuments.length === 0) {
+        return result
+      }
+
+      const progressStart = pageNum * pageSize + 1
+      const progressEnd = Math.min((pageNum + 1) * pageSize, totalCount || (pageNum + 1) * pageSize)
+      const progressText = totalCount
+        ? `${progressStart}-${progressEnd}/${totalCount}`
+        : `${progressStart}-${progressEnd}`
+      this.logger.info(`变更检测进度: ${progressText}`)
+
+      // 分页检查黑名单
+      const docIds = pageDocuments.map((doc) => doc.docId)
+      const blacklistStatus = await this.checkBlacklistPaged(docIds)
       const blacklistedDocIds = docIds.filter((id) => blacklistStatus[id])
 
-      // 使用 Web Worker 进行变更检测（不阻塞主线程）
-      const result = await ChangeDetectionWorkerUtil.detectChanges(allDocuments, allHistory, blacklistedDocIds)
+      // 使用 Web Worker 进行变更检测
+      const pageResult = await ChangeDetectionWorkerUtil.detectChanges(pageDocuments, allHistory, blacklistedDocIds)
 
-      // 缓存结果（5分钟有效）
-      this.detectionCache = result
-      this.cacheTimestamp = Date.now()
-
-      this.logger.info("变更检测结果（已缓存）:", result)
-      return result
+      // 返回单页结果
+      return pageResult
     } catch (error) {
       this.logger.error("检测文档变更失败:", error)
       throw error
     }
-
-    return result
   }
 
   /**
@@ -316,7 +324,7 @@ export class IncrementalShareService {
 
     try {
       const docIds = documents.map((doc) => doc.docId)
-      
+
       // 分页检查黑名单，避免一次性查询过多文档给服务端造成压力
       const blacklistStatus = await this.checkBlacklistPaged(docIds)
       const validDocs: Array<{ docId: string; docTitle: string }> = []
@@ -397,7 +405,7 @@ export class IncrementalShareService {
       const pageDocIds = docIds.slice(i, i + PAGE_SIZE)
       const pageResult = await this.blacklistService.areInBlacklist(pageDocIds)
       Object.assign(result, pageResult)
-      
+
       this.logger.debug(`黑名单检查进度: ${Math.min(i + PAGE_SIZE, docIds.length)}/${docIds.length}`)
     }
 

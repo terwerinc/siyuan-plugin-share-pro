@@ -17,30 +17,33 @@
   import { ShareProConfig } from "../../models/ShareProConfig"
   import type { ChangeDetectionResult } from "../../service/IncrementalShareService"
   import { icons } from "../../utils/svg"
+  import { useSiyuanApi, getDocumentsPaged, getDocumentsCount } from "../../composables/useSiyuanApi"
 
   export let pluginInstance: ShareProPlugin
 
   const logger = simpleLogger("incremental-share-ui", "share-pro", isDev)
   let config: ShareProConfig
   let isLoading = false
+  let isLoadingMore = false // 新增：是否正在加载更多
   let changeDetectionResult: ChangeDetectionResult | null = null
-  let selectedNewDocs = new Set<string>()
-  let selectedUpdatedDocs = new Set<string>()
-  let expandedGroups = {
-    newDocuments: true,
-    updatedDocuments: true,
-    unchangedDocuments: false,
-  }
+  let selectedDocs = new Set<string>()
   let searchTerm = ""
-  let filteredNewDocs: any[] = []
-  let filteredUpdatedDocs: any[] = []
-  let filteredUnchangedDocs: any[] = []
-  let selectAllNew = false
-  let selectAllUpdated = false
+  
+  // 统一的文档列表（新文档和更新文档合并）
+  let combinedDocs: Array<{docId: string, docTitle: string, shareTime?: number, type: "new" | "updated"}> = []
+  let filteredDocs: Array<{docId: string, docTitle: string, shareTime?: number, type: "new" | "updated"}> = []
+  let selectAll = false
+  
+  // 分页相关状态
+  let currentPage = 0
+  let pageSize = 5 // 每页显示5条记录
+  let totalDocuments = 0
+  let totalPages = 0
+  let hasMoreDocuments = true
   
   // 虚拟滚动配置
   const ITEM_HEIGHT = 45 // 每个文档项的高度（像素）
-  const MAX_VISIBLE_ITEMS = 100 // 每页显示的最大项数
+  const MAX_VISIBLE_ITEMS = 5 // 每页显示的最大项数
   
   const formatTime = (timestamp: number) => {
     if (!timestamp || timestamp === 0) return "从未分享"
@@ -65,105 +68,190 @@
   const loadDocuments = async () => {
     isLoading = true
     try {
-      const allDocuments = await getAllDocuments()
-      changeDetectionResult = await pluginInstance.incrementalShareService.detectChangedDocuments(allDocuments)
+      // 获取思源 API
+      const { kernelApi } = useSiyuanApi(config)
+      
+      // 获取上次分享时间戳（用于增量检测）
+      const lastShareTime = config.appConfig?.incrementalShareConfig?.lastShareTime
+      
+      // 获取文档总数（用于显示进度）
+      totalDocuments = await getDocumentsCount(kernelApi, lastShareTime)
+      totalPages = Math.ceil(totalDocuments / pageSize)
+      logger.info(`文档总数: ${totalDocuments}, 总页数: ${totalPages}`)
+      
+      // 重置分页状态
+      currentPage = 0
+      hasMoreDocuments = true
+      changeDetectionResult = {
+        newDocuments: [],
+        updatedDocuments: [],
+        unchangedDocuments: [],
+        blacklistedCount: 0,
+      }
+      
+      // 加载第一页
+      await loadDocumentsPage()
+      
       updateFilteredResults()
       logger.info("文档变更检测结果:", changeDetectionResult)
     } catch (error) {
       logger.error("加载文档失败:", error)
       showMessage(pluginInstance.i18n.incrementalShare.loadError, 7000, "error")
+      
+      // 在加载失败时使用mock数据
+      useMockData()
     } finally {
       isLoading = false
     }
   }
-
-  const getAllDocuments = async () => {
+  
+  // 使用mock数据进行测试
+  const useMockData = () => {
+    logger.info("使用mock数据进行测试")
+    
+    // 生成mock的新文档数据
+    const mockNewDocuments = Array.from({ length: 25 }, (_, i) => ({
+      docId: `new-doc-${i + 1}`,
+      docTitle: `Mock 新增文档 ${i + 1} - 测试数据`,
+      modifiedTime: Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24), // 随机在过去24小时内
+      shareTime: 0,
+      type: "new" as const
+    }))
+    
+    // 生成mock的更新文档数据
+    const mockUpdatedDocuments = Array.from({ length: 15 }, (_, i) => ({
+      docId: `updated-doc-${i + 1}`,
+      docTitle: `Mock 更新文档 ${i + 1} - 内容已修改`,
+      modifiedTime: Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24), // 随机在过去24小时内
+      shareTime: Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24 * 7), // 随机在过去一周内分享
+      type: "updated" as const
+    }))
+    
+    // 设置mock数据
+    changeDetectionResult = {
+      newDocuments: mockNewDocuments,
+      updatedDocuments: mockUpdatedDocuments,
+      unchangedDocuments: [],
+      blacklistedCount: 3,
+    }
+    
+    // 更新分页信息
+    totalDocuments = mockNewDocuments.length + mockUpdatedDocuments.length
+    totalPages = Math.ceil(totalDocuments / pageSize)
+    currentPage = 0
+    
+    updateFilteredResults()
+    logger.info("已加载mock数据", changeDetectionResult)
+  }
+  
+  // 新增：加载指定页码的文档
+  const loadDocumentsByPage = async (pageNum: number) => {
+    isLoading = true
     try {
-      const mockDocuments = [
-        { docId: "20231201-mock001", docTitle: "Mock 文档1 - 已分享未更新", modifiedTime: Date.now() - 1000 * 60 * 60 * 24 * 8, notebookId: "mock-nb1", notebookName: "Mock 笔记木1" },
-        { docId: "20231202-mock002", docTitle: "Mock 文档2 - 已分享有更新", modifiedTime: Date.now() - 1000 * 60 * 60, notebookId: "mock-nb1", notebookName: "Mock 笔记木1" },
-        { docId: "20231203-mock003", docTitle: "Mock 文档3 - 分享失败", modifiedTime: Date.now() - 1000 * 60 * 60 * 24 * 2, notebookId: "mock-nb1", notebookName: "Mock 笔记木1" },
-        { docId: "20231205-mock005", docTitle: "Mock 文档5 - 新增文档", modifiedTime: Date.now() - 1000 * 60 * 30, notebookId: "mock-nb2", notebookName: "Mock 笔记木2" },
-      ]
-      logger.info(`获取到 ${mockDocuments.length} 个文档（Mock 数据）`)
-      return mockDocuments
+      const { kernelApi } = useSiyuanApi(config)
+      
+      // 获取上次分享时间戳（用于增量检测）
+      const lastShareTime = config.appConfig?.incrementalShareConfig?.lastShareTime
+      
+      // 使用分页检测方法，只加载指定页
+      const pageResult = await pluginInstance.incrementalShareService.detectChangedDocumentsSinglePage(
+        async (pageNum, size) => {
+          return await getDocumentsPaged(kernelApi, pageNum, size, lastShareTime)
+        },
+        pageNum,
+        pageSize,
+        totalDocuments
+      )
+      
+      // 更新结果
+      changeDetectionResult = pageResult
+      
+      // 更新分页状态
+      currentPage = pageNum
+      
+      updateFilteredResults()
     } catch (error) {
-      logger.error("获取文档列表失败:", error)
-      return []
+      logger.error("加载文档页失败:", error)
+      showMessage(pluginInstance.i18n.incrementalShare.loadError, 7000, "error")
+      
+      // 在加载失败时使用mock数据
+      useMockData()
+    } finally {
+      isLoading = false
+    }
+  }
+  
+  // 加载下一页文档
+  const loadNextPage = async () => {
+    if (currentPage < totalPages - 1) {
+      await loadDocumentsByPage(currentPage + 1)
+    }
+  }
+  
+  // 加载上一页文档
+  const loadPrevPage = async () => {
+    if (currentPage > 0) {
+      await loadDocumentsByPage(currentPage - 1)
     }
   }
 
   const updateFilteredResults = () => {
     if (!changeDetectionResult) return
+    
+    // 合并新文档和更新文档
+    const allDocs = [
+      ...changeDetectionResult.newDocuments.map(doc => ({...doc, type: "new" as const})),
+      ...changeDetectionResult.updatedDocuments.map(doc => ({...doc, type: "updated" as const}))
+    ]
+    
+    // 应用搜索过滤
     const filterDocs = (docs: any[]) => {
       if (!searchTerm) return docs
       return docs.filter((doc) => doc.docTitle.toLowerCase().includes(searchTerm.toLowerCase()))
     }
-    filteredNewDocs = filterDocs(changeDetectionResult.newDocuments)
-    filteredUpdatedDocs = filterDocs(changeDetectionResult.updatedDocuments)
-    filteredUnchangedDocs = filterDocs(changeDetectionResult.unchangedDocuments)
+    
+    combinedDocs = allDocs
+    filteredDocs = filterDocs(allDocs)
   }
 
   const handleSearch = () => updateFilteredResults()
 
-  const handleSelectAllNew = () => {
-    if (selectAllNew) {
-      filteredNewDocs.forEach((doc) => selectedNewDocs.add(doc.docId))
+  const handleSelectAll = () => {
+    if (selectAll) {
+      filteredDocs.forEach((doc) => selectedDocs.add(doc.docId))
     } else {
-      filteredNewDocs.forEach((doc) => selectedNewDocs.delete(doc.docId))
+      filteredDocs.forEach((doc) => selectedDocs.delete(doc.docId))
     }
-    selectedNewDocs = selectedNewDocs
+    selectedDocs = selectedDocs
   }
 
-  const handleSelectAllUpdated = () => {
-    if (selectAllUpdated) {
-      filteredUpdatedDocs.forEach((doc) => selectedUpdatedDocs.add(doc.docId))
+  const toggleDocSelection = (docId: string) => {
+    if (selectedDocs.has(docId)) {
+      selectedDocs.delete(docId)
     } else {
-      filteredUpdatedDocs.forEach((doc) => selectedUpdatedDocs.delete(doc.docId))
+      selectedDocs.add(docId)
     }
-    selectedUpdatedDocs = selectedUpdatedDocs
-  }
-
-  const toggleDocSelection = (docId: string, type: "new" | "updated") => {
-    if (type === "new") {
-      if (selectedNewDocs.has(docId)) {
-        selectedNewDocs.delete(docId)
-      } else {
-        selectedNewDocs.add(docId)
-      }
-      selectedNewDocs = selectedNewDocs
-      selectAllNew = selectedNewDocs.size === filteredNewDocs.length && filteredNewDocs.length > 0
-    } else {
-      if (selectedUpdatedDocs.has(docId)) {
-        selectedUpdatedDocs.delete(docId)
-      } else {
-        selectedUpdatedDocs.add(docId)
-      }
-      selectedUpdatedDocs = selectedUpdatedDocs
-      selectAllUpdated = selectedUpdatedDocs.size === filteredUpdatedDocs.length && filteredUpdatedDocs.length > 0
-    }
+    selectedDocs = selectedDocs
+    selectAll = selectedDocs.size === filteredDocs.length && filteredDocs.length > 0
   }
 
   const handleBulkShare = async () => {
-    const selectedDocs = [
-      ...Array.from(selectedNewDocs).map((docId) => ({
+    const selectedDocsArray = Array.from(selectedDocs).map(docId => {
+      const doc = combinedDocs.find(d => d.docId === docId)
+      return {
         docId,
-        docTitle: filteredNewDocs.find((d) => d.docId === docId)?.docTitle || "",
-      })),
-      ...Array.from(selectedUpdatedDocs).map((docId) => ({
-        docId,
-        docTitle: filteredUpdatedDocs.find((d) => d.docId === docId)?.docTitle || "",
-      })),
-    ]
+        docTitle: doc?.docTitle || ""
+      }
+    }).filter(doc => doc.docTitle) // 过滤掉找不到的文档
 
-    if (selectedDocs.length === 0) {
+    if (selectedDocsArray.length === 0) {
       showMessage(pluginInstance.i18n.incrementalShare.noSelection, 3000, "error")
       return
     }
 
     isLoading = true
     try {
-      const result = await pluginInstance.incrementalShareService.bulkShareDocuments(selectedDocs)
+      const result = await pluginInstance.incrementalShareService.bulkShareDocuments(selectedDocsArray)
 
       if (result.successCount > 0) {
         showMessage(
@@ -174,10 +262,8 @@
           "info"
         )
         await loadDocuments()
-        selectedNewDocs.clear()
-        selectedUpdatedDocs.clear()
-        selectAllNew = false
-        selectAllUpdated = false
+        selectedDocs.clear()
+        selectAll = false
       }
 
       if (result.failedCount > 0) {
@@ -197,12 +283,9 @@
     }
   }
 
-  const toggleGroup = (group: keyof typeof expandedGroups) => {
-    expandedGroups[group] = !expandedGroups[group]
-    expandedGroups = expandedGroups
+  $: if (changeDetectionResult) {
+    updateFilteredResults()
   }
-
-  $: if (changeDetectionResult) updateFilteredResults()
 </script>
 
 <div class="incremental-share-ui">
@@ -219,11 +302,11 @@
       <button
         class="btn-primary"
         on:click={handleBulkShare}
-        disabled={isLoading || selectedNewDocs.size + selectedUpdatedDocs.size === 0}
+        disabled={isLoading || selectedDocs.size === 0}
       >
         {@html icons.iconBulk}
         {pluginInstance.i18n.incrementalShare.bulkShare}
-        ({selectedNewDocs.size + selectedUpdatedDocs.size})
+        ({selectedDocs.size})
       </button>
       <button class="btn-default" on:click={loadDocuments} disabled={isLoading}>
         {@html icons.iconRefresh}
@@ -257,126 +340,83 @@
       </div>
     </div>
 
-    <div class="document-groups">
-      <!-- 新增文档 -->
+    <div class="document-section">
+      <!-- 统一的文档列表 -->
       <div class="document-group">
-        <div class="group-header" on:click={() => toggleGroup("newDocuments")}>
+        <div class="group-header">
           <span class="group-title">
-            {@html expandedGroups.newDocuments ? icons.iconChevronDown : icons.iconChevronRight}
-            {pluginInstance.i18n.incrementalShare.newDocumentsGroup}
-            <span class="group-count">({filteredNewDocs.length})</span>
+            {pluginInstance.i18n.incrementalShare.documentsToShare}
+            <span class="group-count">({filteredDocs.length})</span>
           </span>
-          {#if filteredNewDocs.length > 0}
+          {#if filteredDocs.length > 0}
             <label class="select-all">
-              <input type="checkbox" bind:checked={selectAllNew} on:change={handleSelectAllNew} />
+              <input type="checkbox" bind:checked={selectAll} on:change={handleSelectAll} />
               {pluginInstance.i18n.incrementalShare.selectAll}
             </label>
           {/if}
         </div>
-        {#if expandedGroups.newDocuments}
-          <div class="group-content">
-            {#if filteredNewDocs.length === 0}
-              <div class="empty-message">
-                {pluginInstance.i18n.incrementalShare.noNewDocuments}
-              </div>
-            {:else}
-              <!-- 使用虚拟滚动 -->
-              <div class="virtual-list-container" style="height: {Math.min(filteredNewDocs.length, MAX_VISIBLE_ITEMS) * ITEM_HEIGHT}px;">
-                <VirtualList items={filteredNewDocs} let:item height="{Math.min(filteredNewDocs.length, MAX_VISIBLE_ITEMS) * ITEM_HEIGHT}px">
-                  <div class="document-item">
-                    <label class="document-checkbox">
-                      <input
-                        type="checkbox"
-                        checked={selectedNewDocs.has(item.docId)}
-                        on:change={() => toggleDocSelection(item.docId, "new")}
-                      />
-                      <span class="document-title">{item.docTitle}</span>
-                    </label>
-                    <span class="document-time">{formatTime(item.shareTime)}</span>
-                  </div>
-                </VirtualList>
-              </div>
-            {/if}
-          </div>
-        {/if}
-      </div>
-
-      <!-- 更新文档 -->
-      <div class="document-group">
-        <div class="group-header" on:click={() => toggleGroup("updatedDocuments")}>
-          <span class="group-title">
-            {@html expandedGroups.updatedDocuments ? icons.iconChevronDown : icons.iconChevronRight}
-            {pluginInstance.i18n.incrementalShare.updatedDocumentsGroup}
-            <span class="group-count">({filteredUpdatedDocs.length})</span>
-          </span>
-          {#if filteredUpdatedDocs.length > 0}
-            <label class="select-all">
-              <input type="checkbox" bind:checked={selectAllUpdated} on:change={handleSelectAllUpdated} />
-              {pluginInstance.i18n.incrementalShare.selectAll}
-            </label>
-          {/if}
-        </div>
-        {#if expandedGroups.updatedDocuments}
-          <div class="group-content">
-            {#if filteredUpdatedDocs.length === 0}
-              <div class="empty-message">
-                {pluginInstance.i18n.incrementalShare.noUpdatedDocuments}
-              </div>
-            {:else}
-              <!-- 使用虚拟滚动 -->
-              <div class="virtual-list-container" style="height: {Math.min(filteredUpdatedDocs.length, MAX_VISIBLE_ITEMS) * ITEM_HEIGHT}px;">
-                <VirtualList items={filteredUpdatedDocs} let:item height="{Math.min(filteredUpdatedDocs.length, MAX_VISIBLE_ITEMS) * ITEM_HEIGHT}px">
-                  <div class="document-item">
-                    <label class="document-checkbox">
-                      <input
-                        type="checkbox"
-                        checked={selectedUpdatedDocs.has(item.docId)}
-                        on:change={() => toggleDocSelection(item.docId, "updated")}
-                      />
-                      <span class="document-title">{item.docTitle}</span>
-                    </label>
-                    <span class="document-time">
-                      {pluginInstance.i18n.incrementalShare.lastShared}: {formatTime(item.shareTime)}
-                    </span>
-                  </div>
-                </VirtualList>
-              </div>
-            {/if}
-          </div>
-        {/if}
-      </div>
-
-      <!-- 未变更文档 -->
-      <div class="document-group">
-        <div class="group-header" on:click={() => toggleGroup("unchangedDocuments")}>
-          <span class="group-title">
-            {@html expandedGroups.unchangedDocuments ? icons.iconChevronDown : icons.iconChevronRight}
-            {pluginInstance.i18n.incrementalShare.unchangedDocumentsGroup}
-            <span class="group-count">({filteredUnchangedDocs.length})</span>
-          </span>
-        </div>
-        {#if expandedGroups.unchangedDocuments}
-          <div class="group-content">
-            {#if filteredUnchangedDocs.length === 0}
-              <div class="empty-message">
-                {pluginInstance.i18n.incrementalShare.noUnchangedDocuments}
-              </div>
-            {:else}
-              <!-- 使用虚拟滚动 -->
-              <div class="virtual-list-container" style="height: {Math.min(filteredUnchangedDocs.length, MAX_VISIBLE_ITEMS) * ITEM_HEIGHT}px;">
-                <VirtualList items={filteredUnchangedDocs} let:item height="{Math.min(filteredUnchangedDocs.length, MAX_VISIBLE_ITEMS) * ITEM_HEIGHT}px">
-                  <div class="document-item no-select">
+        <div class="group-content">
+          {#if filteredDocs.length === 0}
+            <div class="empty-message">
+              {pluginInstance.i18n.incrementalShare.noDocumentsToShare}
+            </div>
+          {:else}
+            <!-- 使用虚拟滚动 -->
+            <div class="virtual-list-container" 
+                 style="height: {Math.min(filteredDocs.length, MAX_VISIBLE_ITEMS) * ITEM_HEIGHT}px;">
+              <VirtualList items={filteredDocs} let:item height="{Math.min(filteredDocs.length, MAX_VISIBLE_ITEMS) * ITEM_HEIGHT}px">
+                <div class="document-item">
+                  <label class="document-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={selectedDocs.has(item.docId)}
+                      on:change={() => toggleDocSelection(item.docId)}
+                    />
                     <span class="document-title">{item.docTitle}</span>
-                    <span class="document-time">
-                      {pluginInstance.i18n.incrementalShare.lastShared}: {formatTime(item.shareTime)}
+                  </label>
+                  <div class="document-meta">
+                    <span class={`document-type document-type--${item.type}`}>
+                      {item.type === 'new' ? pluginInstance.i18n.incrementalShare.new : pluginInstance.i18n.incrementalShare.updated}
                     </span>
+                    {#if item.shareTime}
+                      <span class="document-time">
+                        {pluginInstance.i18n.incrementalShare.lastShared}: {formatTime(item.shareTime)}
+                      </span>
+                    {/if}
                   </div>
-                </VirtualList>
-              </div>
-            {/if}
-          </div>
-        {/if}
+                </div>
+              </VirtualList>
+            </div>
+          {/if}
+        </div>
       </div>
+
+      <!-- 分页控件 -->
+      {#if totalPages > 1}
+        <div class="pagination-controls">
+          <button 
+            class="pagination-btn" 
+            on:click={loadPrevPage} 
+            disabled={currentPage === 0 || isLoading}
+          >
+            {@html icons.iconChevronLeft}
+            {pluginInstance.i18n.incrementalShare.prevPage}
+          </button>
+          
+          <div class="pagination-info">
+            {pluginInstance.i18n.incrementalShare.page} {currentPage + 1} / {totalPages}
+          </div>
+          
+          <button 
+            class="pagination-btn" 
+            on:click={loadNextPage} 
+            disabled={currentPage === totalPages - 1 || isLoading}
+          >
+            {pluginInstance.i18n.incrementalShare.nextPage}
+            {@html icons.iconChevronRight}
+          </button>
+        </div>
+      {/if}
     </div>
   {:else}
     <div class="empty-state">
@@ -569,7 +609,7 @@
     margin-top: 4px;
   }
 
-  .document-groups {
+  .document-section {
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -587,12 +627,7 @@
     align-items: center;
     padding: 12px 16px;
     background: var(--b3-theme-surface);
-    cursor: pointer;
     user-select: none;
-  }
-
-  .group-header:hover {
-    background: var(--b3-theme-surface-light);
   }
 
   .group-title {
@@ -643,10 +678,6 @@
     border-bottom: none;
   }
 
-  .document-item.no-select {
-    padding-left: 40px;
-  }
-
   .document-checkbox {
     display: flex;
     align-items: center;
@@ -658,6 +689,40 @@
   .document-title {
     font-size: 14px;
     color: var(--b3-theme-on-background);
+  }
+
+  .document-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+
+  .document-type {
+    font-size: 12px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+
+  .document-type--new {
+    background-color: #e6ffec;
+    color: #00b324;
+  }
+
+  .document-type--updated {
+    background-color: #fff7e6;
+    color: #fa8c16;
+  }
+
+  html[data-theme-mode="dark"] .document-type--new {
+    background-color: #1f3a24;
+    color: #65e48d;
+  }
+
+  html[data-theme-mode="dark"] .document-type--updated {
+    background-color: #3a2a1f;
+    color: #fabe8f;
   }
 
   .document-time {
@@ -677,5 +742,46 @@
     text-align: center;
     color: var(--b3-theme-on-surface);
     font-size: 16px;
+  }
+  
+  .pagination-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: var(--b3-theme-surface);
+    border-top: 1px solid var(--b3-border-color);
+  }
+  
+  .pagination-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: 1px solid var(--b3-border-color);
+    background: var(--b3-theme-background);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--b3-theme-on-background);
+    transition: all 0.2s;
+  }
+  
+  .pagination-btn:hover:not(:disabled) {
+    background: var(--b3-theme-surface-light);
+    border-color: var(--b3-theme-primary);
+  }
+  
+  .pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .pagination-info {
+    font-size: 14px;
+    color: var(--b3-theme-on-surface);
+    min-width: 100px;
+    text-align: center;
   }
 </style>

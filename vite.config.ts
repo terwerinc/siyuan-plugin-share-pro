@@ -15,7 +15,9 @@ console.log("distDir=>", distDir)
 
 export default defineConfig({
   plugins: [
-    svelte(),
+    svelte({
+      compilerOptions: { customElement: true },
+    }),
 
     viteStaticCopy({
       targets: [
