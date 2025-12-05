@@ -249,7 +249,9 @@ export class IncrementalShareService {
 
     try {
       const docIds = allDocuments.map((doc) => doc.docId)
-      const blacklistStatus = await this.blacklistService.areInBlacklist(docIds)
+      
+      // 分页检查黑名单，避免一次性查询过多文档给服务端造成压力
+      const blacklistStatus = await this.checkBlacklistPaged(docIds)
 
       const allHistory = await this.getAllShareHistory()
 
@@ -314,7 +316,9 @@ export class IncrementalShareService {
 
     try {
       const docIds = documents.map((doc) => doc.docId)
-      const blacklistStatus = await this.blacklistService.areInBlacklist(docIds)
+      
+      // 分页检查黑名单，避免一次性查询过多文档给服务端造成压力
+      const blacklistStatus = await this.checkBlacklistPaged(docIds)
       const validDocs: Array<{ docId: string; docTitle: string }> = []
 
       for (const doc of documents) {
@@ -374,6 +378,27 @@ export class IncrementalShareService {
     } catch (error) {
       this.logger.error("批量分享失败:", error)
       throw error
+    }
+
+    return result
+  }
+
+  /**
+   * 分页检查黑名单（避免一次性查询过多文档）
+   * @param docIds 文档ID列表
+   * @returns 黑名单状态映射
+   */
+  private async checkBlacklistPaged(docIds: string[]): Promise<Record<string, boolean>> {
+    const PAGE_SIZE = 100 // 每页检查 100 个文档
+    const result: Record<string, boolean> = {}
+
+    // 分页处理
+    for (let i = 0; i < docIds.length; i += PAGE_SIZE) {
+      const pageDocIds = docIds.slice(i, i + PAGE_SIZE)
+      const pageResult = await this.blacklistService.areInBlacklist(pageDocIds)
+      Object.assign(result, pageResult)
+      
+      this.logger.debug(`黑名单检查进度: ${Math.min(i + PAGE_SIZE, docIds.length)}/${docIds.length}`)
     }
 
     return result
