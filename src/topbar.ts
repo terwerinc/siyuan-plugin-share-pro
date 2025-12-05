@@ -200,15 +200,18 @@ class Topbar {
       }
 
       // 增量分享
-      menu.addItem({
-        icon: `iconAdd`,
-        label: this.pluginInstance.i18n?.incrementalShare?.title,
-        click: async () => {
-          await this.showIncrementalShareUI()
-        },
-      })
+      const appConfig = cfg?.appConfig
+      if (appConfig?.incrementalShareConfig?.enabled) {
+        menu.addItem({
+          icon: `iconAdd`,
+          label: this.pluginInstance.i18n?.incrementalShare?.title,
+          click: async () => {
+            await this.showIncrementalShareUI()
+          },
+        })
 
-      menu.addSeparator()
+        menu.addSeparator()
+      }
 
       // 分享管理
       menu.addItem({
