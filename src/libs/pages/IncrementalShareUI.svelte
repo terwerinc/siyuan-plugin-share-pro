@@ -8,23 +8,22 @@
   -->
 
 <script lang="ts">
+  import VirtualList from "@sveltejs/svelte-virtual-list"
   import { showMessage } from "siyuan"
   import { onMount } from "svelte"
   import { simpleLogger } from "zhi-lib-base"
-  import VirtualList from "svelte-virtual-list"
-  import { isDev, SHARE_PRO_STORE_NAME } from "../../Constants"
+  import { getDocumentsCount, getDocumentsPaged, useSiyuanApi } from "../../composables/useSiyuanApi"
+  import { isDev } from "../../Constants"
   import ShareProPlugin from "../../index"
   import { ShareProConfig } from "../../models/ShareProConfig"
   import type { ChangeDetectionResult } from "../../service/IncrementalShareService"
   import { icons } from "../../utils/svg"
-  import { useSiyuanApi, getDocumentsPaged, getDocumentsCount } from "../../composables/useSiyuanApi"
 
   export let pluginInstance: ShareProPlugin
+  export let config: ShareProConfig
 
   const logger = simpleLogger("incremental-share-ui", "share-pro", isDev)
-  let config: ShareProConfig
   let isLoading = false
-  let isLoadingMore = false // 新增：是否正在加载更多
   let changeDetectionResult: ChangeDetectionResult | null = null
   let selectedDocs = new Set<string>()
   let searchTerm = ""
@@ -61,7 +60,6 @@
   }
 
   onMount(async () => {
-    config = await pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
     await loadDocuments()
   })
 
@@ -90,7 +88,7 @@
       }
       
       // 加载第一页
-      await loadDocumentsPage()
+      await loadDocumentsByPage(0)
       
       updateFilteredResults()
       logger.info("文档变更检测结果:", changeDetectionResult)
@@ -110,21 +108,25 @@
     logger.info("使用mock数据进行测试")
     
     // 生成mock的新文档数据
-    const mockNewDocuments = Array.from({ length: 25 }, (_, i) => ({
+    const mockNewDocuments: any = Array.from({ length: 25 }, (_, i) => ({
       docId: `new-doc-${i + 1}`,
       docTitle: `Mock 新增文档 ${i + 1} - 测试数据`,
       modifiedTime: Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24), // 随机在过去24小时内
       shareTime: 0,
-      type: "new" as const
+      type: "new" as const,
+      shareStatus: "pending" as const,
+      docModifiedTime: Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24)
     }))
     
     // 生成mock的更新文档数据
-    const mockUpdatedDocuments = Array.from({ length: 15 }, (_, i) => ({
+    const mockUpdatedDocuments: any = Array.from({ length: 15 }, (_, i) => ({
       docId: `updated-doc-${i + 1}`,
       docTitle: `Mock 更新文档 ${i + 1} - 内容已修改`,
       modifiedTime: Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24), // 随机在过去24小时内
       shareTime: Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24 * 7), // 随机在过去一周内分享
-      type: "updated" as const
+      type: "updated" as const,
+      shareStatus: "success" as const,
+      docModifiedTime: Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24)
     }))
     
     // 设置mock数据

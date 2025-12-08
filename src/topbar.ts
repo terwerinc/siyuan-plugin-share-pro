@@ -274,7 +274,8 @@ class Topbar {
     }
 
     const incrementalShareId = "incremental-share-ui"
-    const d = new Dialog({
+    // const d = new Dialog({
+    new Dialog({
       title: `${this.pluginInstance.i18n?.incrementalShare?.title} - ${this.pluginInstance.i18n?.sharePro} v${pkg.version}`,
       content: `<div id="${incrementalShareId}"></div>`,
       width: this.pluginInstance.isMobile ? "95vw" : "80vw",
@@ -286,6 +287,7 @@ class Topbar {
       props: {
         pluginInstance: this.pluginInstance,
         // dialog: d
+        config: cfg,
       },
     })
   }

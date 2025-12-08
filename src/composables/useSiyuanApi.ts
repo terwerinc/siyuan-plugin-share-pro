@@ -68,14 +68,12 @@ export const getDocumentsPaged = async (
   }>
 > => {
   const offset = pageNum * pageSize
-  
+
   // SQL 查询：获取所有文档，按更新时间排序，支持分页
   // 如果有 lastShareTime，则只获取自该时间以来修改的文档
   // 注意：SiYuan 使用的是 Unix 时间戳格式，需要转换
-  const timeCondition = lastShareTime 
-    ? `AND b.updated > ${lastShareTime}`
-    : ''
-    
+  const timeCondition = lastShareTime ? `AND b.updated > ${lastShareTime}` : ""
+
   const sql = `
     SELECT DISTINCT 
       b.root_id as docId,
@@ -91,7 +89,7 @@ export const getDocumentsPaged = async (
   `
 
   const result = await kernelApi.sql(sql)
-  
+
   if (result.code !== 0 || !result.data) {
     return []
   }
@@ -113,10 +111,8 @@ export const getDocumentsPaged = async (
 export const getDocumentsCount = async (kernelApi: SiyuanKernelApi, lastShareTime?: number): Promise<number> => {
   // 如果有 lastShareTime，则只计算自该时间以来修改的文档数量
   // 注意：SiYuan 使用的是 Unix 时间戳格式，需要转换
-  const timeCondition = lastShareTime 
-    ? `AND b.updated > ${lastShareTime}`
-    : ''
-    
+  const timeCondition = lastShareTime ? `AND b.updated > ${lastShareTime}` : ""
+
   const sql = `
     SELECT COUNT(DISTINCT b.root_id) as total
     FROM blocks b

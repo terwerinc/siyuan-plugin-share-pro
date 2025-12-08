@@ -31,7 +31,7 @@ const DefaultAppConfig: AppConfig = {
   },
 
   customCss: [] as any,
-  
+
   // 增量分享默认启用
   incrementalShareConfig: {
     enabled: true,

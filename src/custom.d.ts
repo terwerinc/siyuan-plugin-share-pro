@@ -17,35 +17,35 @@ import {
     TEditorMode,
     TOperation,
     TProtyleAction
-} from "../siyuan";
-import {Model} from "./layout/Model";
-import {Wnd} from "./layout/Wnd";
-import {Tab} from "./layout/Tab";
-import {BlockPanel} from "./block/Panel";
-import {Inbox} from "./layout/dock/Inbox";
-import {MobileOutline} from "./mobile/dock/MobileOutline";
-import {MobileFiles} from "./mobile/dock/MobileFiles";
-import {MobileBookmarks} from "./mobile/dock/MobileBookmarks";
-import {MobileTags} from "./mobile/dock/MobileTags";
-import {MobileBacklinks} from "./mobile/dock/MobileBacklinks";
+} from "../siyuan"
+import { BlockPanel } from "./block/Panel"
+import { Inbox } from "./layout/dock/Inbox"
+import { Model } from "./layout/Model"
+import { Tab } from "./layout/Tab"
+import { Wnd } from "./layout/Wnd"
+import { MobileBacklinks } from "./mobile/dock/MobileBacklinks"
+import { MobileBookmarks } from "./mobile/dock/MobileBookmarks"
+import { MobileFiles } from "./mobile/dock/MobileFiles"
+import { MobileOutline } from "./mobile/dock/MobileOutline"
+import { MobileTags } from "./mobile/dock/MobileTags"
 
-export * from "./config";
-export * from "./events";
-export * from "./protyle";
-export * from "./response";
-export * from "./constants";
-export * from "./layout/Wnd";
-export * from "./layout/Tab";
-export * from "./layout/Model";
-export * from "./layout/dock/Files";
-export * from "./layout/dock/Inbox";
-export * from "./block/Panel";
-export * from "./mobile/dock/MobileTags";
-export * from "./mobile/dock/MobileOutline";
-export * from "./mobile/dock/MobileBacklinks";
-export * from "./mobile/dock/MobileBookmarks";
-export * from "./mobile/dock/MobileFiles";
-export * as platformUtils from "./protyle/util/compatibility";
+export * from "./block/Panel"
+export * from "./config"
+export * from "./constants"
+export * from "./events"
+export * from "./layout/dock/Files"
+export * from "./layout/dock/Inbox"
+export * from "./layout/Model"
+export * from "./layout/Tab"
+export * from "./layout/Wnd"
+export * from "./mobile/dock/MobileBacklinks"
+export * from "./mobile/dock/MobileBookmarks"
+export * from "./mobile/dock/MobileFiles"
+export * from "./mobile/dock/MobileOutline"
+export * from "./mobile/dock/MobileTags"
+export * from "./protyle"
+export * as platformUtils from "./protyle/util/compatibility"
+export * from "./response"
 
 
 type TDockPosition = "Left" | "Right" | "Bottom"
@@ -438,4 +438,16 @@ export declare class Menus {
     constructor(app: App);
     private getDir;
     private unselect;
+}
+
+declare module "@sveltejs/svelte-virtual-list" {
+    import type { SvelteComponentTyped } from "svelte"
+
+    export interface VirtualListProps {
+        items: any[];
+        height?: string | number;
+        itemHeight?: number;
+    }
+
+    export default class VirtualList extends SvelteComponentTyped<VirtualListProps> {}
 }

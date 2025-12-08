@@ -17,7 +17,7 @@ const QUEUE_STORAGE_KEY = "share_queue"
 
 /**
  * 分享队列管理服务
- * 
+ *
  * @author terwer
  * @since 1.14.0
  */
