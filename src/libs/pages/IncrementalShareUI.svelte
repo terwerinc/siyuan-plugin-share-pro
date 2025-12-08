@@ -40,7 +40,7 @@
   let totalPages = 0
 
   // 虚拟滚动配置
-  const ITEM_HEIGHT = 45 // 每个文档项的高度（像素）
+  const ITEM_HEIGHT = 60 // 每个文档项的高度（像素）
   const MAX_VISIBLE_ITEMS = 5 // 每页显示的最大项数
 
   const formatTime = (timestamp: number) => {
@@ -117,56 +117,11 @@
     } catch (error) {
       logger.error(`${pluginInstance.i18n.incrementalShare.loadError}:`, error)
       showMessage(pluginInstance.i18n.incrementalShare.loadError, 7000, "error")
-
-      // 在加载失败时使用mock数据
-      useMockData()
     } finally {
       isLoading = false
     }
   }
 
-  // 使用mock数据进行测试
-  const useMockData = () => {
-    logger.info(pluginInstance.i18n.ui.incrementalShareModeInfo)
-
-    // 生成mock的新文档数据
-    const mockNewDocuments: any = Array.from({ length: 5 }, (_, i) => ({
-      docId: `new-doc-${i + 1}`,
-      docTitle: `Mock 新增文档 ${i + 1} - 测试数据`,
-      modifiedTime: Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24), // 随机在过去24小时内
-      shareTime: 0,
-      type: "new" as const,
-      shareStatus: "pending" as const,
-      docModifiedTime: Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24),
-    }))
-
-    // 生成mock的更新文档数据
-    const mockUpdatedDocuments: any = Array.from({ length: 3 }, (_, i) => ({
-      docId: `updated-doc-${i + 1}`,
-      docTitle: `Mock 更新文档 ${i + 1} - 内容已修改`,
-      modifiedTime: Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24), // 随机在过去24小时内
-      shareTime: Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24 * 7), // 随机在过去一周内分享
-      type: "updated" as const,
-      shareStatus: "success" as const,
-      docModifiedTime: Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24),
-    }))
-
-    // 设置mock数据
-    changeDetectionResult = {
-      newDocuments: mockNewDocuments,
-      updatedDocuments: mockUpdatedDocuments,
-      unchangedDocuments: [],
-      blacklistedCount: 0,
-    }
-
-    // 更新分页信息
-    totalDocuments = mockNewDocuments.length + mockUpdatedDocuments.length
-    totalPages = Math.ceil(totalDocuments / pageSize)
-    currentPage = 0
-
-    updateFilteredResults()
-    logger.info(pluginInstance.i18n.incrementalShare.detectSuccess, changeDetectionResult)
-  }
 
   // 加载指定页码的文档
   const loadDocumentsByPage = async (pageNum: number) => {
@@ -201,7 +156,7 @@
       showMessage(pluginInstance.i18n.incrementalShare.loadError, 7000, "error")
 
       // 在加载失败时使用mock数据
-      useMockData()
+      // useMockData()
     } finally {
       isLoading = false
     }
@@ -386,12 +341,12 @@
             <!-- 使用虚拟滚动 -->
             <div
               class="virtual-list-container"
-              style="height: {Math.min(filteredDocs?.length || 0, MAX_VISIBLE_ITEMS) * ITEM_HEIGHT}px;"
+              style="max-height: {Math.max(ITEM_HEIGHT, Math.min(filteredDocs?.length || 0, MAX_VISIBLE_ITEMS) * ITEM_HEIGHT)}px;"
             >
               <VirtualList
                 items={filteredDocs || []}
                 let:item
-                height="{Math.min(filteredDocs?.length || 0, MAX_VISIBLE_ITEMS) * ITEM_HEIGHT}px"
+                height="{Math.max(ITEM_HEIGHT, Math.min(filteredDocs?.length || 0, MAX_VISIBLE_ITEMS) * ITEM_HEIGHT)}px"
               >
                 <div class="document-item">
                   <label class="document-checkbox">
@@ -400,25 +355,29 @@
                       checked={selectedDocs?.has(item.docId) || false}
                       on:change={() => toggleDocSelection(item.docId)}
                     />
-                    <span class="document-title">{item.docTitle || pluginInstance.i18n.incrementalShare.noTitle}</span>
+                    <div class="document-info">
+                      <div class="document-title-wrapper">
+                        <span class="document-title">{item.docTitle || pluginInstance.i18n.incrementalShare.noTitle}</span>
+                        <span class={`document-type document-type--${item.type || "new"}`}>
+                          {item.type === "updated"
+                              ? pluginInstance.i18n.incrementalShare.updated
+                              : pluginInstance.i18n.incrementalShare.new}
+                        </span>
+                      </div>
+                      <div class="document-meta">
+                        {#if item.shareTime && item.shareTime > 0}
+                          <span class="document-time">
+                            {pluginInstance.i18n.incrementalShare.lastShared}: {formatTime(item.shareTime)}
+                          </span>
+                        {:else}
+                          <span class="document-time">
+                            {pluginInstance.i18n.incrementalShare.lastShared}: {pluginInstance.i18n.incrementalShare
+                              .neverShared}
+                          </span>
+                        {/if}
+                      </div>
+                    </div>
                   </label>
-                  <div class="document-meta">
-                    <span class={`document-type document-type--${item.type || "new"}`}>
-                      {item.type === "updated"
-                        ? pluginInstance.i18n.incrementalShare.updated
-                        : pluginInstance.i18n.incrementalShare.new}
-                    </span>
-                    {#if item.shareTime && item.shareTime > 0}
-                      <span class="document-time">
-                        {pluginInstance.i18n.incrementalShare.lastShared}: {formatTime(item.shareTime)}
-                      </span>
-                    {:else}
-                      <span class="document-time">
-                        {pluginInstance.i18n.incrementalShare.lastShared}: {pluginInstance.i18n.incrementalShare
-                          .neverShared}
-                      </span>
-                    {/if}
-                  </div>
                 </div>
               </VirtualList>
             </div>
@@ -687,6 +646,7 @@
     padding: 0;
   }
 
+  /* 调整虚拟列表容器高度计算 */
   .virtual-list-container {
     width: 100%;
     overflow-y: auto;
@@ -695,11 +655,11 @@
 
   .document-item {
     display: flex;
-    justify-content: space-between;
     align-items: center;
     padding: 12px 16px;
     border-bottom: 1px solid var(--b3-border-color);
     transition: background-color 0.2s;
+    min-height: 60px;
   }
 
   .document-item:hover {
@@ -712,29 +672,51 @@
 
   .document-checkbox {
     display: flex;
-    align-items: center;
-    gap: 10px;
+    align-items: flex-start;
+    gap: 12px;
     cursor: pointer;
     flex: 1;
+  }
+
+  .document-checkbox input[type="checkbox"] {
+    margin-top: 2px;
+  }
+
+  .document-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0; /* 允许文本截断 */
+  }
+
+  .document-title-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
   }
 
   .document-title {
     font-size: 14px;
     color: var(--b3-theme-on-background);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
   }
 
   .document-meta {
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 4px;
+    align-items: center;
+    gap: 12px;
   }
 
   .document-type {
-    font-size: 12px;
+    font-size: 10px;
     padding: 2px 6px;
-    border-radius: 4px;
+    border-radius: 3px;
     font-weight: 500;
+    flex-shrink: 0;
   }
 
   .document-type--new {
@@ -760,6 +742,7 @@
   .document-time {
     font-size: 12px;
     color: var(--b3-theme-on-surface);
+    white-space: nowrap;
   }
 
   .empty-message {

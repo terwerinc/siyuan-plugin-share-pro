@@ -204,7 +204,6 @@ class ShareService implements IShareHistoryService {
 
   public async getHistoryByIds(docIds: string[]): Promise<Array<ShareHistoryItem> | undefined> {
     const ret = await this.shareApi.getHistoryByIds(docIds)
-    debugger
     // 数据转换
     return []
   }
