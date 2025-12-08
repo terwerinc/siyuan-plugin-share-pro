@@ -40,8 +40,8 @@
   let totalPages = 0
 
   // 虚拟滚动配置
-  const ITEM_HEIGHT = 60 // 每个文档项的高度（像素）
-  const MAX_VISIBLE_ITEMS = 5 // 每页显示的最大项数
+  const ITEM_HEIGHT = 30 // 每个文档项的高度（像素）
+  const MAX_VISIBLE_ITEMS = 15 // 每页显示的最大项数
 
   const formatTime = (timestamp: number) => {
     if (!timestamp || timestamp === 0) return pluginInstance.i18n.incrementalShare.neverShared
@@ -420,6 +420,10 @@
   .incremental-share-ui {
     padding: 16px;
     font-family: var(--b3-font-family);
+    background: var(--b3-theme-background);
+    border-radius: 8px;
+    max-width: 1200px;
+    margin: 0 auto;
   }
 
   .share-header {
@@ -429,6 +433,10 @@
     margin-bottom: 20px;
     padding-bottom: 16px;
     border-bottom: 1px solid var(--b3-border-color);
+    background: var(--b3-theme-surface);
+    border-radius: 6px;
+    padding: 16px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   }
 
   .share-header h3 {
@@ -444,6 +452,16 @@
 
   .b3-text-field {
     width: 200px;
+    border-radius: 4px;
+    border: 1px solid var(--b3-border-color);
+    padding: 4px 8px;
+    transition: all 0.2s ease;
+  }
+
+  .b3-text-field:focus {
+    outline: none;
+    border-color: var(--b3-theme-primary);
+    box-shadow: 0 0 0 2px rgba(0, 115, 230, 0.2);
   }
 
   .header-actions button {
@@ -452,7 +470,7 @@
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
     white-space: nowrap;
     flex-shrink: 0;
     height: 26px;
@@ -460,6 +478,7 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   }
 
   /* 主要按钮 - 批量分享 */
@@ -547,13 +566,16 @@
     justify-content: center;
     padding: 40px;
     gap: 12px;
+    background: var(--b3-theme-surface);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
 
   .spinner {
-    width: 20px;
-    height: 20px;
-    border: 2px solid var(--b3-border-color);
-    border-top: 2px solid var(--b3-theme-primary);
+    width: 24px;
+    height: 24px;
+    border: 3px solid var(--b3-border-color);
+    border-top: 3px solid var(--b3-theme-primary);
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
@@ -575,6 +597,7 @@
     background: var(--b3-theme-surface);
     border-radius: 8px;
     border: 1px solid var(--b3-border-color);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   }
 
   .stat-item {
@@ -582,6 +605,14 @@
     flex-direction: column;
     align-items: center;
     min-width: 80px;
+    padding: 12px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+  }
+
+  .stat-item:hover {
+    background: var(--b3-theme-hover);
+    transform: translateY(-2px);
   }
 
   .stat-item.blacklisted {
@@ -592,6 +623,7 @@
     font-size: 24px;
     font-weight: bold;
     color: var(--b3-theme-primary);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   }
 
   .stat-label {
@@ -610,6 +642,7 @@
     border: 1px solid var(--b3-border-color);
     border-radius: 8px;
     overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   }
 
   .group-header {
@@ -619,6 +652,8 @@
     padding: 12px 16px;
     background: var(--b3-theme-surface);
     user-select: none;
+    font-weight: 500;
+    border-bottom: 1px solid var(--b3-border-color);
   }
 
   .group-title {
@@ -632,6 +667,10 @@
   .group-count {
     color: var(--b3-theme-on-surface);
     font-size: 14px;
+    background: var(--b3-theme-secondary);
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 500;
   }
 
   .select-all {
@@ -656,10 +695,10 @@
   .document-item {
     display: flex;
     align-items: center;
-    padding: 12px 16px;
+    padding: 4px 8px;
     border-bottom: 1px solid var(--b3-border-color);
-    transition: background-color 0.2s;
-    min-height: 60px;
+    transition: all 0.2s ease;
+    min-height: 30px;
   }
 
   .document-item:hover {
@@ -672,77 +711,89 @@
 
   .document-checkbox {
     display: flex;
-    align-items: flex-start;
-    gap: 12px;
+    align-items: center;
+    gap: 6px;
     cursor: pointer;
     flex: 1;
   }
 
   .document-checkbox input[type="checkbox"] {
-    margin-top: 2px;
+    margin-top: 0;
   }
 
   .document-info {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    align-items: center;
     flex: 1;
     min-width: 0; /* 允许文本截断 */
+    gap: 8px;
   }
 
   .document-title-wrapper {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
   }
 
   .document-title {
-    font-size: 14px;
+    font-size: 13px;
     color: var(--b3-theme-on-background);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     flex: 1;
+    font-weight: 500;
   }
 
   .document-meta {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 6px;
   }
 
   .document-type {
-    font-size: 10px;
-    padding: 2px 6px;
-    border-radius: 3px;
+    font-size: 9px;
+    padding: 1px 4px;
+    border-radius: 8px;
     font-weight: 500;
     flex-shrink: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
   }
 
   .document-type--new {
     background-color: #e6ffec;
     color: #00b324;
+    border: 1px solid #c8e6c9;
   }
 
   .document-type--updated {
     background-color: #fff7e6;
     color: #fa8c16;
+    border: 1px solid #ffe0b2;
   }
 
   html[data-theme-mode="dark"] .document-type--new {
     background-color: #1f3a24;
     color: #65e48d;
+    border: 1px solid #2d5a39;
   }
 
   html[data-theme-mode="dark"] .document-type--updated {
     background-color: #3a2a1f;
     color: #fabe8f;
+    border: 1px solid #5a3f29;
   }
 
   .document-time {
-    font-size: 12px;
+    font-size: 11px;
     color: var(--b3-theme-on-surface);
     white-space: nowrap;
+    font-style: italic;
+    margin-left: auto;
   }
 
   .empty-message {
@@ -780,7 +831,8 @@
     cursor: pointer;
     font-size: 14px;
     color: var(--b3-theme-on-background);
-    transition: all 0.2s;
+    transition: all 0.3s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   }
 
   .pagination-btn:hover:not(:disabled) {
