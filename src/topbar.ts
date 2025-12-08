@@ -202,7 +202,9 @@ class Topbar {
 
       // 增量分享
       const appConfig = cfg?.appConfig
-      if (appConfig?.incrementalShareConfig?.enabled) {
+      // 修复：即使没有配置也应默认启用增量分享功能
+      const isIncrementalShareEnabled = appConfig?.incrementalShareConfig?.enabled ?? true
+      if (isIncrementalShareEnabled) {
         menu.addItem({
           icon: `iconAdd`,
           label: this.pluginInstance.i18n?.incrementalShare?.title,

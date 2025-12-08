@@ -14,6 +14,9 @@ console.log("isWatch=>", isWatch)
 console.log("distDir=>", distDir)
 
 export default defineConfig({
+  resolve: {
+    conditions: ["svelte"],
+  },
   plugins: [
     svelte({
       compilerOptions: { customElement: true },
