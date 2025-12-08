@@ -10,7 +10,7 @@
 **项目**: SiYuan 思源笔记 - 分享Pro插件  
 **功能**: 增量分享 (Incremental Share)  
 **技术栈**: TypeScript + Svelte + Vite  
-**路径**: `/Users/zhangyue/Documents/terwer/myapps/siyuan-plugin-share-pro`
+**路径**: `siyuan-plugin-share-pro`
 
 ---
 
@@ -603,7 +603,7 @@ A: 检查存储和读取逻辑是否匹配
 - src/composables/useSiyuanApi.ts - SQL查询优化
 - src/utils/ShareHistoryCache.ts - 缓存机制
 
-请查看 /Users/zhangyue/Documents/terwer/myapps/siyuan-plugin-share-pro/docs/incremental-share-context-2025-12-08.md 了解完整上下文。
+请查看 incremental-share-context-2025-12-08.md 了解完整上下文。
 
 我现在需要 [描述你的需求]。
 ```

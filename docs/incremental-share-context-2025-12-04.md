@@ -10,7 +10,7 @@
 **项目**: SiYuan 思源笔记 - 分享Pro插件  
 **功能**: 增量分享 (Incremental Share)  
 **技术栈**: TypeScript + Svelte + Vite  
-**路径**: `/Volumes/workspace/myapps/online/siyuan-plugin-share-pro`
+**路径**: `siyuan-plugin-share-pro`
 
 ---
 
@@ -563,7 +563,7 @@ A: 检查字段名是 `shareTime` 还是 `lastShareTime`
 - src/service/SettingService.ts - 第 117、143 行需要实现真实配置读写
 - src/service/IncrementalShareService.ts - 核心逻辑
 
-请查看 /Volumes/workspace/myapps/online/siyuan-plugin-share-pro/docs/incremental-share-context.md 了解完整上下文。
+请查看 incremental-share-context-2512-04.md 了解完整上下文。
 
 我现在需要 [描述你的需求]。
 ```
@@ -586,5 +586,4 @@ A: 检查字段名是 `shareTime` 还是 `lastShareTime`
 
 ---
 
-**最后更新**: 2025-12-04 18:15  
-**下次对话**: 直接提供此文档路径，我会快速恢复上下文 ✅
+**最后更新**: 2025-12-04 18:15
