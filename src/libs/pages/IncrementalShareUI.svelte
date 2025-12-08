@@ -379,8 +379,7 @@
                   </label>
                 </div>
               </VirtualList>
-            </div>
-          {/if}
+            </div>          {/if}
         </div>
       </div>
 
@@ -415,454 +414,388 @@
   {/if}
 </div>
 
-<style>
-  .incremental-share-ui {
-    padding: 16px;
-    font-family: var(--b3-font-family);
-    background: var(--b3-theme-background);
-    border-radius: 8px;
-    max-width: 1200px;
-    margin: 0 auto;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-  }
+<style lang="stylus">
+.incremental-share-ui
+  padding 16px
+  font-family var(--b3-font-family)
+  background var(--b3-theme-background)
+  border-radius 8px
+  max-width 1200px
+  margin 0 auto
+  height 100%
+  display flex
+  flex-direction column
 
-  .share-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--b3-border-color);
-    background: var(--b3-theme-surface);
-    border-radius: 6px;
-    padding: 16px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  }
+.share-header
+  display flex
+  justify-content space-between
+  align-items center
+  margin-bottom 20px
+  padding-bottom 16px
+  border-bottom 1px solid var(--b3-border-color)
+  background var(--b3-theme-surface)
+  border-radius 6px
+  padding 16px
+  box-shadow 0 1px 2px rgba(0, 0, 0, 0.05)
 
-  .share-header h3 {
-    margin: 0;
-    color: var(--b3-theme-on-background);
-  }
+  h3
+    margin 0
+    color var(--b3-theme-on-background)
 
-  .header-actions {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
+.header-actions
+  display flex
+  gap 8px
+  align-items center
 
-  .b3-text-field {
-    width: 200px;
-    border-radius: 4px;
-    border: 1px solid var(--b3-border-color);
-    padding: 4px 8px;
-    transition: all 0.2s ease;
-  }
+  .b3-text-field
+    width 200px
+    border-radius 4px
+    border 1px solid var(--b3-border-color)
+    padding 4px 8px
+    transition all 0.2s ease
 
-  .b3-text-field:focus {
-    outline: none;
-    border-color: var(--b3-theme-primary);
-    box-shadow: 0 0 0 2px rgba(0, 115, 230, 0.2);
-  }
+    &:focus
+      outline none
+      border-color var(--b3-theme-primary)
+      box-shadow 0 0 0 2px rgba(0, 115, 230, 0.2)
 
-  .header-actions button {
-    padding: 3px 10px;
-    font-size: 13px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    white-space: nowrap;
-    flex-shrink: 0;
-    height: 26px;
-    line-height: 20px;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  }
+  button
+    padding 3px 10px
+    font-size 13px
+    border none
+    border-radius 4px
+    cursor pointer
+    transition all 0.3s ease
+    white-space nowrap
+    flex-shrink 0
+    height 26px
+    line-height 20px
+    display inline-flex
+    align-items center
+    gap 4px
+    box-shadow 0 1px 2px rgba(0, 0, 0, 0.05)
 
   /* 主要按钮 - 批量分享 */
-  .header-actions .btn-primary {
-    color: #ffffff;
-    background-color: #0073e6;
-  }
+  .btn-primary
+    color #ffffff
+    background-color #0073e6
 
-  .header-actions .btn-primary:hover:not(:disabled) {
-    background-color: #005bb5;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
+    &:hover:not(:disabled)
+      background-color #005bb5
+      box-shadow 0 2px 4px rgba(0, 0, 0, 0.1)
 
-  .header-actions .btn-primary:active:not(:disabled) {
-    background-color: #004999;
-    transform: translateY(1px);
-  }
+    &:active:not(:disabled)
+      background-color #004999
+      transform translateY(1px)
 
-  .header-actions .btn-primary:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    background-color: #d9d9d9;
-    color: rgba(0, 0, 0, 0.5);
-  }
+    &:disabled
+      opacity 0.6
+      cursor not-allowed
+      background-color #d9d9d9
+      color rgba(0, 0, 0, 0.5)
 
   /* 次要按钮 - 刷新 */
-  .header-actions .btn-default {
-    color: rgba(0, 0, 0, 0.88);
-    background-color: #ffffff;
-    border: 1px solid #d9d9d9;
-  }
+  .btn-default
+    color rgba(0, 0, 0, 0.88)
+    background-color #ffffff
+    border 1px solid #d9d9d9
 
-  .header-actions .btn-default:hover:not(:disabled) {
-    color: #0073e6;
-    border-color: #0073e6;
-  }
+    &:hover:not(:disabled)
+      color #0073e6
+      border-color #0073e6
 
-  .header-actions .btn-default:active:not(:disabled) {
-    color: #005bb5;
-    border-color: #005bb5;
-  }
+    &:active:not(:disabled)
+      color #005bb5
+      border-color #005bb5
 
-  .header-actions .btn-default:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    color: rgba(0, 0, 0, 0.25);
-    background-color: rgba(0, 0, 0, 0.04);
-    border-color: #d9d9d9;
-  }
+    &:disabled
+      opacity 0.6
+      cursor not-allowed
+      color rgba(0, 0, 0, 0.25)
+      background-color rgba(0, 0, 0, 0.04)
+      border-color #d9d9d9
 
-  /* 暗黑模式 */
-  html[data-theme-mode="dark"] .header-actions .btn-primary {
-    background-color: #177ddc;
-  }
+/* 暗黑模式 */
+html[data-theme-mode="dark"]
+  .header-actions
+    .btn-primary
+      background-color #177ddc
 
-  html[data-theme-mode="dark"] .header-actions .btn-primary:hover:not(:disabled) {
-    background-color: #1765ad;
-  }
+      &:hover:not(:disabled)
+        background-color #1765ad
 
-  html[data-theme-mode="dark"] .header-actions .btn-primary:disabled {
-    background-color: rgba(255, 255, 255, 0.08);
-    color: rgba(255, 255, 255, 0.5);
-  }
+      &:disabled
+        background-color rgba(255, 255, 255, 0.08)
+        color rgba(255, 255, 255, 0.5)
 
-  html[data-theme-mode="dark"] .header-actions .btn-default {
-    color: rgba(255, 255, 255, 0.85);
-    background-color: transparent;
-    border-color: #434343;
-  }
+    .btn-default
+      color rgba(255, 255, 255, 0.85)
+      background-color transparent
+      border-color #434343
 
-  html[data-theme-mode="dark"] .header-actions .btn-default:hover:not(:disabled) {
-    color: #177ddc;
-    border-color: #177ddc;
-  }
+      &:hover:not(:disabled)
+        color #177ddc
+        border-color #177ddc
 
-  html[data-theme-mode="dark"] .header-actions .btn-default:disabled {
-    color: rgba(255, 255, 255, 0.3);
-    background-color: rgba(255, 255, 255, 0.08);
-    border-color: #434343;
-  }
+      &:disabled
+        color rgba(255, 255, 255, 0.3)
+        background-color rgba(255, 255, 255, 0.08)
+        border-color #434343
 
-  .loading {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 40px;
-    gap: 12px;
-    background: var(--b3-theme-surface);
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
+.loading
+  display flex
+  align-items center
+  justify-content center
+  padding 40px
+  gap 12px
+  background var(--b3-theme-surface)
+  border-radius 8px
+  box-shadow 0 2px 8px rgba(0, 0, 0, 0.1)
 
-  .spinner {
-    width: 24px;
-    height: 24px;
-    border: 3px solid var(--b3-border-color);
-    border-top: 3px solid var(--b3-theme-primary);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-  }
+.spinner
+  width 24px
+  height 24px
+  border 3px solid var(--b3-border-color)
+  border-top 3px solid var(--b3-theme-primary)
+  border-radius 50%
+  animation spin 1s linear infinite
 
-  @keyframes spin {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
-  }
+@keyframes spin
+  0%
+    transform rotate(0deg)
+  100%
+    transform rotate(360deg)
 
-  .share-stats {
-    display: flex;
-    gap: 24px;
-    margin-bottom: 20px;
-    padding: 16px;
-    background: var(--b3-theme-surface);
-    border-radius: 8px;
-    border: 1px solid var(--b3-border-color);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  }
+.share-stats
+  display flex
+  gap 24px
+  margin-bottom 20px
+  padding 16px
+  background var(--b3-theme-surface)
+  border-radius 8px
+  border 1px solid var(--b3-border-color)
+  box-shadow 0 2px 4px rgba(0, 0, 0, 0.05)
 
-  .stat-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-width: 80px;
-    padding: 12px;
-    border-radius: 6px;
-    transition: all 0.2s ease;
-  }
+.stat-item
+  display flex
+  flex-direction column
+  align-items center
+  min-width 80px
+  padding 12px
+  border-radius 6px
+  transition all 0.2s ease
 
-  .stat-item:hover {
-    background: var(--b3-theme-hover);
-    transform: translateY(-2px);
-  }
+  &:hover
+    background var(--b3-theme-hover)
+    transform translateY(-2px)
 
-  .stat-item.blacklisted {
-    color: var(--b3-theme-error);
-  }
+  &.blacklisted
+    color var(--b3-theme-error)
 
-  .stat-number {
-    font-size: 24px;
-    font-weight: bold;
-    color: var(--b3-theme-primary);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  }
+.stat-number
+  font-size 24px
+  font-weight bold
+  color var(--b3-theme-primary)
+  text-shadow 0 1px 2px rgba(0, 0, 0, 0.1)
 
-  .stat-label {
-    font-size: 12px;
-    color: var(--b3-theme-on-surface);
-    margin-top: 4px;
-  }
+.stat-label
+  font-size 12px
+  color var(--b3-theme-on-surface)
+  margin-top 4px
 
-  .document-section {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    flex: 1;
-    height: 100%;
-  }
+.document-section
+  display flex
+  flex-direction column
+  gap 16px
+  flex 1
+  height 100%
 
-  .document-group {
-    border: 1px solid var(--b3-border-color);
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-  }
+.document-group
+  border 1px solid var(--b3-border-color)
+  border-radius 8px
+  overflow hidden
+  box-shadow 0 2px 4px rgba(0, 0, 0, 0.05)
+  flex 1
+  display flex
+  flex-direction column
 
-  .group-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 16px;
-    background: var(--b3-theme-surface);
-    user-select: none;
-    font-weight: 500;
-    border-bottom: 1px solid var(--b3-border-color);
-  }
+.group-header
+  display flex
+  justify-content space-between
+  align-items center
+  padding 12px 16px
+  background var(--b3-theme-surface)
+  user-select none
+  font-weight 500
+  border-bottom 1px solid var(--b3-border-color)
 
-  .group-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 500;
-    color: var(--b3-theme-on-background);
-  }
+.group-title
+  display flex
+  align-items center
+  gap 8px
+  font-weight 500
+  color var(--b3-theme-on-background)
 
-  .group-count {
-    color: var(--b3-theme-on-surface);
-    font-size: 14px;
-    background: var(--b3-theme-secondary);
-    padding: 2px 8px;
-    border-radius: 10px;
-    font-weight: 500;
-  }
+.group-count
+  color var(--b3-theme-on-surface)
+  font-size 14px
+  background var(--b3-theme-secondary)
+  padding 2px 8px
+  border-radius 10px
+  font-weight 500
 
-  .select-all {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 14px;
-    cursor: pointer;
-  }
+.select-all
+  display flex
+  align-items center
+  gap 6px
+  font-size 14px
+  cursor pointer
 
-  .group-content {
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    flex: 1;
-    min-height: 0;
-  }
+.group-content
+  padding 0
+  display flex
+  flex-direction column
+  height 100%
+  flex 1
+  min-height 0
 
-  /* 调整虚拟列表容器高度计算 */
-  .virtual-list-container {
-    width: 100%;
-    overflow-y: auto;
-    overflow-x: hidden;
-    flex: 1;
-    min-height: 0;
-  }
+/* 调整虚拟列表容器高度计算 */
+.virtual-list-container
+  width 100%
+  overflow-y auto
+  overflow-x hidden
+  flex 1
+  min-height 0
+  /* 当外部容器没有固定高度时，根据内容动态调整高度 */
+  height auto
+  max-height calc(30px * 10) /* 最多显示10项 */
+  min-height 30px /* 至少显示一项的高度 */
 
-  .document-item {
-    display: flex;
-    align-items: center;
-    padding: 4px 8px;
-    border-bottom: 1px solid var(--b3-border-color);
-    transition: all 0.2s ease;
-    min-height: 30px;
-  }
+.document-item
+  display flex
+  align-items center
+  padding 4px 8px
+  border-bottom 1px solid var(--b3-border-color)
+  transition all 0.2s ease
+  min-height 30px
 
-  .document-item:hover {
-    background: var(--b3-theme-surface-light);
-  }
+  &:hover
+    background var(--b3-theme-surface-light)
 
-  .document-item:last-child {
-    border-bottom: none;
-  }
+  &:last-child
+    border-bottom none
 
-  .document-checkbox {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-    flex: 1;
-  }
+.document-checkbox
+  display flex
+  align-items center
+  gap 6px
+  cursor pointer
+  flex 1
 
-  .document-checkbox input[type="checkbox"] {
-    margin-top: 0;
-  }
+  input[type="checkbox"]
+    margin-top 0
 
-  .document-info {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    flex: 1;
-    min-width: 0; /* 允许文本截断 */
-    gap: 8px;
-  }
+.document-info
+  display flex
+  flex-direction row
+  align-items center
+  flex 1
+  min-width 0 /* 允许文本截断 */
+  gap 8px
 
-  .document-title-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 2px;
-  }
+.document-title-wrapper
+  display flex
+  align-items center
+  gap 8px
+  margin-bottom 2px
 
-  .document-title {
-    font-size: 13px;
-    color: var(--b3-theme-on-background);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    flex: 1;
-    font-weight: 500;
-  }
+.document-title
+  font-size 13px
+  color var(--b3-theme-on-background)
+  white-space nowrap
+  overflow hidden
+  text-overflow ellipsis
+  flex 1
+  font-weight 500
 
-  .document-meta {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
+.document-meta
+  display flex
+  align-items center
+  gap 6px
 
-  .document-type {
-    font-size: 9px;
-    padding: 1px 4px;
-    border-radius: 8px;
-    font-weight: 500;
-    flex-shrink: 0;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
-  }
+.document-type
+  font-size 9px
+  padding 1px 4px
+  border-radius 8px
+  font-weight 500
+  flex-shrink 0
+  text-transform uppercase
+  letter-spacing 0.5px
+  box-shadow 0 1px 1px rgba(0, 0, 0, 0.1)
 
-  .document-type--new {
-    background-color: #e6ffec;
-    color: #00b324;
-    border: 1px solid #c8e6c9;
-  }
+.document-type--new
+  background-color #e6ffec
+  color #00b324
+  border 1px solid #c8e6c9
 
-  .document-type--updated {
-    background-color: #fff7e6;
-    color: #fa8c16;
-    border: 1px solid #ffe0b2;
-  }
+.document-type--updated
+  background-color #fff7e6
+  color #fa8c16
+  border 1px solid #ffe0b2
 
-  html[data-theme-mode="dark"] .document-type--new {
-    background-color: #1f3a24;
-    color: #65e48d;
-    border: 1px solid #2d5a39;
-  }
+.document-time
+  font-size 11px
+  color var(--b3-theme-on-surface)
+  white-space nowrap
+  font-style italic
+  margin-left auto
 
-  html[data-theme-mode="dark"] .document-type--updated {
-    background-color: #3a2a1f;
-    color: #fabe8f;
-    border: 1px solid #5a3f29;
-  }
+.empty-message
+  padding 20px
+  text-align center
+  color var(--b3-theme-on-surface)
+  font-size 14px
 
-  .document-time {
-    font-size: 11px;
-    color: var(--b3-theme-on-surface);
-    white-space: nowrap;
-    font-style: italic;
-    margin-left: auto;
-  }
+.empty-state
+  padding 40px
+  text-align center
+  color var(--b3-theme-on-surface)
+  font-size 16px
 
-  .empty-message {
-    padding: 20px;
-    text-align: center;
-    color: var(--b3-theme-on-surface);
-    font-size: 14px;
-  }
+.pagination-controls
+  display flex
+  justify-content center
+  align-items center
+  gap 16px
+  padding 16px
+  background var(--b3-theme-surface)
+  border-top 1px solid var(--b3-border-color)
 
-  .empty-state {
-    padding: 40px;
-    text-align: center;
-    color: var(--b3-theme-on-surface);
-    font-size: 16px;
-  }
+.pagination-btn
+  display flex
+  align-items center
+  gap 6px
+  padding 6px 12px
+  border 1px solid var(--b3-border-color)
+  background var(--b3-theme-background)
+  border-radius 4px
+  cursor pointer
+  font-size 14px
+  color var(--b3-theme-on-background)
+  transition all 0.3s ease
+  box-shadow 0 1px 2px rgba(0, 0, 0, 0.05)
 
-  .pagination-controls {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 16px;
-    padding: 16px;
-    background: var(--b3-theme-surface);
-    border-top: 1px solid var(--b3-border-color);
-  }
+  &:hover:not(:disabled)
+    background var(--b3-theme-surface-light)
+    border-color var(--b3-theme-primary)
 
-  .pagination-btn {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    border: 1px solid var(--b3-border-color);
-    background: var(--b3-theme-background);
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    color: var(--b3-theme-on-background);
-    transition: all 0.3s ease;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  }
+  &:disabled
+    opacity 0.5
+    cursor not-allowed
 
-  .pagination-btn:hover:not(:disabled) {
-    background: var(--b3-theme-surface-light);
-    border-color: var(--b3-theme-primary);
-  }
-
-  .pagination-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .pagination-info {
-    font-size: 14px;
-    color: var(--b3-theme-on-surface);
-    min-width: 100px;
-    text-align: center;
-  }
+.pagination-info
+  font-size 14px
+  color var(--b3-theme-on-surface)
+  min-width 100px
+  text-align center
 </style>
