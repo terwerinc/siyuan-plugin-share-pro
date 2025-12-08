@@ -267,6 +267,9 @@
     "new": "新增",
     "updated": "更新",
     "lastShareTime": "上次分享时间",
+    "resetLastShareTime": "重置分享时间",
+    "resetLastShareTimeTip": "重置后将重新检测所有文档的变更状态",
+    "resetConfirm": "确定要重置分享时间吗？这将重新检测所有文档的变更状态。",
     "blacklist": {
       "title": "黑名单管理",
       "add": "添加",

@@ -13,7 +13,7 @@
   import { onMount } from "svelte"
   import { simpleLogger } from "zhi-lib-base"
   import { getDocumentsCount, getDocumentsPaged, useSiyuanApi } from "../../composables/useSiyuanApi"
-  import { isDev } from "../../Constants"
+  import { isDev, SHARE_PRO_STORE_NAME } from "../../Constants"
   import ShareProPlugin from "../../index"
   import { ShareProConfig } from "../../models/ShareProConfig"
   import type { ChangeDetectionResult } from "../../service/IncrementalShareService"
@@ -66,8 +66,9 @@
     // 本地存储的最后分享时间
     const lastShareTime = cfg.appConfig?.incrementalShareConfig?.lastShareTime
     // 实际上第一次分享的时候或者历史用户并不存在，但是人家已经分享过，需要处理
-    // 可以这么做，下次你查找一篇最新分享的文档，去他的分时间，你懂吗
-    if (!lastShareTime) {
+    // 可以这么做，下次你查找一篇最新分享的文档，取的分时间
+    // 但是对于主动重置的，设置以为 0，特殊处理
+    if (typeof lastShareTime == "undefined") {
       const latestShareDoc = await pluginInstance.incrementalShareService.getLatestShareDoc()
       if (!latestShareDoc) {
         return lastShareTime
@@ -121,7 +122,6 @@
       isLoading = false
     }
   }
-
 
   // 加载指定页码的文档
   const loadDocumentsByPage = async (pageNum: number) => {
@@ -267,6 +267,36 @@
   $: if (changeDetectionResult) {
     updateFilteredResults()
   }
+
+  // 添加重置分享时间的功能
+  const resetLastShareTime = async () => {
+    // 显示确认对话框
+    const confirmMsg = pluginInstance.i18n.incrementalShare.resetConfirm
+    if (!confirm(confirmMsg)) {
+      return
+    }
+
+    try {
+      // 重置配置中的最后分享时间
+      const config = await pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
+      if (config.appConfig?.incrementalShareConfig) {
+        // 0作为特殊值，代表重置
+        config.appConfig.incrementalShareConfig.lastShareTime = 0
+        await pluginInstance.saveData(SHARE_PRO_STORE_NAME, config)
+
+        // 清除增量分享服务的缓存
+        pluginInstance.incrementalShareService.clearCache()
+
+        // 重新加载文档
+        await loadDocuments()
+
+        showMessage(pluginInstance.i18n.incrementalShare.detectSuccess, 3000, "info")
+      }
+    } catch (error) {
+      logger.error("重置分享时间失败:", error)
+      showMessage(pluginInstance.i18n.incrementalShare.detectError, 7000, "error")
+    }
+  }
 </script>
 
 <div class="incremental-share-ui">
@@ -288,6 +318,15 @@
       <button class="btn-default" on:click={loadDocuments} disabled={isLoading}>
         {@html icons.iconRefresh}
         {pluginInstance.i18n.incrementalShare.refresh}
+      </button>
+      <!-- 添加重置按钮 -->
+      <button
+        class="btn-default"
+        on:click={resetLastShareTime}
+        title={pluginInstance.i18n.incrementalShare.resetLastShareTimeTip}
+      >
+        {@html icons.iconUndo}
+        {pluginInstance.i18n.incrementalShare.resetLastShareTime}
       </button>
     </div>
   </div>
@@ -339,14 +378,8 @@
             </div>
           {:else}
             <!-- 使用虚拟滚动 -->
-            <div
-              class="virtual-list-container"
-            >
-              <VirtualList
-                items={filteredDocs || []}
-                let:item
-                itemHeight={30}
-              >
+            <div class="virtual-list-container">
+              <VirtualList items={filteredDocs || []} let:item itemHeight={30}>
                 <div class="document-item">
                   <label class="document-checkbox">
                     <input
@@ -356,11 +389,13 @@
                     />
                     <div class="document-info">
                       <div class="document-title-wrapper">
-                        <span class="document-title">{item.docTitle || pluginInstance.i18n.incrementalShare.noTitle}</span>
+                        <span class="document-title"
+                          >{item.docTitle || pluginInstance.i18n.incrementalShare.noTitle}</span
+                        >
                         <span class={`document-type document-type--${item.type || "new"}`}>
                           {item.type === "updated"
-                              ? pluginInstance.i18n.incrementalShare.updated
-                              : pluginInstance.i18n.incrementalShare.new}
+                            ? pluginInstance.i18n.incrementalShare.updated
+                            : pluginInstance.i18n.incrementalShare.new}
                         </span>
                       </div>
                       <div class="document-meta">
@@ -379,7 +414,8 @@
                   </label>
                 </div>
               </VirtualList>
-            </div>          {/if}
+            </div>
+          {/if}
         </div>
       </div>
 
