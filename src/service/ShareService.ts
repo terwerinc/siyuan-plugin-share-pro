@@ -204,7 +204,23 @@ class ShareService implements IShareHistoryService {
 
   public async getHistoryByIds(docIds: string[]): Promise<Array<ShareHistoryItem> | undefined> {
     const ret = await this.shareApi.getHistoryByIds(docIds)
-    // 数据转换
+    if (ret.code == 0) {
+      const shareHistoryItems = ret.data.map((item: any) => {
+        // 数据转换
+        const shareHistoryItem: ShareHistoryItem = {
+          docId: item.docId,
+          docTitle: item.data.title,
+          shareTime: item.createAtTimestamp,
+          shareStatus: item.status,
+          shareUrl: item.shareUrl,
+          errorMessage: "",
+          docModifiedTime: item.createAtTimestamp,
+        }
+        return shareHistoryItem
+      })
+      this.logger.debug("converted shareHistoryItems", shareHistoryItems)
+      return shareHistoryItems
+    }
     return []
   }
 

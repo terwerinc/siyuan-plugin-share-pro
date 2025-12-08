@@ -279,7 +279,7 @@ class Topbar {
       title: `${this.pluginInstance.i18n?.incrementalShare?.title} - ${this.pluginInstance.i18n?.sharePro} v${pkg.version}`,
       content: `<div id="${incrementalShareId}"></div>`,
       width: this.pluginInstance.isMobile ? "95vw" : "80vw",
-      height: this.pluginInstance.isMobile ? "90vh" : "80vh",
+      height: this.pluginInstance.isMobile ? "90vh" : "62vh",
     })
 
     new IncrementalShareUI({
