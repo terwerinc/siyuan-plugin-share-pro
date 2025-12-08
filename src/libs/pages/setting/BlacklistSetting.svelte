@@ -56,7 +56,7 @@
     try {
       // 调用 Java 后端 API
       const allItems = await blacklistService.getAllItems()
-      
+
       // 转换为 DTO 格式
       blacklistItems = allItems.map((item) => ({
         id: item.dbId || 0,
@@ -171,7 +171,10 @@
       return
     }
 
-    const confirmed = confirm(pluginInstance.i18n?.incrementalShare?.blacklist?.deleteConfirm || `确定要删除选中的 ${selectedItems.size} 个项目吗？`)
+    const confirmed = confirm(
+      pluginInstance.i18n?.incrementalShare?.blacklist?.deleteConfirm ||
+        `确定要删除选中的 ${selectedItems.size} 个项目吗？`
+    )
     if (!confirmed) return
 
     isLoading = true
@@ -226,7 +229,7 @@
 
   // 获取类型标签
   const getTypeLabel = (type: BlacklistType) => {
-    return type === "NOTEBOOK" 
+    return type === "NOTEBOOK"
       ? pluginInstance.i18n?.incrementalShare?.blacklist?.notebook || "笔记本"
       : pluginInstance.i18n?.incrementalShare?.blacklist?.document || "文档"
   }
@@ -288,24 +291,36 @@
         <div class="add-form-content">
           <div class="form-row">
             <div class="form-col">
-              <label>{pluginInstance.i18n?.incrementalShare?.blacklist?.type || "类型"} <span style="color:red">*</span></label>
+              <label
+                >{pluginInstance.i18n?.incrementalShare?.blacklist?.type || "类型"}
+                <span style="color:red">*</span></label
+              >
               <select class="b3-select fn__block" bind:value={formData.type}>
                 <option value="DOCUMENT">{pluginInstance.i18n?.incrementalShare?.blacklist?.document || "文档"}</option>
-                <option value="NOTEBOOK">{pluginInstance.i18n?.incrementalShare?.blacklist?.notebook || "笔记本"}</option>
+                <option value="NOTEBOOK"
+                  >{pluginInstance.i18n?.incrementalShare?.blacklist?.notebook || "笔记本"}</option
+                >
               </select>
             </div>
             <div class="form-col">
-              <label>{pluginInstance.i18n?.incrementalShare?.blacklist?.targetId || "目标ID"} <span style="color:red">*</span></label>
+              <label
+                >{pluginInstance.i18n?.incrementalShare?.blacklist?.targetId || "目标ID"}
+                <span style="color:red">*</span></label
+              >
               <input
                 class="b3-text-field fn__block"
                 bind:value={formData.targetId}
-                placeholder={pluginInstance.i18n?.incrementalShare?.blacklist?.targetIdPlaceholder || "请输入文档ID或笔记本ID"}
+                placeholder={pluginInstance.i18n?.incrementalShare?.blacklist?.targetIdPlaceholder ||
+                  "请输入文档ID或笔记本ID"}
               />
             </div>
           </div>
           <div class="form-row">
             <div class="form-col">
-              <label>{pluginInstance.i18n?.incrementalShare?.blacklist?.targetName || "名称"} <span style="color:red">*</span></label>
+              <label
+                >{pluginInstance.i18n?.incrementalShare?.blacklist?.targetName || "名称"}
+                <span style="color:red">*</span></label
+              >
               <input
                 class="b3-text-field fn__block"
                 bind:value={formData.targetName}
@@ -333,7 +348,8 @@
     <!-- 黑名单列表 -->
     <div class="fn__block form-item">
       <div class="b3-label__text form-item-tip">
-        {pluginInstance.i18n?.incrementalShare?.blacklist?.manageTip || "管理不需要分享的笔记本或文档"}（共 {totalItems} 项）
+        {pluginInstance.i18n?.incrementalShare?.blacklist?.manageTip || "管理不需要分享的笔记本或文档"}（共 {totalItems}
+        项）
       </div>
       <span class="fn__hr" />
 
@@ -348,7 +364,9 @@
                 <th>{pluginInstance.i18n?.incrementalShare?.blacklist?.targetName || "名称"}</th>
                 <th style="width: 120px;">{pluginInstance.i18n?.incrementalShare?.blacklist?.type || "类型"}</th>
                 <th>{pluginInstance.i18n?.incrementalShare?.blacklist?.note || "备注"}</th>
-                <th style="width: 150px;">{pluginInstance.i18n?.incrementalShare?.blacklist?.createdAt || "创建时间"}</th>
+                <th style="width: 150px;"
+                  >{pluginInstance.i18n?.incrementalShare?.blacklist?.createdAt || "创建时间"}</th
+                >
               </tr>
             </thead>
             <tbody>
@@ -397,7 +415,9 @@
           </div>
         {/if}
       {:else}
-        <div class="blacklist-empty">{pluginInstance.i18n?.incrementalShare?.blacklist?.noItems || "暂无黑名单项目"}</div>
+        <div class="blacklist-empty">
+          {pluginInstance.i18n?.incrementalShare?.blacklist?.noItems || "暂无黑名单项目"}
+        </div>
       {/if}
     </div>
 

@@ -29,7 +29,7 @@
 
   let settingConfig: ShareProConfig = pluginInstance.getDefaultCfg()
   const settingService = new SettingService(pluginInstance)
-  
+
   // 使用本地变量避免 undefined 错误
   // 默认值为 true（启用），只有显式保存才能关闭
   let isEnabled = true
@@ -40,10 +40,10 @@
     // 不要重置已存在的配置，只初始化不存在的
     if (typeof settingConfig.appConfig.incrementalShareConfig === "undefined") {
       settingConfig.appConfig.incrementalShareConfig = {
-        enabled: true  // 默认启用
+        enabled: true, // 默认启用
       }
     }
-    
+
     // 更新配置值
     settingConfig.appConfig.incrementalShareConfig.enabled = isEnabled
 
@@ -72,10 +72,10 @@
     // 初始化默认配置（默认启用）- 只在不存在时初始化
     if (typeof settingConfig.appConfig.incrementalShareConfig === "undefined") {
       settingConfig.appConfig.incrementalShareConfig = {
-        enabled: true
+        enabled: true,
       }
     }
-    
+
     // 2、从远程读取配置（覆盖本地）
     try {
       const sAppConfig = await settingService.getSettingByAuthor(vipInfo.data.email)
@@ -102,12 +102,7 @@
         {pluginInstance.i18n.incrementalShare.enabledTip}
       </div>
       <span class="fn__hr" />
-      <input
-        class="b3-switch fn__flex-center"
-        id="incrementalShareEnabled"
-        type="checkbox"
-        bind:checked={isEnabled}
-      />
+      <input class="b3-switch fn__flex-center" id="incrementalShareEnabled" type="checkbox" bind:checked={isEnabled} />
     </div>
 
     <div class="b3-dialog__action">

@@ -150,6 +150,15 @@ class ShareApi {
     return res
   }
 
+  /**
+   * 获取历史记录
+   */
+  public async getHistoryByIds(docIds: string[]) {
+    const res = await this.shareServiceRequest(ServiceApiKeys.API_HISTORY_GET_BY_IDS, { docIds: docIds })
+    this.logger.info("get history by ids =>", res)
+    return res
+  }
+
   // ================
   // private function
   // ================
@@ -209,7 +218,7 @@ enum ServiceApiKeys {
   API_UPLOAD_MEDIA = "/api/asset/upload",
   API_UPLOAD_DATA_VIEW_MEDIA = "/api/asset/uploadDataView",
   API_LIST_DOC = "/api/share/listDoc",
-  API_GET_SETTING = "/api/settings/share",
+  // API_GET_SETTING = "/api/settings/share",
   API_GET_SETTING_BY_AUTHOR = "/api/settings/byAuthor",
   API_UPDATE_SETTING = "/api/settings/update",
   // Blacklist APIs
@@ -217,6 +226,8 @@ enum ServiceApiKeys {
   API_BLACKLIST_ADD = "/api/share/blacklist/add",
   API_BLACKLIST_DELETE = "/api/share/blacklist/delete",
   API_BLACKLIST_CHECK = "/api/share/blacklist/check",
+  //  History
+  API_HISTORY_GET_BY_IDS = "/api/share/history/getByDocIds",
 }
 
 class ServiceResponse {

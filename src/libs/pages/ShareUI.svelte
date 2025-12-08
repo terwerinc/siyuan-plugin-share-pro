@@ -25,15 +25,15 @@
   import { SiyuanKernelApi } from "zhi-siyuan-api"
   import { SettingKeys } from "../../utils/SettingKeys"
   import { AttrUtils } from "../../utils/AttrUtils"
-  import {KeyInfo} from "../../models/KeyInfo";
-  import {WidgetInvoke} from "../../invoke/widgetInvoke";
+  import { KeyInfo } from "../../models/KeyInfo"
+  import { WidgetInvoke } from "../../invoke/widgetInvoke"
 
   export let pluginInstance: ShareProPlugin
   export let shareService: ShareService
   export let vipInfo: {
-      code: number
-      msg: string
-      data: KeyInfo
+    code: number
+    msg: string
+    data: KeyInfo
   }
   export let docId: string = "" // 可选参数,无文档ID时显示简化版UI
 
@@ -82,9 +82,10 @@
     // 层级1: 全局用户偏好设置（非文档级别）
     // 存储位置：本地配置/服务端配置（appConfig）
     userPreferences: {
-      showPassword: false,              // 密码显示偏好
-      incrementalShareConfig: {         // 增量分享配置
-        enabled: true,                  // 默认启用
+      showPassword: false, // 密码显示偏好
+      incrementalShareConfig: {
+        // 增量分享配置
+        enabled: true, // 默认启用
       },
     },
 
@@ -103,17 +104,17 @@
     // 有敏感信息，服务端存储
     // 2、shareOptions，有敏感信息，服务端存储，例如分享密码
     shareOptions: {
-      passwordEnabled: false,  // 密码保护开关
-      password: "",            // 分享密码（敏感信息）
+      passwordEnabled: false, // 密码保护开关
+      password: "", // 分享密码（敏感信息）
     } as ShareOptions,
   }
 
   // ========================================
   // 公共方法
   // ========================================
-  const showManageTab=()=>{
-      const keyInfo = vipInfo.data
-      widgetInvoke.showShareManageTab(keyInfo)
+  const showManageTab = () => {
+    const keyInfo = vipInfo.data
+    widgetInvoke.showShareManageTab(keyInfo)
   }
 
   // ========================================
@@ -304,7 +305,7 @@
 
     // 加载配置
     const cfg = await pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
-    
+
     // 加载增量分享配置
     formData.userPreferences.incrementalShareConfig.enabled = cfg?.appConfig?.incrementalShareConfig?.enabled ?? true
 
@@ -341,11 +342,11 @@
     }
 
     logger.info("[Non-Single-Doc] Initializing non-single-doc mode")
-    
+
     // 加载增量分享配置
     const cfg = await pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
     formData.userPreferences.incrementalShareConfig.enabled = cfg?.appConfig?.incrementalShareConfig?.enabled ?? true
-    
+
     // 非单文档模式不需要加载文档数据，UI会自动隐藏需要docId的功能
     logger.info("[Non-Single-Doc] Initialization complete, showing limited UI")
   }
@@ -383,7 +384,7 @@
           <!-- 非单文档模式：显示通用标题 -->
           <div class="share-title">{pluginInstance.i18n["sharePro"]}</div>
         {/if}
-        
+
         <!-- 全局功能按钮：不需要docId，始终显示 -->
         <div class="global-actions">
           {#if formData.userPreferences.incrementalShareConfig.enabled === true}
@@ -395,11 +396,7 @@
               {@html icons.iconIncremental}
             </span>
           {/if}
-          <span
-            class="action-btn"
-            title={pluginInstance.i18n["manageDoc"]}
-            on:click={() => showManageTab()}
-          >
+          <span class="action-btn" title={pluginInstance.i18n["manageDoc"]} on:click={() => showManageTab()}>
             {@html icons.iconManage}
           </span>
           <span

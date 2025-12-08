@@ -20,19 +20,19 @@
   import { icons } from "../../utils/svg"
 
   export let pluginInstance: ShareProPlugin
-  export let config: ShareProConfig
+  export let cfg: ShareProConfig
 
   const logger = simpleLogger("incremental-share-ui", "share-pro", isDev)
   let isLoading = false
   let changeDetectionResult: ChangeDetectionResult | null = null
   let selectedDocs = new Set<string>()
   let searchTerm = ""
-  
+
   // 统一的文档列表（新文档和更新文档合并）
-  let combinedDocs: Array<{docId: string, docTitle: string, shareTime?: number, type: "new" | "updated"}> = []
-  let filteredDocs: Array<{docId: string, docTitle: string, shareTime?: number, type: "new" | "updated"}> = []
+  let combinedDocs: Array<{ docId: string; docTitle: string; shareTime?: number; type: "new" | "updated" }> = []
+  let filteredDocs: Array<{ docId: string; docTitle: string; shareTime?: number; type: "new" | "updated" }> = []
   let selectAll = false
-  
+
   // 分页相关状态
   let currentPage = 0
   let pageSize = 5 // 每页显示5条记录
@@ -42,7 +42,7 @@
   // 虚拟滚动配置
   const ITEM_HEIGHT = 45 // 每个文档项的高度（像素）
   const MAX_VISIBLE_ITEMS = 5 // 每页显示的最大项数
-  
+
   const formatTime = (timestamp: number) => {
     if (!timestamp || timestamp === 0) return pluginInstance.i18n.incrementalShare.neverShared
     try {
@@ -62,20 +62,44 @@
     await loadDocuments()
   })
 
+  const getLastShareTime = async () => {
+    // 本地存储的最后分享时间
+    const lastShareTime = cfg.appConfig?.incrementalShareConfig?.lastShareTime
+    // 实际上第一次分享的时候或者历史用户并不存在，但是人家已经分享过，需要处理
+    // 可以这么做，下次你查找一篇最新分享的文档，去他的分时间，你懂吗
+    if (!lastShareTime) {
+      const latestShareDoc = await pluginInstance.incrementalShareService.getLatestShareDoc()
+      if (!latestShareDoc) {
+        return lastShareTime
+      }
+      // createAtTimestamp:1765160549990
+      return latestShareDoc.createAtTimestamp
+    } else {
+      return lastShareTime
+    }
+  }
+
   const loadDocuments = async () => {
     isLoading = true
     try {
       // 获取思源 API
-      const { kernelApi } = useSiyuanApi(config)
-      
+      const { kernelApi } = useSiyuanApi(cfg)
+
       // 获取上次分享时间戳（用于增量检测）
-      const lastShareTime = config.appConfig?.incrementalShareConfig?.lastShareTime
-      
+      const lastShareTime = await getLastShareTime()
+      logger.info(
+        `${pluginInstance.i18n.incrementalShare.lastShareTime}: ${
+          lastShareTime || pluginInstance.i18n.incrementalShare.neverShared
+        }`
+      )
+
       // 获取文档总数（用于显示进度）
       totalDocuments = await getDocumentsCount(kernelApi, lastShareTime)
       totalPages = Math.ceil(totalDocuments / pageSize)
-      logger.info(`${pluginInstance.i18n.incrementalShare.totalDocs}: ${totalDocuments}, ${pluginInstance.i18n.incrementalShare.page}: ${totalPages}`)
-      
+      logger.info(
+        `${pluginInstance.i18n.incrementalShare.totalDocs}: ${totalDocuments}, ${pluginInstance.i18n.incrementalShare.page}: ${totalPages}`
+      )
+
       // 重置分页状态
       currentPage = 0
       changeDetectionResult = {
@@ -84,27 +108,27 @@
         unchangedDocuments: [],
         blacklistedCount: 0,
       }
-      
+
       // 加载第一页
       await loadDocumentsByPage(0)
-      
+
       updateFilteredResults()
       logger.info(`${pluginInstance.i18n.incrementalShare.shareStats}:`, changeDetectionResult)
     } catch (error) {
       logger.error(`${pluginInstance.i18n.incrementalShare.loadError}:`, error)
       showMessage(pluginInstance.i18n.incrementalShare.loadError, 7000, "error")
-      
+
       // 在加载失败时使用mock数据
       useMockData()
     } finally {
       isLoading = false
     }
   }
-  
+
   // 使用mock数据进行测试
   const useMockData = () => {
     logger.info(pluginInstance.i18n.ui.incrementalShareModeInfo)
-    
+
     // 生成mock的新文档数据
     const mockNewDocuments: any = Array.from({ length: 5 }, (_, i) => ({
       docId: `new-doc-${i + 1}`,
@@ -113,9 +137,9 @@
       shareTime: 0,
       type: "new" as const,
       shareStatus: "pending" as const,
-      docModifiedTime: Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24)
+      docModifiedTime: Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24),
     }))
-    
+
     // 生成mock的更新文档数据
     const mockUpdatedDocuments: any = Array.from({ length: 3 }, (_, i) => ({
       docId: `updated-doc-${i + 1}`,
@@ -124,9 +148,9 @@
       shareTime: Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24 * 7), // 随机在过去一周内分享
       type: "updated" as const,
       shareStatus: "success" as const,
-      docModifiedTime: Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24)
+      docModifiedTime: Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24),
     }))
-    
+
     // 设置mock数据
     changeDetectionResult = {
       newDocuments: mockNewDocuments,
@@ -134,27 +158,32 @@
       unchangedDocuments: [],
       blacklistedCount: 0,
     }
-    
+
     // 更新分页信息
     totalDocuments = mockNewDocuments.length + mockUpdatedDocuments.length
     totalPages = Math.ceil(totalDocuments / pageSize)
     currentPage = 0
-    
+
     updateFilteredResults()
     logger.info(pluginInstance.i18n.incrementalShare.detectSuccess, changeDetectionResult)
   }
-  
+
   // 加载指定页码的文档
   const loadDocumentsByPage = async (pageNum: number) => {
     isLoading = true
     try {
-      const { kernelApi } = useSiyuanApi(config)
-      
+      const { kernelApi } = useSiyuanApi(cfg)
+
       // 获取上次分享时间戳（用于增量检测）
-      const lastShareTime = config.appConfig?.incrementalShareConfig?.lastShareTime
-      
+      const lastShareTime = await getLastShareTime()
+      logger.info(
+        `${pluginInstance.i18n.incrementalShare.lastShareTime}: ${
+          lastShareTime || pluginInstance.i18n.incrementalShare.neverShared
+        }`
+      )
+
       // 使用分页检测方法，只加载指定页
-      const pageResult = await pluginInstance.incrementalShareService.detectChangedDocumentsSinglePage(
+      changeDetectionResult = await pluginInstance.incrementalShareService.detectChangedDocumentsSinglePage(
         async (pageNum, size) => {
           return await getDocumentsPaged(kernelApi, pageNum, size, lastShareTime)
         },
@@ -162,32 +191,29 @@
         pageSize,
         totalDocuments
       )
-      
-      // 更新结果
-      changeDetectionResult = pageResult
-      
+
       // 更新分页状态
       currentPage = pageNum
-      
+
       updateFilteredResults()
     } catch (error) {
       logger.error(`${pluginInstance.i18n.incrementalShare.loadError}:`, error)
       showMessage(pluginInstance.i18n.incrementalShare.loadError, 7000, "error")
-      
+
       // 在加载失败时使用mock数据
       useMockData()
     } finally {
       isLoading = false
     }
   }
-  
+
   // 加载下一页文档
   const loadNextPage = async () => {
     if (currentPage < totalPages - 1) {
       await loadDocumentsByPage(currentPage + 1)
     }
   }
-  
+
   // 加载上一页文档
   const loadPrevPage = async () => {
     if (currentPage > 0) {
@@ -196,20 +222,22 @@
   }
 
   const updateFilteredResults = () => {
-    if (!changeDetectionResult) return
-    
+    if (!changeDetectionResult) {
+      return
+    }
+
     // 合并新文档和更新文档
     const allDocs = [
-      ...changeDetectionResult.newDocuments.map(doc => ({...doc, type: "new" as const})),
-      ...changeDetectionResult.updatedDocuments.map(doc => ({...doc, type: "updated" as const}))
+      ...changeDetectionResult.newDocuments.map((doc) => ({ ...doc, type: "new" as const })),
+      ...changeDetectionResult.updatedDocuments.map((doc) => ({ ...doc, type: "updated" as const })),
     ]
-    
+
     // 应用搜索过滤
     const filterDocs = (docs: any[]) => {
       if (!searchTerm) return docs
       return docs.filter((doc) => doc.docTitle.toLowerCase().includes(searchTerm.toLowerCase()))
     }
-    
+
     combinedDocs = allDocs
     filteredDocs = filterDocs(allDocs)
   }
@@ -236,13 +264,15 @@
   }
 
   const handleBulkShare = async () => {
-    const selectedDocsArray = Array.from(selectedDocs).map(docId => {
-      const doc = combinedDocs.find(d => d.docId === docId)
-      return {
-        docId,
-        docTitle: doc?.docTitle || ""
-      }
-    }).filter(doc => doc.docTitle) // 过滤掉找不到的文档
+    const selectedDocsArray = Array.from(selectedDocs)
+      .map((docId) => {
+        const doc = combinedDocs.find((d) => d.docId === docId)
+        return {
+          docId,
+          docTitle: doc?.docTitle || "",
+        }
+      })
+      .filter((doc) => doc.docTitle) // 过滤掉找不到的文档
 
     if (selectedDocsArray.length === 0) {
       showMessage(pluginInstance.i18n.incrementalShare.noSelection, 3000, "error")
@@ -255,9 +285,7 @@
 
       if (result.successCount > 0) {
         showMessage(
-          `${pluginInstance.i18n.incrementalShare.shareSuccess}: ${result.successCount} ${
-            pluginInstance.i18n.incrementalShare.documents
-          }`,
+          `${pluginInstance.i18n.incrementalShare.shareSuccess}: ${result.successCount} ${pluginInstance.i18n.incrementalShare.documents}`,
           3000,
           "info"
         )
@@ -268,9 +296,7 @@
 
       if (result.failedCount > 0) {
         showMessage(
-          `${pluginInstance.i18n.incrementalShare.shareFailed}: ${result.failedCount} ${
-            pluginInstance.i18n.incrementalShare.documents
-          }`,
+          `${pluginInstance.i18n.incrementalShare.shareFailed}: ${result.failedCount} ${pluginInstance.i18n.incrementalShare.documents}`,
           7000,
           "error"
         )
@@ -299,11 +325,7 @@
         bind:value={searchTerm}
         on:input={handleSearch}
       />
-      <button
-        class="btn-primary"
-        on:click={handleBulkShare}
-        disabled={isLoading || selectedDocs.size === 0}
-      >
+      <button class="btn-primary" on:click={handleBulkShare} disabled={isLoading || selectedDocs.size === 0}>
         {@html icons.iconBulk}
         {pluginInstance.i18n.incrementalShare.bulkShare}
         ({selectedDocs.size})
@@ -362,9 +384,15 @@
             </div>
           {:else}
             <!-- 使用虚拟滚动 -->
-            <div class="virtual-list-container"
-                 style="height: {Math.min(filteredDocs?.length || 0, MAX_VISIBLE_ITEMS) * ITEM_HEIGHT}px;">
-              <VirtualList items={filteredDocs || []} let:item height="{Math.min(filteredDocs?.length || 0, MAX_VISIBLE_ITEMS) * ITEM_HEIGHT}px">
+            <div
+              class="virtual-list-container"
+              style="height: {Math.min(filteredDocs?.length || 0, MAX_VISIBLE_ITEMS) * ITEM_HEIGHT}px;"
+            >
+              <VirtualList
+                items={filteredDocs || []}
+                let:item
+                height="{Math.min(filteredDocs?.length || 0, MAX_VISIBLE_ITEMS) * ITEM_HEIGHT}px"
+              >
                 <div class="document-item">
                   <label class="document-checkbox">
                     <input
@@ -375,8 +403,10 @@
                     <span class="document-title">{item.docTitle || pluginInstance.i18n.incrementalShare.noTitle}</span>
                   </label>
                   <div class="document-meta">
-                    <span class={`document-type document-type--${item.type || 'new'}`}>
-                      {item.type === 'updated' ? pluginInstance.i18n.incrementalShare.updated : pluginInstance.i18n.incrementalShare.new}
+                    <span class={`document-type document-type--${item.type || "new"}`}>
+                      {item.type === "updated"
+                        ? pluginInstance.i18n.incrementalShare.updated
+                        : pluginInstance.i18n.incrementalShare.new}
                     </span>
                     {#if item.shareTime && item.shareTime > 0}
                       <span class="document-time">
@@ -384,7 +414,8 @@
                       </span>
                     {:else}
                       <span class="document-time">
-                        {pluginInstance.i18n.incrementalShare.lastShared}: {pluginInstance.i18n.incrementalShare.neverShared}
+                        {pluginInstance.i18n.incrementalShare.lastShared}: {pluginInstance.i18n.incrementalShare
+                          .neverShared}
                       </span>
                     {/if}
                   </div>
@@ -398,22 +429,19 @@
       <!-- 分页控件 -->
       {#if (totalPages || 0) > 1}
         <div class="pagination-controls">
-          <button 
-            class="pagination-btn" 
-            on:click={loadPrevPage} 
-            disabled={currentPage === 0 || isLoading}
-          >
+          <button class="pagination-btn" on:click={loadPrevPage} disabled={currentPage === 0 || isLoading}>
             {@html icons.iconChevronLeft}
             {pluginInstance.i18n.incrementalShare.prevPage}
           </button>
-          
+
           <div class="pagination-info">
-            {pluginInstance.i18n.incrementalShare.page} {(currentPage || 0) + 1} / {totalPages || 1}
+            {pluginInstance.i18n.incrementalShare.page}
+            {(currentPage || 0) + 1} / {totalPages || 1}
           </div>
-          
-          <button 
-            class="pagination-btn" 
-            on:click={loadNextPage} 
+
+          <button
+            class="pagination-btn"
+            on:click={loadNextPage}
             disabled={currentPage === (totalPages || 1) - 1 || isLoading}
           >
             {pluginInstance.i18n.incrementalShare.nextPage}
@@ -747,7 +775,7 @@
     color: var(--b3-theme-on-surface);
     font-size: 16px;
   }
-  
+
   .pagination-controls {
     display: flex;
     justify-content: center;
@@ -757,7 +785,7 @@
     background: var(--b3-theme-surface);
     border-top: 1px solid var(--b3-border-color);
   }
-  
+
   .pagination-btn {
     display: flex;
     align-items: center;
@@ -771,17 +799,17 @@
     color: var(--b3-theme-on-background);
     transition: all 0.2s;
   }
-  
+
   .pagination-btn:hover:not(:disabled) {
     background: var(--b3-theme-surface-light);
     border-color: var(--b3-theme-primary);
   }
-  
+
   .pagination-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
-  
+
   .pagination-info {
     font-size: 14px;
     color: var(--b3-theme-on-surface);

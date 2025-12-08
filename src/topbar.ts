@@ -287,7 +287,7 @@ class Topbar {
       props: {
         pluginInstance: this.pluginInstance,
         // dialog: d
-        config: cfg,
+        cfg: cfg,
       },
     })
   }

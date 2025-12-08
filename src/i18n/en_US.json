@@ -261,6 +261,7 @@
     "noTitle": "Untitled document",
     "new": "New",
     "updated": "Updated",
+    "lastShareTime": "Last share time",
     "blacklist": {
       "title": "Blacklist Management",
       "add": "Add",

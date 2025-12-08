@@ -35,8 +35,8 @@ export default class ShareProPlugin extends Plugin {
   public isMobile: boolean
   public statusBarElement: any
   private main: Main
-  private shareService: ShareService
-  private settingService: SettingService
+  public shareService: ShareService
+  public settingService: SettingService
   public incrementalShareService: IncrementalShareService
 
   constructor(options: { app: App; id: string; name: string; i18n: IObject }) {

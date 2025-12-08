@@ -26,6 +26,7 @@ import { SingleDocSetting } from "../models/SingleDocSetting"
 import { SiyuanKernelApi } from "zhi-siyuan-api"
 import { SettingKeys } from "../utils/SettingKeys"
 import { AttrUtils } from "../utils/AttrUtils"
+import { IShareHistoryService, ShareHistoryItem } from "../types"
 
 /**
  * 分享服务
@@ -33,7 +34,7 @@ import { AttrUtils } from "../utils/AttrUtils"
  * @author terwer
  * @since 0.0.1
  */
-class ShareService {
+class ShareService implements IShareHistoryService {
   private logger: ILogger
   private pluginInstance: ShareProPlugin
   private shareApi: ShareApi
@@ -199,6 +200,13 @@ class ShareService {
       search: search,
     }
     return await this.shareApi.listDoc(params)
+  }
+
+  public async getHistoryByIds(docIds: string[]): Promise<Array<ShareHistoryItem> | undefined> {
+    const ret = await this.shareApi.getHistoryByIds(docIds)
+    debugger
+    // 数据转换
+    return []
   }
 
   // ================

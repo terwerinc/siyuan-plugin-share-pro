@@ -128,9 +128,9 @@
 2. **执行测试**
    - [ ] 点击"批量分享"按钮
    - [ ] 在分享过程中（约 3-5 个文档完成后）
-   - [ ] 调用 `pluginInstance.incrementalShareService.queueService.pauseQueue()`
+   - [ ] 调用 `incrementalShareService.queueService.pauseQueue()`
    - [ ] 观察分享是否暂停
-   - [ ] 调用 `pluginInstance.incrementalShareService.queueService.resumeQueue()`
+   - [ ] 调用 `incrementalShareService.queueService.resumeQueue()`
    - [ ] 观察分享是否继续
 
 3. **验证点**

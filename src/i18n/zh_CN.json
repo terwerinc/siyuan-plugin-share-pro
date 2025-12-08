@@ -266,6 +266,7 @@
     "noTitle": "未命名文档",
     "new": "新增",
     "updated": "更新",
+    "lastShareTime": "上次分享时间",
     "blacklist": {
       "title": "黑名单管理",
       "add": "添加",

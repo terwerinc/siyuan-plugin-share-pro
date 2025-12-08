@@ -132,7 +132,7 @@ export class IncrementalShareService {
     this.queueService = new ShareQueueService(pluginInstance)
 
     // 启动时尝试恢复队列
-    this.restoreQueueOnStartup()
+    void this.restoreQueueOnStartup()
   }
 
   /**
@@ -145,81 +145,20 @@ export class IncrementalShareService {
     }
   }
 
-  /**
-   * 获取所有分享历史记录（从服务端，支持分页）
-   */
-  private async getShareHistoryPaged(
-    pageNum = 0,
-    pageSize = 100,
-    search?: string
-  ): Promise<{
-    items: ShareHistoryItem[]
-    total: number
-    hasMore: boolean
-  }> {
-    try {
-      const response = await this.shareApi.listDoc({
-        pageNum,
-        pageSize,
-        search,
-      })
-
-      const items: ShareHistoryItem[] = []
-      let total = 0
-
-      if (response.code === 0 && response.data) {
-        total = response.data.total || 0
-
-        if (response.data.data) {
-          response.data.data.forEach((doc: any) => {
-            items.push(docDTOToHistoryItem(doc))
-          })
-        }
-      }
-
-      const hasMore = (pageNum + 1) * pageSize < total
-
-      return { items, total, hasMore }
-    } catch (error) {
-      this.logger.error("获取分页分享历史失败:", error)
-      return { items: [], total: 0, hasMore: false }
+  public async getLatestShareDoc(): Promise<any> {
+    const params = {
+      pageNum: 0,
+      pageSize: 1,
+    }
+    const result = await this.shareApi.listDoc(params)
+    if (result.code === 0 && result.data && result.data.data && result.data.data.length > 0) {
+      return result.data.data[0]
     }
   }
 
   /**
-   * 获取所有分享历史记录（自动处理分页）
-   */
-  private async getAllShareHistory(): Promise<ShareHistoryItem[]> {
-    const PAGE_SIZE = 100
-    const allItems: ShareHistoryItem[] = []
-    let currentPage = 0
-    let hasMore = true
-
-    try {
-      while (hasMore) {
-        const { items, hasMore: more } = await this.getShareHistoryPaged(currentPage, PAGE_SIZE)
-
-        allItems.push(...items)
-        hasMore = more
-        currentPage++
-
-        // 安全检查：避免无限循环
-        if (currentPage > 100) {
-          this.logger.warn("分页查询超过100页，停止查询")
-          break
-        }
-      }
-
-      this.logger.info(`获取分享历史完成，共 ${allItems.length} 条记录`)
-      return allItems
-    } catch (error) {
-      this.logger.error("获取所有分享历史失败:", error)
-      return []
-    }
-  }
-
-  /**
-   * 单页检测文档变更（真正的分页实现）
+   * 单页检测文档变更
+   *
    * @param getDocumentsPageFn 获取文档的分页函数
    * @param pageNum 页码
    * @param pageSize 每页大小
@@ -235,7 +174,6 @@ export class IncrementalShareService {
         docTitle: string
         modifiedTime: number
         notebookId?: string
-        notebookName?: string
       }>
     >,
     pageNum: number,
@@ -250,12 +188,8 @@ export class IncrementalShareService {
     }
 
     try {
-      // 获取分享历史（已经是分页的）
-      const allHistory = await this.getAllShareHistory()
-
       // 获取当前页的文档
       const pageDocuments = await getDocumentsPageFn(pageNum, pageSize)
-
       if (!pageDocuments || pageDocuments.length === 0) {
         return result
       }
@@ -267,13 +201,17 @@ export class IncrementalShareService {
         : `${progressStart}-${progressEnd}`
       this.logger.info(`变更检测进度: ${progressText}`)
 
-      // 分页检查黑名单
       const docIds = pageDocuments.map((doc) => doc.docId)
-      const blacklistStatus = await this.checkBlacklistPaged(docIds)
+
+      // 检查黑名单
+      const blacklistStatus = await this.checkBlacklist(docIds)
       const blacklistedDocIds = docIds.filter((id) => blacklistStatus[id])
 
+      // 获取当前页分享历史
+      const shareHistory = await this.shareService.getHistoryByIds(docIds)
+
       // 使用 Web Worker 进行变更检测
-      const pageResult = await ChangeDetectionWorkerUtil.detectChanges(pageDocuments, allHistory, blacklistedDocIds)
+      const pageResult = await ChangeDetectionWorkerUtil.detectChanges(pageDocuments, shareHistory, blacklistedDocIds)
 
       // 返回单页结果
       return pageResult
@@ -326,7 +264,7 @@ export class IncrementalShareService {
       const docIds = documents.map((doc) => doc.docId)
 
       // 分页检查黑名单，避免一次性查询过多文档给服务端造成压力
-      const blacklistStatus = await this.checkBlacklistPaged(docIds)
+      const blacklistStatus = await this.checkBlacklist(docIds)
       const validDocs: Array<{ docId: string; docTitle: string }> = []
 
       for (const doc of documents) {
@@ -393,22 +331,14 @@ export class IncrementalShareService {
 
   /**
    * 分页检查黑名单（避免一次性查询过多文档）
+   *
    * @param docIds 文档ID列表
    * @returns 黑名单状态映射
    */
-  private async checkBlacklistPaged(docIds: string[]): Promise<Record<string, boolean>> {
-    const PAGE_SIZE = 100 // 每页检查 100 个文档
-    const result: Record<string, boolean> = {}
-
+  private async checkBlacklist(docIds: string[]): Promise<Record<string, boolean>> {
     // 分页处理
-    for (let i = 0; i < docIds.length; i += PAGE_SIZE) {
-      const pageDocIds = docIds.slice(i, i + PAGE_SIZE)
-      const pageResult = await this.blacklistService.areInBlacklist(pageDocIds)
-      Object.assign(result, pageResult)
-
-      this.logger.debug(`黑名单检查进度: ${Math.min(i + PAGE_SIZE, docIds.length)}/${docIds.length}`)
-    }
-
+    const result = await this.blacklistService.areInBlacklist(docIds)
+    this.logger.debug(`黑名单检查完成=>`, result)
     return result
   }
 

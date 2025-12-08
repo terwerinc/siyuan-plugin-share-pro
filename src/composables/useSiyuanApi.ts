@@ -63,16 +63,12 @@ export const getDocumentsPaged = async (
     docTitle: string
     modifiedTime: number
     notebookId?: string
-    notebookName?: string
   }>
 > => {
   const offset = pageNum * pageSize
 
-  // SQL 查询：获取所有文档，按更新时间排序，支持分页
-  // 如果有 lastShareTime，则只获取自该时间以来修改的文档
-  // 注意：SiYuan 使用的是 Unix 时间戳格式（毫秒），需要直接比较
-  // 当 lastShareTime 为 0 时，表示获取所有文档
-  const timeCondition = lastShareTime && lastShareTime > 0 ? `AND b.updated > ${lastShareTime}` : ""
+  // 获取所有文档，按更新时间排序，支持分页
+  const timeCondition = generateTimeCondition(lastShareTime)
 
   const sql = `
     SELECT DISTINCT 
@@ -88,13 +84,12 @@ export const getDocumentsPaged = async (
     LIMIT ${pageSize} OFFSET ${offset}
   `
 
-  const result = await kernelApi.sql(sql)
-
-  if (result.code !== 0 || !result.data) {
+  const resData = await kernelApi.sql(sql)
+  if (!resData || resData.length === 0) {
     return []
   }
 
-  return result.data.map((row: any) => ({
+  return resData.map((row: any) => ({
     docId: row.docId,
     docTitle: row.docTitle || "未命名文档",
     // modifiedTime 看起来是形如 "20251208000004" 的字符串，需要转换为 Unix 时间戳
@@ -110,21 +105,20 @@ export const getDocumentsPaged = async (
           ).getTime()
         : parseInt(row.modifiedTime) || 0,
     notebookId: row.notebookId,
-    notebookName: row.notebookId, // 这里可以后续优化获取笔记本名称
   }))
 }
 
 /**
  * 获取文档总数
+ *
  * @param kernelApi 思源内核 API
  * @param lastShareTime 上次分享时间戳（用于增量检测）
  */
 export const getDocumentsCount = async (kernelApi: SiyuanKernelApi, lastShareTime?: number): Promise<number> => {
-  // 如果有 lastShareTime，则只计算自该时间以来修改的文档数量
-  // 注意：SiYuan 使用的是 Unix 时间戳格式（毫秒），需要直接比较
-  // 当 lastShareTime 为 0 时，表示获取所有文档
-  const timeCondition = lastShareTime && lastShareTime > 0 ? `AND b.updated > ${lastShareTime}` : ""
-
+  // lastShareTime:1765160549990，存储的时间戳
+  // updated:20240220222307：是时间拼接的
+  // 时间戳转换成updated这种才行
+  const timeCondition = generateTimeCondition(lastShareTime)
   const sql = `
     SELECT COUNT(DISTINCT b.root_id) as total
     FROM blocks b
@@ -133,11 +127,41 @@ export const getDocumentsCount = async (kernelApi: SiyuanKernelApi, lastShareTim
       ${timeCondition}
   `
 
-  const result = await kernelApi.sql(sql)
-
-  if (result.code !== 0 || !result.data || result.data.length === 0) {
+  const resData = await kernelApi.sql(sql)
+  if (!resData || resData.length === 0 || !resData[0].total) {
     return 0
   }
+  return parseInt(resData[0].total) || 0
+}
 
-  return parseInt(result.data[0].total) || 0
+// =====================================================================================================================
+// Private utility functions
+// =====================================================================================================================
+
+/**
+ * 将时间戳转换为思源数据库使用的日期字符串格式 (YYYYMMDDHHmmss)
+ * @param timestamp 时间戳（毫秒）
+ */
+const convertTimestampToSiyuanDate = (timestamp?: number): string => {
+  const date = timestamp && timestamp > 0 ? new Date(timestamp) : new Date()
+  return (
+    date.getFullYear() +
+    (date.getMonth() + 1).toString().padStart(2, "0") +
+    date.getDate().toString().padStart(2, "0") +
+    date.getHours().toString().padStart(2, "0") +
+    date.getMinutes().toString().padStart(2, "0") +
+    date.getSeconds().toString().padStart(2, "0")
+  )
+}
+
+/**
+ * 生成时间条件SQL片段
+ * @param lastShareTime 上次分享时间戳
+ */
+const generateTimeCondition = (lastShareTime?: number): string => {
+  if (lastShareTime && lastShareTime > 0) {
+    const lastUpdated = convertTimestampToSiyuanDate(lastShareTime)
+    return `AND b.updated > '${lastUpdated}'`
+  }
+  return ""
 }

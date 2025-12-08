@@ -34,39 +34,40 @@ export class ChangeDetectionWorkerUtil {
    * 使用 Web Worker 或主线程执行变更检测
    */
   public static async detectChanges(
-    allDocuments: Array<{
+    pageDocuments: Array<{
       docId: string
       docTitle: string
       modifiedTime: number
     }>,
-    shareHistory: ShareHistoryItem[],
+    shareHistory: Array<ShareHistoryItem>,
     blacklistedDocIds: string[]
   ): Promise<ChangeDetectionResult> {
     // 如果支持 Web Worker，使用 Worker
     if (this.isWorkerSupported()) {
+      console.log("使用 Web Worker 检测变更")
       try {
-        return await this.detectWithWorker(allDocuments, shareHistory, blacklistedDocIds)
+        return await this.detectWithWorker(pageDocuments, shareHistory, blacklistedDocIds)
       } catch (error) {
         console.warn("Web Worker 检测失败，回退到主线程:", error)
         // 回退到主线程
-        return this.detectInMainThread(allDocuments, shareHistory, blacklistedDocIds)
+        return this.detectInMainThread(pageDocuments, shareHistory, blacklistedDocIds)
       }
     }
 
     // 不支持 Web Worker，使用主线程
-    return this.detectInMainThread(allDocuments, shareHistory, blacklistedDocIds)
+    return this.detectInMainThread(pageDocuments, shareHistory, blacklistedDocIds)
   }
 
   /**
    * 使用 Web Worker 检测变更
    */
   private static async detectWithWorker(
-    allDocuments: Array<{
+    pagedDocuments: Array<{
       docId: string
       docTitle: string
       modifiedTime: number
     }>,
-    shareHistory: ShareHistoryItem[],
+    shareHistory: Array<ShareHistoryItem>,
     blacklistedDocIds: string[]
   ): Promise<ChangeDetectionResult> {
     return new Promise((resolve, reject) => {
@@ -74,7 +75,7 @@ export class ChangeDetectionWorkerUtil {
       // 使用 setTimeout 将任务推入宏任务队列，避免阻塞 UI
       setTimeout(() => {
         try {
-          const result = this.detectInMainThread(allDocuments, shareHistory, blacklistedDocIds)
+          const result = this.detectInMainThread(pagedDocuments, shareHistory, blacklistedDocIds)
           resolve(result)
         } catch (error) {
           reject(error)
@@ -87,12 +88,12 @@ export class ChangeDetectionWorkerUtil {
    * 在主线程检测变更（作为回退方案和 Worker 内部实现）
    */
   private static detectInMainThread(
-    allDocuments: Array<{
+    pagedDocuments: Array<{
       docId: string
       docTitle: string
       modifiedTime: number
     }>,
-    shareHistory: ShareHistoryItem[],
+    shareHistory: Array<ShareHistoryItem>,
     blacklistedDocIds: string[]
   ): ChangeDetectionResult {
     const result: ChangeDetectionResult = {
@@ -112,7 +113,7 @@ export class ChangeDetectionWorkerUtil {
     }
 
     // 遍历所有文档进行分类
-    for (const doc of allDocuments) {
+    for (const doc of pagedDocuments) {
       // 黑名单过滤
       if (blacklistedSet.has(doc.docId)) {
         result.blacklistedCount++
