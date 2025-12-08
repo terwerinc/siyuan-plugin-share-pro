@@ -41,7 +41,7 @@
 
   // 虚拟滚动配置
   const ITEM_HEIGHT = 30 // 每个文档项的高度（像素）
-  const MAX_VISIBLE_ITEMS = 15 // 每页显示的最大项数
+  const MAX_VISIBLE_ITEMS = 20 // 每页显示的最大项数
 
   const formatTime = (timestamp: number) => {
     if (!timestamp || timestamp === 0) return pluginInstance.i18n.incrementalShare.neverShared
@@ -341,12 +341,11 @@
             <!-- 使用虚拟滚动 -->
             <div
               class="virtual-list-container"
-              style="max-height: {Math.max(ITEM_HEIGHT, Math.min(filteredDocs?.length || 0, MAX_VISIBLE_ITEMS) * ITEM_HEIGHT)}px;"
             >
               <VirtualList
                 items={filteredDocs || []}
                 let:item
-                height="{Math.max(ITEM_HEIGHT, Math.min(filteredDocs?.length || 0, MAX_VISIBLE_ITEMS) * ITEM_HEIGHT)}px"
+                itemHeight={30}
               >
                 <div class="document-item">
                   <label class="document-checkbox">
@@ -424,6 +423,9 @@
     border-radius: 8px;
     max-width: 1200px;
     margin: 0 auto;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
   }
 
   .share-header {
@@ -636,6 +638,8 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
+    flex: 1;
+    height: 100%;
   }
 
   .document-group {
@@ -643,6 +647,9 @@
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
   }
 
   .group-header {
@@ -683,6 +690,11 @@
 
   .group-content {
     padding: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    flex: 1;
+    min-height: 0;
   }
 
   /* 调整虚拟列表容器高度计算 */
@@ -690,6 +702,8 @@
     width: 100%;
     overflow-y: auto;
     overflow-x: hidden;
+    flex: 1;
+    min-height: 0;
   }
 
   .document-item {
