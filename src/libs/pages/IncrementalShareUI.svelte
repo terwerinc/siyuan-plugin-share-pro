@@ -44,7 +44,7 @@
   const MAX_VISIBLE_ITEMS = 5 // 每页显示的最大项数
   
   const formatTime = (timestamp: number) => {
-    if (!timestamp || timestamp === 0) return "从未分享"
+    if (!timestamp || timestamp === 0) return pluginInstance.i18n.incrementalShare.neverShared
     try {
       return new Date(timestamp).toLocaleString("zh-CN", {
         year: "numeric",
@@ -54,7 +54,7 @@
         minute: "2-digit",
       })
     } catch (error) {
-      return "无效日期"
+      return pluginInstance.i18n.incrementalShare.invalidDate
     }
   }
 
@@ -74,7 +74,7 @@
       // 获取文档总数（用于显示进度）
       totalDocuments = await getDocumentsCount(kernelApi, lastShareTime)
       totalPages = Math.ceil(totalDocuments / pageSize)
-      logger.info(`文档总数: ${totalDocuments}, 总页数: ${totalPages}`)
+      logger.info(`${pluginInstance.i18n.incrementalShare.totalDocs}: ${totalDocuments}, ${pluginInstance.i18n.incrementalShare.page}: ${totalPages}`)
       
       // 重置分页状态
       currentPage = 0
@@ -89,9 +89,9 @@
       await loadDocumentsByPage(0)
       
       updateFilteredResults()
-      logger.info("文档变更检测结果:", changeDetectionResult)
+      logger.info(`${pluginInstance.i18n.incrementalShare.shareStats}:`, changeDetectionResult)
     } catch (error) {
-      logger.error("加载文档失败:", error)
+      logger.error(`${pluginInstance.i18n.incrementalShare.loadError}:`, error)
       showMessage(pluginInstance.i18n.incrementalShare.loadError, 7000, "error")
       
       // 在加载失败时使用mock数据
@@ -103,7 +103,7 @@
   
   // 使用mock数据进行测试
   const useMockData = () => {
-    logger.info("使用mock数据进行测试")
+    logger.info(pluginInstance.i18n.ui.incrementalShareModeInfo)
     
     // 生成mock的新文档数据
     const mockNewDocuments: any = Array.from({ length: 5 }, (_, i) => ({
@@ -141,10 +141,10 @@
     currentPage = 0
     
     updateFilteredResults()
-    logger.info("已加载mock数据", changeDetectionResult)
+    logger.info(pluginInstance.i18n.incrementalShare.detectSuccess, changeDetectionResult)
   }
   
-  // 新增：加载指定页码的文档
+  // 加载指定页码的文档
   const loadDocumentsByPage = async (pageNum: number) => {
     isLoading = true
     try {
@@ -171,7 +171,7 @@
       
       updateFilteredResults()
     } catch (error) {
-      logger.error("加载文档页失败:", error)
+      logger.error(`${pluginInstance.i18n.incrementalShare.loadError}:`, error)
       showMessage(pluginInstance.i18n.incrementalShare.loadError, 7000, "error")
       
       // 在加载失败时使用mock数据
@@ -276,7 +276,7 @@
         )
       }
     } catch (error) {
-      logger.error("批量分享失败:", error)
+      logger.error(`${pluginInstance.i18n.incrementalShare.shareError}:`, error)
       showMessage(pluginInstance.i18n.incrementalShare.shareError, 7000, "error")
     } finally {
       isLoading = false
@@ -321,7 +321,6 @@
       <span>{pluginInstance.i18n.incrementalShare.loading}</span>
     </div>
   {:else if changeDetectionResult}
-  {JSON.stringify(changeDetectionResult)}
     <div class="share-stats">
       <div class="stat-item">
         <span class="stat-number">{changeDetectionResult.newDocuments?.length || 0}</span>
@@ -373,7 +372,7 @@
                       checked={selectedDocs?.has(item.docId) || false}
                       on:change={() => toggleDocSelection(item.docId)}
                     />
-                    <span class="document-title">{item.docTitle || "未命名文档"}</span>
+                    <span class="document-title">{item.docTitle || pluginInstance.i18n.incrementalShare.noTitle}</span>
                   </label>
                   <div class="document-meta">
                     <span class={`document-type document-type--${item.type || 'new'}`}>
