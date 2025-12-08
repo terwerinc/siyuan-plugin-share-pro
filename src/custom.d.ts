@@ -439,15 +439,3 @@ export declare class Menus {
     private getDir;
     private unselect;
 }
-
-declare module "@sveltejs/svelte-virtual-list" {
-    import type { SvelteComponentTyped } from "svelte"
-
-    export interface VirtualListProps {
-        items: any[];
-        height?: string | number;
-        itemHeight?: number;
-    }
-
-    export default class VirtualList extends SvelteComponentTyped<VirtualListProps> {}
-}
