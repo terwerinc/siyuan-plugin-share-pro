@@ -8,8 +8,8 @@
  */
 
 import { simpleLogger } from "zhi-lib-base"
-import { isDev } from "../Constants"
 import { SiYuanApiAdaptor, SiyuanConfig, SiyuanKernelApi } from "zhi-siyuan-api"
+import { isDev } from "../Constants"
 import { ShareProConfig } from "../models/ShareProConfig"
 
 /**
@@ -70,8 +70,9 @@ export const getDocumentsPaged = async (
 
   // SQL 查询：获取所有文档，按更新时间排序，支持分页
   // 如果有 lastShareTime，则只获取自该时间以来修改的文档
-  // 注意：SiYuan 使用的是 Unix 时间戳格式，需要转换
-  const timeCondition = lastShareTime ? `AND b.updated > ${lastShareTime}` : ""
+  // 注意：SiYuan 使用的是 Unix 时间戳格式（毫秒），需要直接比较
+  // 当 lastShareTime 为 0 时，表示获取所有文档
+  const timeCondition = lastShareTime && lastShareTime > 0 ? `AND b.updated > ${lastShareTime}` : ""
 
   const sql = `
     SELECT DISTINCT 
@@ -96,7 +97,18 @@ export const getDocumentsPaged = async (
   return result.data.map((row: any) => ({
     docId: row.docId,
     docTitle: row.docTitle || "未命名文档",
-    modifiedTime: new Date(row.modifiedTime).getTime() || 0,
+    // modifiedTime 看起来是形如 "20251208000004" 的字符串，需要转换为 Unix 时间戳
+    modifiedTime:
+      row.modifiedTime && typeof row.modifiedTime === "string"
+        ? new Date(
+            parseInt(row.modifiedTime.substring(0, 4)), // 年
+            parseInt(row.modifiedTime.substring(4, 6)) - 1, // 月（需要减1，因为月份从0开始）
+            parseInt(row.modifiedTime.substring(6, 8)), // 日
+            parseInt(row.modifiedTime.substring(8, 10)), // 时
+            parseInt(row.modifiedTime.substring(10, 12)), // 分
+            parseInt(row.modifiedTime.substring(12, 14)) // 秒
+          ).getTime()
+        : parseInt(row.modifiedTime) || 0,
     notebookId: row.notebookId,
     notebookName: row.notebookId, // 这里可以后续优化获取笔记本名称
   }))
@@ -109,8 +121,9 @@ export const getDocumentsPaged = async (
  */
 export const getDocumentsCount = async (kernelApi: SiyuanKernelApi, lastShareTime?: number): Promise<number> => {
   // 如果有 lastShareTime，则只计算自该时间以来修改的文档数量
-  // 注意：SiYuan 使用的是 Unix 时间戳格式，需要转换
-  const timeCondition = lastShareTime ? `AND b.updated > ${lastShareTime}` : ""
+  // 注意：SiYuan 使用的是 Unix 时间戳格式（毫秒），需要直接比较
+  // 当 lastShareTime 为 0 时，表示获取所有文档
+  const timeCondition = lastShareTime && lastShareTime > 0 ? `AND b.updated > ${lastShareTime}` : ""
 
   const sql = `
     SELECT COUNT(DISTINCT b.root_id) as total

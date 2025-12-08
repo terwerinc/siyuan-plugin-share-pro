@@ -251,6 +251,7 @@
     "shareFailed": "Share failed",
     "loadError": "Failed to load documents",
     "noData": "No data",
+    "neverShared": "Never shared",
     "blacklist": {
       "title": "Blacklist Management",
       "add": "Add",

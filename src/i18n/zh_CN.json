@@ -256,6 +256,7 @@
     "shareFailed": "分享失败",
     "loadError": "加载文档失败",
     "noData": "暂无数据",
+    "neverShared": "从未分享",
     "blacklist": {
       "title": "黑名单管理",
       "add": "添加",

@@ -38,8 +38,7 @@
   let pageSize = 5 // 每页显示5条记录
   let totalDocuments = 0
   let totalPages = 0
-  let hasMoreDocuments = true
-  
+
   // 虚拟滚动配置
   const ITEM_HEIGHT = 45 // 每个文档项的高度（像素）
   const MAX_VISIBLE_ITEMS = 5 // 每页显示的最大项数
@@ -79,7 +78,6 @@
       
       // 重置分页状态
       currentPage = 0
-      hasMoreDocuments = true
       changeDetectionResult = {
         newDocuments: [],
         updatedDocuments: [],
@@ -108,7 +106,7 @@
     logger.info("使用mock数据进行测试")
     
     // 生成mock的新文档数据
-    const mockNewDocuments: any = Array.from({ length: 25 }, (_, i) => ({
+    const mockNewDocuments: any = Array.from({ length: 5 }, (_, i) => ({
       docId: `new-doc-${i + 1}`,
       docTitle: `Mock 新增文档 ${i + 1} - 测试数据`,
       modifiedTime: Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24), // 随机在过去24小时内
@@ -119,7 +117,7 @@
     }))
     
     // 生成mock的更新文档数据
-    const mockUpdatedDocuments: any = Array.from({ length: 15 }, (_, i) => ({
+    const mockUpdatedDocuments: any = Array.from({ length: 3 }, (_, i) => ({
       docId: `updated-doc-${i + 1}`,
       docTitle: `Mock 更新文档 ${i + 1} - 内容已修改`,
       modifiedTime: Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24), // 随机在过去24小时内
@@ -134,7 +132,7 @@
       newDocuments: mockNewDocuments,
       updatedDocuments: mockUpdatedDocuments,
       unchangedDocuments: [],
-      blacklistedCount: 3,
+      blacklistedCount: 0,
     }
     
     // 更新分页信息
@@ -323,17 +321,18 @@
       <span>{pluginInstance.i18n.incrementalShare.loading}</span>
     </div>
   {:else if changeDetectionResult}
+  {JSON.stringify(changeDetectionResult)}
     <div class="share-stats">
       <div class="stat-item">
-        <span class="stat-number">{changeDetectionResult.newDocuments.length}</span>
+        <span class="stat-number">{changeDetectionResult.newDocuments?.length || 0}</span>
         <span class="stat-label">{pluginInstance.i18n.incrementalShare.newDocuments}</span>
       </div>
       <div class="stat-item">
-        <span class="stat-number">{changeDetectionResult.updatedDocuments.length}</span>
+        <span class="stat-number">{changeDetectionResult.updatedDocuments?.length || 0}</span>
         <span class="stat-label">{pluginInstance.i18n.incrementalShare.updatedDocuments}</span>
       </div>
       <div class="stat-item">
-        <span class="stat-number">{changeDetectionResult.unchangedDocuments.length}</span>
+        <span class="stat-number">{changeDetectionResult.unchangedDocuments?.length || 0}</span>
         <span class="stat-label">{pluginInstance.i18n.incrementalShare.unchangedDocuments}</span>
       </div>
       <div class="stat-item blacklisted">
@@ -348,9 +347,9 @@
         <div class="group-header">
           <span class="group-title">
             {pluginInstance.i18n.incrementalShare.documentsToShare}
-            <span class="group-count">({filteredDocs.length})</span>
+            <span class="group-count">({filteredDocs?.length || 0})</span>
           </span>
-          {#if filteredDocs.length > 0}
+          {#if (filteredDocs?.length || 0) > 0}
             <label class="select-all">
               <input type="checkbox" bind:checked={selectAll} on:change={handleSelectAll} />
               {pluginInstance.i18n.incrementalShare.selectAll}
@@ -358,31 +357,35 @@
           {/if}
         </div>
         <div class="group-content">
-          {#if filteredDocs.length === 0}
+          {#if (filteredDocs?.length || 0) === 0}
             <div class="empty-message">
               {pluginInstance.i18n.incrementalShare.noDocumentsToShare}
             </div>
           {:else}
             <!-- 使用虚拟滚动 -->
-            <div class="virtual-list-container" 
-                 style="height: {Math.min(filteredDocs.length, MAX_VISIBLE_ITEMS) * ITEM_HEIGHT}px;">
-              <VirtualList items={filteredDocs} let:item height="{Math.min(filteredDocs.length, MAX_VISIBLE_ITEMS) * ITEM_HEIGHT}px">
+            <div class="virtual-list-container"
+                 style="height: {Math.min(filteredDocs?.length || 0, MAX_VISIBLE_ITEMS) * ITEM_HEIGHT}px;">
+              <VirtualList items={filteredDocs || []} let:item height="{Math.min(filteredDocs?.length || 0, MAX_VISIBLE_ITEMS) * ITEM_HEIGHT}px">
                 <div class="document-item">
                   <label class="document-checkbox">
                     <input
                       type="checkbox"
-                      checked={selectedDocs.has(item.docId)}
+                      checked={selectedDocs?.has(item.docId) || false}
                       on:change={() => toggleDocSelection(item.docId)}
                     />
-                    <span class="document-title">{item.docTitle}</span>
+                    <span class="document-title">{item.docTitle || "未命名文档"}</span>
                   </label>
                   <div class="document-meta">
-                    <span class={`document-type document-type--${item.type}`}>
-                      {item.type === 'new' ? pluginInstance.i18n.incrementalShare.new : pluginInstance.i18n.incrementalShare.updated}
+                    <span class={`document-type document-type--${item.type || 'new'}`}>
+                      {item.type === 'updated' ? pluginInstance.i18n.incrementalShare.updated : pluginInstance.i18n.incrementalShare.new}
                     </span>
-                    {#if item.shareTime}
+                    {#if item.shareTime && item.shareTime > 0}
                       <span class="document-time">
                         {pluginInstance.i18n.incrementalShare.lastShared}: {formatTime(item.shareTime)}
+                      </span>
+                    {:else}
+                      <span class="document-time">
+                        {pluginInstance.i18n.incrementalShare.lastShared}: {pluginInstance.i18n.incrementalShare.neverShared}
                       </span>
                     {/if}
                   </div>
@@ -394,7 +397,7 @@
       </div>
 
       <!-- 分页控件 -->
-      {#if totalPages > 1}
+      {#if (totalPages || 0) > 1}
         <div class="pagination-controls">
           <button 
             class="pagination-btn" 
@@ -406,13 +409,13 @@
           </button>
           
           <div class="pagination-info">
-            {pluginInstance.i18n.incrementalShare.page} {currentPage + 1} / {totalPages}
+            {pluginInstance.i18n.incrementalShare.page} {(currentPage || 0) + 1} / {totalPages || 1}
           </div>
           
           <button 
             class="pagination-btn" 
             on:click={loadNextPage} 
-            disabled={currentPage === totalPages - 1 || isLoading}
+            disabled={currentPage === (totalPages || 1) - 1 || isLoading}
           >
             {pluginInstance.i18n.incrementalShare.nextPage}
             {@html icons.iconChevronRight}
