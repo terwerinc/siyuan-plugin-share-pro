@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@sveltejs/svelte-virtual-list':
+        specifier: ^3.0.1
+        version: 3.0.1
       cheerio:
         specifier: ^1.0.0
         version: 1.0.0
@@ -522,6 +525,9 @@ packages:
 
   '@rushstack/ts-command-line@5.0.1':
     resolution: {integrity: sha512-bsbUucn41UXrQK7wgM8CNM/jagBytEyJqXw/umtI8d68vFm1Jwxh1OtLrlW7uGZgjCWiiPH6ooUNa1aVsuVr3Q==}
+
+  '@sveltejs/svelte-virtual-list@3.0.1':
+    resolution: {integrity: sha512-aF9TptS7NKKS7/TqpsxQBSDJ9Q0XBYzBehCeIC5DzdMEgrJZpIYao9LRLnyyo6SVodpapm2B7FE/Lj+FSA5/SQ==}
 
   '@sveltejs/vite-plugin-svelte-inspector@2.1.0':
     resolution: {integrity: sha512-9QX28IymvBlSCqsCll5t0kQVxipsfhFFL+L2t3nTWfXnddYwxBuAEtTtlaVQpRz9c37BhJjltSeY4AJSC03SSg==}
@@ -2894,6 +2900,8 @@ snapshots:
       string-argv: 0.3.2
     transitivePeerDependencies:
       - '@types/node'
+
+  '@sveltejs/svelte-virtual-list@3.0.1': {}
 
   '@sveltejs/vite-plugin-svelte-inspector@2.1.0(@sveltejs/vite-plugin-svelte@3.1.2(svelte@4.2.19)(vite@5.4.19(@types/node@22.16.5)(stylus@0.64.0)))(svelte@4.2.19)(vite@5.4.19(@types/node@22.16.5)(stylus@0.64.0))':
     dependencies:

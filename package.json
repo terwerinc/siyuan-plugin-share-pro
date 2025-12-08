@@ -41,6 +41,7 @@
     "vitest": "^3.2.4"
   },
   "dependencies": {
+    "@sveltejs/svelte-virtual-list": "^3.0.1",
     "cheerio": "^1.0.0",
     "copy-to-clipboard": "^3.3.3",
     "zhi-blog-api": "^1.70.0",

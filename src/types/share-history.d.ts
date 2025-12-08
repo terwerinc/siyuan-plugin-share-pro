@@ -7,12 +7,8 @@
  *  of this license document, but changing it is not allowed.
  */
 
-import type { DocDTO } from "./service-dto"
-
 /**
- * 分享历史记录项（客户端使用）
- * 
- * 注意：这是 DocDTO 的客户端适配类型，数据来源于服务端
+ * 分享历史记录项
  */
 export interface ShareHistoryItem {
   /**
@@ -49,4 +45,14 @@ export interface ShareHistoryItem {
    * 文档修改时间戳（用于变更检测）
    */
   docModifiedTime: number
+}
+
+/**
+ * 分享历史记录管理
+ */
+export interface IShareHistoryService {
+  /**
+   * 获取文档历史记录
+   */
+  getHistoryByIds(docIds: string[]): Promise<Array<ShareHistoryItem> | undefined>
 }

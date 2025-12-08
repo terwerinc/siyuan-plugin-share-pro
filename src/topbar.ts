@@ -2,7 +2,7 @@
  *            GNU GENERAL PUBLIC LICENSE
  *               Version 3, 29 June 2007
  *
- *  Copyright (C) 2024 Terwer, Inc. <https://terwer.space/>
+ *  Copyright (C) 2024-2025 Terwer, Inc. <https://terwer.space/>
  *  Everyone is permitted to copy and distribute verbatim copies
  *  of this license document, but changing it is not allowed.
  */
@@ -13,12 +13,12 @@ import pkg from "../package.json"
 import { isDev, SHARE_PRO_STORE_NAME } from "./Constants"
 import ShareProPlugin from "./index"
 import { WidgetInvoke } from "./invoke/widgetInvoke"
-import IncrementalShareUI from "./libs/pages/IncrementalShareUI.svelte"
 import { ShareProConfig } from "./models/ShareProConfig"
 import { NewUI } from "./newUI"
 import { ShareService } from "./service/ShareService"
 import PageUtil from "./utils/pageUtil"
 import { icons } from "./utils/svg"
+import IncrementalShareUI from "./libs/pages/IncrementalShareUI.svelte"
 
 /**
  * 顶部按钮
@@ -201,15 +201,20 @@ class Topbar {
       }
 
       // 增量分享
-      menu.addItem({
-        icon: `iconAdd`,
-        label: this.pluginInstance.i18n?.incrementalShare?.title,
-        click: async () => {
-          await this.showIncrementalShareUI()
-        },
-      })
+      const appConfig = cfg?.appConfig
+      // 修复：即使没有配置也应默认启用增量分享功能
+      const isIncrementalShareEnabled = appConfig?.incrementalShareConfig?.enabled ?? true
+      if (isIncrementalShareEnabled) {
+        menu.addItem({
+          icon: `iconAdd`,
+          label: this.pluginInstance.i18n?.incrementalShare?.title,
+          click: async () => {
+            await this.showIncrementalShareUI()
+          },
+        })
 
-      menu.addSeparator()
+        menu.addSeparator()
+      }
 
       // 分享管理
       menu.addItem({
@@ -274,7 +279,7 @@ class Topbar {
       title: `${this.pluginInstance.i18n?.incrementalShare?.title} - ${this.pluginInstance.i18n?.sharePro} v${pkg.version}`,
       content: `<div id="${incrementalShareId}"></div>`,
       width: this.pluginInstance.isMobile ? "95vw" : "80vw",
-      height: this.pluginInstance.isMobile ? "90vh" : "80vh",
+      height: this.pluginInstance.isMobile ? "90vh" : "62vh",
     })
 
     new IncrementalShareUI({
@@ -282,6 +287,7 @@ class Topbar {
       props: {
         pluginInstance: this.pluginInstance,
         // dialog: d
+        cfg: cfg,
       },
     })
   }

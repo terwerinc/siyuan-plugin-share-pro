@@ -2,7 +2,7 @@
   -            GNU GENERAL PUBLIC LICENSE
   -               Version 3, 29 June 2007
   -
-  -  Copyright (C) 2024 Terwer, Inc. <https://terwer.space/>
+  -  Copyright (C) 2024-2025 Terwer, Inc. <https://terwer.space/>
   -  Everyone is permitted to copy and distribute verbatim copies
   -  of this license document, but changing it is not allowed.
   -->
@@ -22,7 +22,7 @@
   const logger = simpleLogger("share-manage", "share-pro", isDev)
   export let pluginInstance: ShareProPlugin
   export let keyInfo: KeyInfo
-  const shareService = new ShareService(pluginInstance)
+  const shareService = pluginInstance.shareService
   let docs = []
   let loading = false
   let settingConfig: ShareProConfig
@@ -118,10 +118,24 @@
             createdAt: doc.createdAt,
             status: doc.status,
             action: `
-            <a href="javascript:;" onclick="window.cancelShareFromSharePro('${doc.docId}','${doc.data.title}')">${pluginInstance.i18n.manage.actionCancel}</a>&nbsp;&nbsp;
-            <a href="javascript:;" style="${settingConfig?.appConfig?.homePageId===doc.docId?'color:green;text-decoration:none;cursor:text;':''}" onclick="window.setHomeFromSharePro('${doc.docId}','${doc.data.title}',${settingConfig?.appConfig?.homePageId===doc.docId})">${settingConfig?.appConfig?.homePageId===doc.docId?pluginInstance.i18n.manage.actionSetAlready:pluginInstance.i18n.manage.actionSetHome}</a>&nbsp;&nbsp;
-            <a href="javascript:;" onclick="window.viewDocFromSharePro('${doc.docId}','${doc.data.title}')">${pluginInstance.i18n.manage.actionViewDoc}</a>&nbsp;&nbsp;
-            <a href="javascript:;" onclick="window.goToOriginalDocFromSharePro('${doc.docId}')">${pluginInstance.i18n.manage.actionGotoDoc}</a>
+            <a href="javascript:;" onclick="window.cancelShareFromSharePro('${doc.docId}','${doc.data.title}')">${
+              pluginInstance.i18n.manage.actionCancel
+            }</a>&nbsp;&nbsp;
+            <a href="javascript:;" style="${
+              settingConfig?.appConfig?.homePageId === doc.docId ? "color:green;text-decoration:none;cursor:text;" : ""
+            }" onclick="window.setHomeFromSharePro('${doc.docId}','${doc.data.title}',${
+              settingConfig?.appConfig?.homePageId === doc.docId
+            })">${
+              settingConfig?.appConfig?.homePageId === doc.docId
+                ? pluginInstance.i18n.manage.actionSetAlready
+                : pluginInstance.i18n.manage.actionSetHome
+            }</a>&nbsp;&nbsp;
+            <a href="javascript:;" onclick="window.viewDocFromSharePro('${doc.docId}','${doc.data.title}')">${
+              pluginInstance.i18n.manage.actionViewDoc
+            }</a>&nbsp;&nbsp;
+            <a href="javascript:;" onclick="window.goToOriginalDocFromSharePro('${doc.docId}')">${
+              pluginInstance.i18n.manage.actionGotoDoc
+            }</a>
             `,
           }
         }),
@@ -150,7 +164,7 @@
 
   // @ts-ignore
   window.setHomeFromSharePro = async function (docId: string, docTitle: string, isSet: boolean) {
-    if(isSet){
+    if (isSet) {
       return
     }
 

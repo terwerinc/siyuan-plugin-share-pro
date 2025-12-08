@@ -2,7 +2,7 @@
  *            GNU GENERAL PUBLIC LICENSE
  *               Version 3, 29 June 2007
  *
- *  Copyright (C) 2024 Terwer, Inc. <https://terwer.space/>
+ *  Copyright (C) 2024-2025 Terwer, Inc. <https://terwer.space/>
  *  Everyone is permitted to copy and distribute verbatim copies
  *  of this license document, but changing it is not allowed.
  */
@@ -111,6 +111,55 @@ class ShareApi {
   }
 
   // ================
+  // Blacklist APIs
+  // ================
+
+  /**
+   * 获取黑名单列表（分页）
+   */
+  public async getBlacklistList(params: { pageNum: number; pageSize: number; type?: string }) {
+    const res = await this.shareServiceRequest(ServiceApiKeys.API_BLACKLIST_LIST, params)
+    this.logger.info("get blacklist list =>", res)
+    return res
+  }
+
+  /**
+   * 添加黑名单项
+   */
+  public async addBlacklist(params: any) {
+    const res = await this.shareServiceRequest(ServiceApiKeys.API_BLACKLIST_ADD, params)
+    this.logger.info("add blacklist =>", res)
+    return res
+  }
+
+  /**
+   * 删除黑名单项
+   */
+  public async deleteBlacklist(params: { id: number }) {
+    const res = await this.shareServiceRequest(ServiceApiKeys.API_BLACKLIST_DELETE, params)
+    this.logger.info("delete blacklist =>", res)
+    return res
+  }
+
+  /**
+   * 批量检查是否在黑名单中
+   */
+  public async checkBlacklist(params: { docIds: string[] }) {
+    const res = await this.shareServiceRequest(ServiceApiKeys.API_BLACKLIST_CHECK, params)
+    this.logger.info("check blacklist =>", res)
+    return res
+  }
+
+  /**
+   * 获取历史记录
+   */
+  public async getHistoryByIds(docIds: string[]) {
+    const res = await this.shareServiceRequest(ServiceApiKeys.API_HISTORY_GET_BY_IDS, { docIds: docIds })
+    this.logger.info("get history by ids =>", res)
+    return res
+  }
+
+  // ================
   // private function
   // ================
 
@@ -169,9 +218,16 @@ enum ServiceApiKeys {
   API_UPLOAD_MEDIA = "/api/asset/upload",
   API_UPLOAD_DATA_VIEW_MEDIA = "/api/asset/uploadDataView",
   API_LIST_DOC = "/api/share/listDoc",
-  API_GET_SETTING = "/api/settings/share",
+  // API_GET_SETTING = "/api/settings/share",
   API_GET_SETTING_BY_AUTHOR = "/api/settings/byAuthor",
   API_UPDATE_SETTING = "/api/settings/update",
+  // Blacklist APIs
+  API_BLACKLIST_LIST = "/api/share/blacklist/list",
+  API_BLACKLIST_ADD = "/api/share/blacklist/add",
+  API_BLACKLIST_DELETE = "/api/share/blacklist/delete",
+  API_BLACKLIST_CHECK = "/api/share/blacklist/check",
+  //  History
+  API_HISTORY_GET_BY_IDS = "/api/share/history/getByDocIds",
 }
 
 class ServiceResponse {

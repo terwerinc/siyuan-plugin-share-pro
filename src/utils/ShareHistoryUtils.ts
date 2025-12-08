@@ -7,8 +7,7 @@
  *  of this license document, but changing it is not allowed.
  */
 
-import type { DocDTO } from "../types/service-dto"
-import type { ShareHistoryItem } from "../types/share-history"
+import type { DocDTO, ShareHistoryItem } from "../types"
 
 /**
  * 将服务端 DocDTO 转换为客户端 ShareHistoryItem
@@ -22,12 +21,7 @@ export function docDTOToHistoryItem(doc: DocDTO): ShareHistoryItem {
     docId: doc.docId,
     docTitle: doc.data.title,
     shareTime: updatedTime || createdTime,
-    shareStatus:
-      doc.status === "COMPLETED"
-        ? "success"
-        : doc.status === "FAILED"
-        ? "failed"
-        : "pending",
+    shareStatus: doc.status === "COMPLETED" ? "success" : doc.status === "FAILED" ? "failed" : "pending",
     shareUrl: undefined, // 服务端返回数据中没有 shareUrl，需要单独获取
     errorMessage: undefined, // 服务端返回数据中没有 errorMessage
     docModifiedTime: updatedTime, // 使用 dateUpdated 作为文档修改时间

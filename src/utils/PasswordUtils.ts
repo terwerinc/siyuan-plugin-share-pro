@@ -16,7 +16,7 @@
 export class PasswordUtils {
   /**
    * 生成随机密码
-   * 
+   *
    * @returns 随机密码字符串
    * @author terwer
    * @since 1.13.0
@@ -24,4 +24,4 @@ export class PasswordUtils {
   static getNewRndPassword(): string {
     return Math.random().toString(36).substring(2, 15)
   }
-} 
+}

@@ -45,7 +45,7 @@ class NewUI {
   constructor(pluginInstance: ShareProPlugin, topBarElement: HTMLElement) {
     this.logger = simpleLogger("new-ui", "share-pro", isDev)
     this.pluginInstance = pluginInstance
-    this.shareService = new ShareService(pluginInstance)
+    this.shareService = pluginInstance.shareService
     this.widgetInvoke = new WidgetInvoke(pluginInstance)
     this.topBarElement = topBarElement
   }

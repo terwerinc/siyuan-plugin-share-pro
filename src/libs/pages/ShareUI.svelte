@@ -25,15 +25,15 @@
   import { SiyuanKernelApi } from "zhi-siyuan-api"
   import { SettingKeys } from "../../utils/SettingKeys"
   import { AttrUtils } from "../../utils/AttrUtils"
-  import {KeyInfo} from "../../models/KeyInfo";
-  import {WidgetInvoke} from "../../invoke/widgetInvoke";
+  import { KeyInfo } from "../../models/KeyInfo"
+  import { WidgetInvoke } from "../../invoke/widgetInvoke"
 
   export let pluginInstance: ShareProPlugin
   export let shareService: ShareService
   export let vipInfo: {
-      code: number
-      msg: string
-      data: KeyInfo
+    code: number
+    msg: string
+    data: KeyInfo
   }
   export let docId: string = "" // 可选参数,无文档ID时显示简化版UI
 
@@ -46,7 +46,30 @@
   const isSingleDocMode = docId && docId.trim() !== ""
 
   // ========================================
-  // 单文档模式专属数据
+  // 单文档模式专属数据 - 三层配置架构
+  // ========================================
+  // 设计理念：通过明确的分层来简化维护和理解配置的生命周期与存储位置
+  //
+  // 层级1: userPreferences - 全局用户偏好设置（非文档级别）
+  //   特点：全局设置，影响所有文档
+  //   存储：本地配置（从 appConfig 加载）
+  //   生命周期：跨文档持久化
+  //   维护性：易维护，全局统一
+  //   示例：密码显示偏好、增量分享配置
+  //
+  // 层级2: singleDocSetting - 文档级设置
+  //   特点：文档级设置，无敏感信息
+  //   存储：文档属性（跟随文档）
+  //   生命周期：跟随文档
+  //   维护性：易维护，文档隔离
+  //   示例：文档树、大纲、有效期
+  //
+  // 层级3: shareOptions - 分享选项（文档级别）
+  //   特点：文档级设置，有敏感信息
+  //   存储：服务端存储（跟随文档）
+  //   生命周期：跟随文档
+  //   维护性：易维护，安全隔离
+  //   示例：分享密码
   // ========================================
   let formData = {
     post: Post as any,
@@ -56,33 +79,42 @@
     shareLink: "",
     kernelApi: SiyuanKernelApi,
 
-    // 全局用户偏好设置（非文档级别）
+    // 层级1: 全局用户偏好设置（非文档级别）
+    // 存储位置：本地配置/服务端配置（appConfig）
     userPreferences: {
-      showPassword: false,
+      showPassword: false, // 密码显示偏好
+      incrementalShareConfig: {
+        // 增量分享配置
+        enabled: true, // 默认启用
+      },
     },
 
+    // 层级2: singleDocSetting - 文档级设置
+    // 无敏感信息，存储在文档属性
     // 1、singleDocSetting，无敏感信息的，只在文档属性存储，例如文档大纲、文档有效期、文档状态
     singleDocSetting: {
       docTreeEnable: false, // 是否显示文档树
       docTreeLevel: 3, // 文档树层级
       outlineEnable: false, // 是否显示大纲
       outlineLevel: 6, // 大纲层级
-      expiresTime: "",
+      expiresTime: "", // 分享有效期
     } as SingleDocSetting,
 
+    // 层级3: shareOptions - 分享选项
+    // 有敏感信息，服务端存储
     // 2、shareOptions，有敏感信息，服务端存储，例如分享密码
     shareOptions: {
-      passwordEnabled: false,
-      password: "",
+      passwordEnabled: false, // 密码保护开关
+      password: "", // 分享密码（敏感信息）
     } as ShareOptions,
   }
 
   // ========================================
   // 公共方法
   // ========================================
-  const showManageTab=()=>{
-      const keyInfo = vipInfo.data
-      widgetInvoke.showShareManageTab(keyInfo)
+  const showManageTab = () => {
+    const keyInfo = vipInfo.data
+    widgetInvoke.showShareManageTab(keyInfo)
   }
 
   // ========================================
@@ -274,6 +306,9 @@
     // 加载配置
     const cfg = await pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
 
+    // 加载增量分享配置
+    formData.userPreferences.incrementalShareConfig.enabled = cfg?.appConfig?.incrementalShareConfig?.enabled ?? true
+
     // 加载文档设置
     await loadSingleDocSetting(cfg)
 
@@ -307,6 +342,11 @@
     }
 
     logger.info("[Non-Single-Doc] Initializing non-single-doc mode")
+
+    // 加载增量分享配置
+    const cfg = await pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
+    formData.userPreferences.incrementalShareConfig.enabled = cfg?.appConfig?.incrementalShareConfig?.enabled ?? true
+
     // 非单文档模式不需要加载文档数据，UI会自动隐藏需要docId的功能
     logger.info("[Non-Single-Doc] Initialization complete, showing limited UI")
   }
@@ -344,21 +384,19 @@
           <!-- 非单文档模式：显示通用标题 -->
           <div class="share-title">{pluginInstance.i18n["sharePro"]}</div>
         {/if}
-        
+
         <!-- 全局功能按钮：不需要docId，始终显示 -->
         <div class="global-actions">
-          <span
-            class="action-btn"
-            title={pluginInstance.i18n["incrementalShare"]["title"]}
-            on:click={() => pluginInstance.showIncrementalShareUI()}
-          >
-            {@html icons.iconIncremental}
-          </span>
-          <span
-            class="action-btn"
-            title={pluginInstance.i18n["manageDoc"]}
-            on:click={() => showManageTab()}
-          >
+          {#if formData.userPreferences.incrementalShareConfig.enabled === true}
+            <span
+              class="action-btn"
+              title={pluginInstance.i18n["incrementalShare"]["title"]}
+              on:click={() => pluginInstance.showIncrementalShareUI()}
+            >
+              {@html icons.iconIncremental}
+            </span>
+          {/if}
+          <span class="action-btn" title={pluginInstance.i18n["manageDoc"]} on:click={() => showManageTab()}>
             {@html icons.iconManage}
           </span>
           <span
