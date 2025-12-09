@@ -22,7 +22,9 @@
   import { ShareProConfig } from "../../models/ShareProConfig"
   import type { ChangeDetectionResult } from "../../service/IncrementalShareService"
   import { icons } from "../../utils/svg"
+  import BlacklistSetting from "./setting/BlacklistSetting.svelte"
   import ShareManage from "./ShareManage.svelte"
+ // 添加黑名单管理组件导入
 
   export let pluginInstance: ShareProPlugin
   export let cfg: ShareProConfig
@@ -89,6 +91,30 @@
             pluginInstance: pluginInstance,
             keyInfo: keyInfo,
             pageSize: 5, // 传递较小的分页大小
+          },
+        })
+      }
+    }, 0)
+  }
+
+  // 打开黑名单管理弹窗
+  const openBlacklistManageDialog = async () => {
+    const dialog = new Dialog({
+      title: pluginInstance.i18n.incrementalShare.blacklist.title,
+      content: `<div id="blacklist-manage-dialog-content"></div>`,
+      width: "75vw",
+      height: "55vh",
+    })
+
+    // 等待DOM更新后挂载BlacklistSetting组件
+    setTimeout(() => {
+      const container = document.getElementById("blacklist-manage-dialog-content")
+      if (container) {
+        new BlacklistSetting({
+          target: container,
+          props: {
+            pluginInstance: pluginInstance,
+            dialog: dialog,
           },
         })
       }
@@ -301,6 +327,9 @@
       <h3>{pluginInstance.i18n.incrementalShare.title}</h3>
       <button class="btn-icon" on:click={openShareManageDialog} title={pluginInstance.i18n.manageDoc}>
         {@html icons.iconManage}
+      </button>
+      <button class="btn-icon" on:click={openBlacklistManageDialog} title={pluginInstance.i18n.incrementalShare.blacklist.title}>
+        {@html icons.iconBan}
       </button>
     </div>
     <div class="header-actions">
