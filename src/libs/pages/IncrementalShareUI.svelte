@@ -803,7 +803,7 @@ html[data-theme-mode="dark"]
   justify-content center
   align-items center
   gap 16px
-  padding 16px
+  padding 24px
   background var(--b3-theme-surface)
   border-top 1px solid var(--b3-border-color)
 
