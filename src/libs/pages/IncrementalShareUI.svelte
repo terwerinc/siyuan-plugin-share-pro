@@ -9,19 +9,20 @@
 
 <script lang="ts">
   import VirtualList from "@sveltejs/svelte-virtual-list"
-  import { showMessage } from "siyuan"
+  import { Dialog, showMessage } from "siyuan"
   import { onMount } from "svelte"
   import { simpleLogger } from "zhi-lib-base"
   import {
-    getIncrementalDocumentsCount,
-    getIncrementalDocumentsPaged,
-    useSiyuanApi,
+      getIncrementalDocumentsCount,
+      getIncrementalDocumentsPaged,
+      useSiyuanApi,
   } from "../../composables/useSiyuanApi"
   import { isDev } from "../../Constants"
   import ShareProPlugin from "../../index"
   import { ShareProConfig } from "../../models/ShareProConfig"
   import type { ChangeDetectionResult } from "../../service/IncrementalShareService"
   import { icons } from "../../utils/svg"
+  import ShareManage from "./ShareManage.svelte"
 
   export let pluginInstance: ShareProPlugin
   export let cfg: ShareProConfig
@@ -31,6 +32,7 @@
   let changeDetectionResult: ChangeDetectionResult | null = null
   let selectedDocs = new Set<string>()
   let searchTerm = ""
+  let keyInfo: any = null
 
   // 统一的文档列表（新文档和更新文档合并）
   let combinedDocs: Array<{ docId: string; docTitle: string; shareTime?: number; type: "new" | "updated" }> = []
@@ -56,6 +58,41 @@
     } catch (error) {
       return pluginInstance.i18n.incrementalShare.invalidDate
     }
+  }
+
+  // 打开分享管理弹窗
+  const openShareManageDialog = async () => {
+    // 获取最新的vipInfo
+    const vipInfo = await pluginInstance.shareService.getVipInfo(cfg?.serviceApiConfig?.token ?? "")
+    if (vipInfo.code !== 0) {
+      const vipTip = vipInfo.msg ?? pluginInstance.i18n?.unknownError
+      showMessage(vipTip + "，" + pluginInstance.i18n?.openLicensePage, 7000, "error")
+      return
+    }
+    
+    keyInfo = vipInfo.data
+
+    const dialog = new Dialog({
+      title: pluginInstance.i18n.manageDoc,
+      content: `<div id="share-manage-dialog-content"></div>`,
+      width: "75vw",
+      height: "55vh",
+    })
+
+    // 等待DOM更新后挂载ShareManage组件
+    setTimeout(() => {
+      const container = document.getElementById("share-manage-dialog-content")
+      if (container) {
+        new ShareManage({
+          target: container,
+          props: {
+            pluginInstance: pluginInstance,
+            keyInfo: keyInfo,
+            pageSize: 5, // 传递较小的分页大小
+          },
+        })
+      }
+    }, 0)
   }
 
   onMount(async () => {
@@ -260,7 +297,12 @@
 
 <div class="incremental-share-ui">
   <div class="share-header">
-    <h3>{pluginInstance.i18n.incrementalShare.title}</h3>
+    <div class="header-title">
+      <h3>{pluginInstance.i18n.incrementalShare.title}</h3>
+      <button class="btn-icon" on:click={openShareManageDialog} title={pluginInstance.i18n.manageDoc}>
+        {@html icons.iconManage}
+      </button>
+    </div>
     <div class="header-actions">
       <input
         type="text"
@@ -415,9 +457,33 @@
   padding 16px
   box-shadow 0 1px 2px rgba(0, 0, 0, 0.05)
 
+.header-title
+  display flex
+  align-items center
+  gap 12px
+
   h3
     margin 0
     color var(--b3-theme-on-background)
+
+  .btn-icon
+    padding 6px
+    border none
+    background transparent
+    border-radius 4px
+    cursor pointer
+    transition all 0.3s ease
+    display flex
+    align-items center
+    justify-content center
+    width 32px
+    height 32px
+
+    &:hover
+      background-color var(--b3-theme-hover)
+
+    &:active
+      background-color var(--b3-theme-secondary)
 
 .header-actions
   display flex
@@ -518,6 +584,13 @@ html[data-theme-mode="dark"]
         color rgba(255, 255, 255, 0.3)
         background-color rgba(255, 255, 255, 0.08)
         border-color #434343
+
+  .btn-icon
+    &:hover
+      background-color rgba(255, 255, 255, 0.1)
+
+    &:active
+      background-color rgba(255, 255, 255, 0.2)
 
 .loading
   display flex

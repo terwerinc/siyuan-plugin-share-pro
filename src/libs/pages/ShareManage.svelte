@@ -7,28 +7,28 @@
   -  of this license document, but changing it is not allowed.
   -->
 <script lang="ts">
-  import ShareProPlugin from "../../index"
-  import { KeyInfo } from "../../models/KeyInfo"
+  import { confirm, openTab, showMessage } from "siyuan"
   import { onMount } from "svelte"
-  import { ShareService } from "../../service/ShareService"
   import { simpleLogger } from "zhi-lib-base"
   import { isDev, SHARE_LIST_PAGE_SIZE, SHARE_PRO_STORE_NAME } from "../../Constants"
-  import Bench from "../components/bench/Bench.svelte"
-  import { confirm, openTab, showMessage } from "siyuan"
+  import ShareProPlugin from "../../index"
+  import { KeyInfo } from "../../models/KeyInfo"
   import { ShareProConfig } from "../../models/ShareProConfig"
-  import { syncAppConfig } from "../../utils/ShareConfigUtils"
   import { SettingService } from "../../service/SettingService"
+  import { syncAppConfig } from "../../utils/ShareConfigUtils"
+  import Bench from "../components/bench/Bench.svelte"
 
   const logger = simpleLogger("share-manage", "share-pro", isDev)
   export let pluginInstance: ShareProPlugin
   export let keyInfo: KeyInfo
+  export let pageSize: number = SHARE_LIST_PAGE_SIZE // 允许传递自定义分页大小
   const shareService = pluginInstance.shareService
   let docs = []
   let loading = false
   let settingConfig: ShareProConfig
 
   let tableData,
-    tableLimit = SHARE_LIST_PAGE_SIZE,
+    tableLimit = pageSize, // 使用传递的pageSize或默认值
     tableOffset = 0,
     tableOrder,
     tableDir,
