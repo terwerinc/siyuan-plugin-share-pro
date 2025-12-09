@@ -1,16 +1,7 @@
-/*
- *            GNU GENERAL PUBLIC LICENSE
- *               Version 3, 29 June 2007
- *
- *  Copyright (C) 2024-2025 Terwer, Inc. <https://terwer.space/>
- *  Everyone is permitted to copy and distribute verbatim copies
- *  of this license document, but changing it is not allowed.
- */
-
-import ShareProPlugin from "../index"
+import { Dialog, openTab } from "siyuan"
 import { ILogger, simpleLogger } from "zhi-lib-base"
 import { isDev } from "../Constants"
-import { openTab } from "siyuan"
+import ShareProPlugin from "../index"
 import ShareManage from "../libs/pages/ShareManage.svelte"
 import { KeyInfo } from "../models/KeyInfo"
 
@@ -34,6 +25,31 @@ class WidgetInvoke {
         keyInfo: keyInfo,
       } as any,
     })
+  }
+
+  public async showShareManageDialog(keyInfo: KeyInfo) {
+    // 创建弹窗
+    const dialog = new Dialog({
+      title: this.pluginInstance.i18n.manageDoc,
+      content: `<div id="share-manage-dialog-content"></div>`,
+      width: "75vw",
+      height: "55vh",
+    })
+
+    // 等待DOM更新后挂载ShareManage组件
+    setTimeout(() => {
+      const container = document.getElementById("share-manage-dialog-content")
+      if (container) {
+        new ShareManage({
+          target: container,
+          props: {
+            pluginInstance: this.pluginInstance,
+            keyInfo: keyInfo,
+            pageSize: 5,
+          } as any,
+        })
+      }
+    }, 0)
   }
 
   private async showTab(title: string) {
