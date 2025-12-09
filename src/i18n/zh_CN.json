@@ -285,7 +285,7 @@
       "targetId": "目标ID",
       "targetIdPlaceholder": "请输入文档ID或笔记本ID",
       "targetName": "名称",
-      "targetNamePlaceholder": "请输入名称",
+      "targetNamePlaceholder": "输入关键词搜索文档或笔记本",
       "note": "备注",
       "notePlaceholder": "请输入备注（可选）",
       "pattern": "名称",

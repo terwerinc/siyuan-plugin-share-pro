@@ -1,12 +1,3 @@
-<!--
-  -            GNU GENERAL PUBLIC LICENSE
-  -               Version 3, 29 June 2007
-  -
-  -  Copyright (C) 2024-2025 Terwer, Inc. <https://terwer.space/>
-  -  Everyone is permitted to copy and distribute verbatim copies
-  -  of this license document, but changing it is not allowed.
-  -->
-
 <script lang="ts">
   import { Dialog, showMessage } from "siyuan"
   import { onMount } from "svelte"
@@ -44,6 +35,12 @@
     targetId: "",
     note: "",
   }
+
+  // 智能搜索相关
+  let searchKeyword = ""
+  let searchResults: Array<{id: string, name: string}> = []
+  let showSearchDropdown = false
+  let isSearching = false
 
   onMount(async () => {
     blacklistService = new LocalBlacklistService(pluginInstance, pluginInstance.settingService)
@@ -115,6 +112,8 @@
       targetId: "",
       note: "",
     }
+    searchResults = []
+    showSearchDropdown = false
     showAddForm = true
   }
 
@@ -242,8 +241,53 @@
     }
   }
 
+  // 搜索文档或笔记本
+  const searchTargets = async () => {
+    if (!searchKeyword.trim()) {
+      searchResults = []
+      showSearchDropdown = false
+      return
+    }
+
+    isSearching = true
+    try {
+      if (formData.type === "DOCUMENT") {
+        // 搜索文档
+        searchResults = await blacklistService.searchDocuments(searchKeyword)
+      } else {
+        // 搜索笔记本
+        searchResults = await blacklistService.searchNotebooks(searchKeyword)
+      }
+      showSearchDropdown = searchResults.length > 0
+    } catch (error) {
+      logger.error("搜索失败:", error)
+      searchResults = []
+      showSearchDropdown = false
+    } finally {
+      isSearching = false
+    }
+  }
+
+  // 选择搜索结果
+  const selectSearchResult = (item: {id: string, name: string}) => {
+    formData.targetId = item.id
+    formData.targetName = item.name
+    searchResults = []
+    showSearchDropdown = false
+    searchKeyword = item.name
+  }
+
   const onCancel = () => {
     dialog.destroy()
+  }
+  
+  // 当类型改变时清空搜索结果
+  const handleTypeChange = () => {
+    searchResults = []
+    showSearchDropdown = false
+    searchKeyword = ""
+    formData.targetId = ""
+    formData.targetName = ""
   }
 </script>
 
@@ -294,7 +338,7 @@
                 >{pluginInstance.i18n?.incrementalShare?.blacklist?.type || "类型"}
                 <span style="color:red">*</span></label
               >
-              <select class="b3-select fn__block" bind:value={formData.type}>
+              <select class="b3-select fn__block" bind:value={formData.type} on:change={handleTypeChange}>
                 <option value="DOCUMENT">{pluginInstance.i18n?.incrementalShare?.blacklist?.document || "文档"}</option>
                 <option value="NOTEBOOK"
                   >{pluginInstance.i18n?.incrementalShare?.blacklist?.notebook || "笔记本"}</option
@@ -303,29 +347,35 @@
             </div>
             <div class="form-col">
               <label
-                >{pluginInstance.i18n?.incrementalShare?.blacklist?.targetId || "目标ID"}
-                <span style="color:red">*</span></label
-              >
-              <input
-                class="b3-text-field fn__block"
-                bind:value={formData.targetId}
-                placeholder={pluginInstance.i18n?.incrementalShare?.blacklist?.targetIdPlaceholder ||
-                  "请输入文档ID或笔记本ID"}
-              />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-col">
-              <label
                 >{pluginInstance.i18n?.incrementalShare?.blacklist?.targetName || "名称"}
                 <span style="color:red">*</span></label
               >
-              <input
-                class="b3-text-field fn__block"
-                bind:value={formData.targetName}
-                placeholder={pluginInstance.i18n?.incrementalShare?.blacklist?.targetNamePlaceholder || "请输入名称"}
-              />
+              <div class="search-input-container">
+                <input
+                  class="b3-text-field fn__block"
+                  bind:value={searchKeyword}
+                  placeholder={pluginInstance.i18n?.incrementalShare?.blacklist?.targetNamePlaceholder || "输入关键词搜索文档或笔记本"}
+                  on:input={searchTargets}
+                />
+                {#if isSearching}
+                  <div class="search-loading">搜索中...</div>
+                {/if}
+                {#if showSearchDropdown}
+                  <div class="search-dropdown">
+                    {#each searchResults as item}
+                      <div class="dropdown-item" on:click={() => selectSearchResult(item)}>
+                        {item.name}
+                      </div>
+                    {/each}
+                  </div>
+                {/if}
+              </div>
+              <!-- 隐藏的实际值 -->
+              <input type="hidden" bind:value={formData.targetId} />
+              <input type="hidden" bind:value={formData.targetName} />
             </div>
+          </div>
+          <div class="form-row">
             <div class="form-col">
               <label>{pluginInstance.i18n?.incrementalShare?.blacklist?.note || "备注"}</label>
               <input
@@ -336,7 +386,7 @@
             </div>
           </div>
           <div class="form-actions">
-            <button class="b3-button b3-button--text" on:click={handleAddItem} disabled={isLoading}>
+            <button class="b3-button b3-button--text" on:click={handleAddItem} disabled={isLoading || !formData.targetId}>
               {pluginInstance.i18n?.incrementalShare?.blacklist?.confirmAdd || "确定添加"}
             </button>
           </div>
@@ -476,6 +526,7 @@
 
   .form-col {
     flex: 1;
+    position: relative;
   }
 
   .form-col label {
@@ -487,6 +538,54 @@
   .form-actions {
     margin-top: 12px;
     text-align: right;
+  }
+
+  /* 搜索输入框容器 */
+  .search-input-container {
+    position: relative;
+  }
+
+  /* 搜索加载状态 */
+  .search-loading {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--b3-theme-surface);
+    border: 1px solid var(--b3-border-color);
+    border-radius: 4px;
+    padding: 8px 12px;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  /* 搜索下拉框 */
+  .search-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--b3-theme-surface);
+    border: 1px solid var(--b3-border-color);
+    border-radius: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .dropdown-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--b3-border-color);
+  }
+
+  .dropdown-item:hover {
+    background: var(--b3-theme-surface-light);
+  }
+
+  .dropdown-item:last-child {
+    border-bottom: none;
   }
 
   /* 表格样式 */

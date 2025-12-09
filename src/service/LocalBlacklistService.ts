@@ -1,12 +1,3 @@
-/*
- *            GNU GENERAL PUBLIC LICENSE
- *               Version 3, 29 June 2007
- *
- *  Copyright (C) 2025 Terwer, Inc. <https://terwer.space/>
- *  Everyone is permitted to copy and distribute verbatim copies
- *  of this license document, but changing it is not allowed.
- */
-
 import { simpleLogger } from "zhi-lib-base"
 import { isDev, SHARE_PRO_STORE_NAME } from "../Constants"
 import ShareProPlugin from "../index"
@@ -14,6 +5,7 @@ import { BlacklistItem, BlacklistItemType, ShareBlacklist } from "../models/Shar
 import { ShareProConfig } from "../models/ShareProConfig"
 import { ApiUtils } from "../utils/ApiUtils"
 import { DefaultAppConfig, syncAppConfig } from "../utils/ShareConfigUtils"
+import { BlacklistApiService } from "./BlacklistApiService"
 import { SettingService } from "./SettingService"
 
 /**
@@ -30,10 +22,12 @@ export class LocalBlacklistService implements ShareBlacklist {
   private logger = simpleLogger("local-blacklist-service", "share-pro", isDev)
   private pluginInstance: ShareProPlugin
   private settingService: SettingService
+  private blacklistApiService: BlacklistApiService
 
   constructor(pluginInstance: ShareProPlugin, settingService: SettingService) {
     this.pluginInstance = pluginInstance
     this.settingService = settingService
+    this.blacklistApiService = new BlacklistApiService(pluginInstance)
   }
 
   /**
@@ -206,6 +200,22 @@ export class LocalBlacklistService implements ShareBlacklist {
       this.logger.error("搜索黑名单失败:", error)
       return []
     }
+  }
+
+  /**
+   * 搜索文档列表
+   * @param keyword 搜索关键词
+   */
+  public async searchDocuments(keyword: string): Promise<Array<{ id: string; name: string }>> {
+    return await this.blacklistApiService.searchDocuments(keyword)
+  }
+
+  /**
+   * 搜索笔记本列表
+   * @param keyword 搜索关键词
+   */
+  public async searchNotebooks(keyword: string): Promise<Array<{ id: string; name: string }>> {
+    return await this.blacklistApiService.searchNotebooks(keyword)
   }
 
   // ====================

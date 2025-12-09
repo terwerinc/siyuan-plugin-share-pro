@@ -280,7 +280,7 @@
       "targetId": "Target ID",
       "targetIdPlaceholder": "Enter document ID or notebook ID",
       "targetName": "Name",
-      "targetNamePlaceholder": "Enter name",
+      "targetNamePlaceholder": "Enter keywords to search documents or notebooks",
       "note": "Note",
       "notePlaceholder": "Enter note (optional)",
       "pattern": "Name",
