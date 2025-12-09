@@ -56,16 +56,6 @@ export interface ChangeDetectionResult {
    * 已更新文档列表
    */
   updatedDocuments: ShareHistoryItem[]
-
-  /**
-   * 无变更文档列表
-   */
-  unchangedDocuments: ShareHistoryItem[]
-
-  /**
-   * 被黑名单过滤的文档数量
-   */
-  blacklistedCount: number
 }
 
 /**
@@ -186,8 +176,7 @@ export class IncrementalShareService {
     const result: ChangeDetectionResult = {
       newDocuments: [],
       updatedDocuments: [],
-      unchangedDocuments: [],
-      blacklistedCount: 0,
+      // 移除了 unchangedDocuments 字段，因为在增量分享模式下不会查询未变更的文档
     }
 
     try {
@@ -206,15 +195,11 @@ export class IncrementalShareService {
 
       const docIds = pageDocuments.map((doc) => doc.docId)
 
-      // 检查黑名单
-      const blacklistStatus = await this.checkBlacklist(docIds)
-      const blacklistedDocIds = docIds.filter((id) => blacklistStatus[id])
-
       // 获取当前页分享历史（使用本地存储和缓存）
       const shareHistory = await this.getLocalHistoryByIds(docIds)
 
       // 使用 Web Worker 进行变更检测
-      const pageResult = await ChangeDetectionWorkerUtil.detectChanges(pageDocuments, shareHistory, blacklistedDocIds)
+      const pageResult = await ChangeDetectionWorkerUtil.detectChanges(pageDocuments, shareHistory, [])
 
       // 返回单页结果
       return pageResult
@@ -318,6 +303,7 @@ export class IncrementalShareService {
 
       if (validDocs.length === 0) {
         this.logger.warn("所有文档都在黑名单中，跳过分享")
+        showMessage("所有文档都在黑名单中，跳过分享", 3000, "error")
         return result
       }
 

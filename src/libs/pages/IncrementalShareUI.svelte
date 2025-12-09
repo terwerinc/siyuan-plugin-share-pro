@@ -13,9 +13,9 @@
   import { onMount } from "svelte"
   import { simpleLogger } from "zhi-lib-base"
   import {
-      getIncrementalDocumentsCount,
-      getIncrementalDocumentsPaged,
-      useSiyuanApi,
+    getIncrementalDocumentsCount,
+    getIncrementalDocumentsPaged,
+    useSiyuanApi,
   } from "../../composables/useSiyuanApi"
   import { isDev } from "../../Constants"
   import ShareProPlugin from "../../index"
@@ -94,7 +94,7 @@
       )
 
       // 获取文档总数（用于显示进度）
-      totalDocuments = await getIncrementalDocumentsCount(kernelApi, lastShareTime)
+      totalDocuments = await getIncrementalDocumentsCount(kernelApi, lastShareTime, searchTerm)
       totalPages = Math.ceil(totalDocuments / pageSize)
       logger.info(
         `${pluginInstance.i18n.incrementalShare.totalDocs}: ${totalDocuments}, ${pluginInstance.i18n.incrementalShare.page}: ${totalPages}`
@@ -105,14 +105,11 @@
       changeDetectionResult = {
         newDocuments: [],
         updatedDocuments: [],
-        unchangedDocuments: [],
-        blacklistedCount: 0,
       }
 
       // 加载第一页
       await loadDocumentsByPage(0)
 
-      updateFilteredResults()
       logger.info(`${pluginInstance.i18n.incrementalShare.shareStats}:`, changeDetectionResult)
     } catch (error) {
       logger.error(`${pluginInstance.i18n.incrementalShare.loadError}:`, error)
@@ -136,20 +133,35 @@
         }`
       )
 
-      // 使用分页检测方法，只加载指定页
+      // 使用分页检测方法，只加载指定页，传递搜索词
       changeDetectionResult = await pluginInstance.incrementalShareService.detectChangedDocumentsSinglePage(
         async (pageNum, size) => {
-          return await getIncrementalDocumentsPaged(kernelApi, pageNum, size, lastShareTime)
+          return await getIncrementalDocumentsPaged(kernelApi, pageNum, size, lastShareTime, searchTerm)
         },
         pageNum,
-        pageSize,
-        totalDocuments
+        pageSize
       )
+
+      // 更新合并文档列表
+      if (changeDetectionResult) {
+        // 合并新文档和更新文档
+        combinedDocs = [
+          ...changeDetectionResult.newDocuments.map((doc) => ({
+            ...doc,
+            type: "new" as const,
+          })),
+          ...changeDetectionResult.updatedDocuments.map((doc) => ({
+            ...doc,
+            type: "updated" as const,
+          })),
+        ]
+
+        // 更新过滤后的文档列表（目前不过滤，直接显示所有）
+        filteredDocs = combinedDocs
+      }
 
       // 更新分页状态
       currentPage = pageNum
-
-      updateFilteredResults()
     } catch (error) {
       logger.error(`${pluginInstance.i18n.incrementalShare.loadError}:`, error)
       showMessage(pluginInstance.i18n.incrementalShare.loadError, 7000, "error")
@@ -175,28 +187,10 @@
     }
   }
 
-  const updateFilteredResults = () => {
-    if (!changeDetectionResult) {
-      return
-    }
-
-    // 合并新文档和更新文档
-    const allDocs = [
-      ...changeDetectionResult.newDocuments.map((doc) => ({ ...doc, type: "new" as const })),
-      ...changeDetectionResult.updatedDocuments.map((doc) => ({ ...doc, type: "updated" as const })),
-    ]
-
-    // 应用搜索过滤
-    const filterDocs = (docs: any[]) => {
-      if (!searchTerm) return docs
-      return docs.filter((doc) => doc.docTitle.toLowerCase().includes(searchTerm.toLowerCase()))
-    }
-
-    combinedDocs = allDocs
-    filteredDocs = filterDocs(allDocs)
+  const handleSearch = () => {
+    // 重新加载文档，将搜索词传递给后端
+    loadDocuments()
   }
-
-  const handleSearch = () => updateFilteredResults()
 
   const handleSelectAll = () => {
     if (selectAll) {
@@ -262,10 +256,6 @@
       isLoading = false
     }
   }
-
-  $: if (changeDetectionResult) {
-    updateFilteredResults()
-  }
 </script>
 
 <div class="incremental-share-ui">
@@ -305,14 +295,6 @@
       <div class="stat-item">
         <span class="stat-number">{changeDetectionResult.updatedDocuments?.length || 0}</span>
         <span class="stat-label">{pluginInstance.i18n.incrementalShare.updatedDocuments}</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-number">{changeDetectionResult.unchangedDocuments?.length || 0}</span>
-        <span class="stat-label">{pluginInstance.i18n.incrementalShare.unchangedDocuments}</span>
-      </div>
-      <div class="stat-item blacklisted">
-        <span class="stat-number">{changeDetectionResult.blacklistedCount || 0}</span>
-        <span class="stat-label">{pluginInstance.i18n.incrementalShare.blacklistedDocuments}</span>
       </div>
     </div>
 

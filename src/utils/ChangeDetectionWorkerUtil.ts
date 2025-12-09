@@ -7,8 +7,8 @@
  *  of this license document, but changing it is not allowed.
  */
 
-import type { ShareHistoryItem } from "../types"
 import type { ChangeDetectionResult } from "../service/IncrementalShareService"
+import type { ShareHistoryItem } from "../types"
 
 /**
  * Web Worker 变更检测工具
@@ -99,12 +99,7 @@ export class ChangeDetectionWorkerUtil {
     const result: ChangeDetectionResult = {
       newDocuments: [],
       updatedDocuments: [],
-      unchangedDocuments: [],
-      blacklistedCount: 0,
     }
-
-    // 创建黑名单集合以提高查询效率（O(1)）
-    const blacklistedSet = new Set(blacklistedDocIds)
 
     // 创建分享历史映射
     const historyMap = new Map<string, ShareHistoryItem>()
@@ -114,12 +109,6 @@ export class ChangeDetectionWorkerUtil {
 
     // 遍历所有文档进行分类
     for (const doc of pagedDocuments) {
-      // 黑名单过滤
-      if (blacklistedSet.has(doc.docId)) {
-        result.blacklistedCount++
-        continue
-      }
-
       const history = historyMap.get(doc.docId)
 
       if (!history) {
@@ -139,10 +128,8 @@ export class ChangeDetectionWorkerUtil {
           shareStatus: "pending",
           docModifiedTime: doc.modifiedTime,
         })
-      } else {
-        // 未变更文档
-        result.unchangedDocuments.push(history)
       }
+      // 不处理未变更的文档，因为在增量分享模式下不会查询这些文档
     }
 
     return result

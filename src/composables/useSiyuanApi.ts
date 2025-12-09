@@ -55,12 +55,14 @@ export const useSiyuanApi = (cfg: ShareProConfig) => {
  * @param pageNum 页码（从 0 开始）
  * @param pageSize 每页大小
  * @param lastShareTime 上次分享时间戳（用于增量检测）
+ * @param searchTerm 搜索词
  */
 export const getIncrementalDocumentsPaged = async (
   kernelApi: SiyuanKernelApi,
   pageNum: number,
   pageSize: number,
-  lastShareTime?: number // 增量时间戳
+  lastShareTime?: number, // 增量时间戳
+  searchTerm?: string // 搜索词
 ): Promise<
   Array<{
     docId: string
@@ -71,11 +73,16 @@ export const getIncrementalDocumentsPaged = async (
 > => {
   const logger = simpleLogger("use-siyuan-api", "share-pro", isDev)
   const offset = pageNum * pageSize
-
   // 增量分享模式：查询两类文档：
   // 1. 从未分享过的文档 (a.block_id IS NULL)
   // 2. 已分享但在上次分享时间之后有更新的文档
-  const whereCondition = buildIncrementalShareWhereCondition(lastShareTime)
+  let whereCondition = buildIncrementalShareWhereCondition(lastShareTime)
+
+  // 添加搜索条件
+  if (searchTerm && searchTerm.trim() !== "") {
+    whereCondition += ` AND b.content LIKE '%${searchTerm.replace(/'/g, "''")}%'`
+  }
+
   const sql = `
     SELECT DISTINCT 
       b.root_id as docId,
@@ -120,16 +127,24 @@ export const getIncrementalDocumentsPaged = async (
  *
  * @param kernelApi 思源内核 API
  * @param lastShareTime 上次分享时间戳（用于增量检测）
+ * @param searchTerm 搜索词
  */
 export const getIncrementalDocumentsCount = async (
   kernelApi: SiyuanKernelApi,
-  lastShareTime?: number
+  lastShareTime?: number,
+  searchTerm?: string
 ): Promise<number> => {
   const logger = simpleLogger("use-siyuan-api", "share-pro", isDev)
   // 增量分享模式：统计两类文档：
   // 1. 从未分享过的文档 (a.block_id IS NULL)
   // 2. 已分享但在上次分享时间之后有更新的文档
-  const whereCondition = buildIncrementalShareWhereCondition(lastShareTime)
+  let whereCondition = buildIncrementalShareWhereCondition(lastShareTime)
+
+  // 添加搜索条件
+  if (searchTerm && searchTerm.trim() !== "") {
+    whereCondition += ` AND b.content LIKE '%${searchTerm.replace(/'/g, "''")}%'`
+  }
+
   const sql = `
     SELECT COUNT(DISTINCT b.root_id) as total
     FROM blocks b
