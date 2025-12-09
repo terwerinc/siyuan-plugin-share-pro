@@ -471,6 +471,7 @@
   max-width 1200px
   margin 0 auto
   height 100%
+  max-height 80vh
   display flex
   flex-direction column
 
@@ -688,6 +689,8 @@ html[data-theme-mode="dark"]
   gap 16px
   flex 1
   height 100%
+  overflow hidden
+  min-height 0
 
 .document-group
   border 1px solid var(--b3-border-color)
@@ -697,6 +700,7 @@ html[data-theme-mode="dark"]
   flex 1
   display flex
   flex-direction column
+  min-height 0
 
 .group-header
   display flex
@@ -737,6 +741,8 @@ html[data-theme-mode="dark"]
   height 100%
   flex 1
   min-height 0
+  overflow-y auto
+  overflow-x hidden
 
 /* 调整虚拟列表容器高度计算 */
 .virtual-list-container
@@ -744,10 +750,9 @@ html[data-theme-mode="dark"]
   overflow-y auto
   overflow-x hidden
   flex 1
-  min-height 0
   /* 当外部容器没有固定高度时，根据内容动态调整高度 */
   height auto
-  max-height calc(30px * 10) /* 最多显示10项 */
+  max-height 100%
   min-height 30px /* 至少显示一项的高度 */
 
 .document-item
