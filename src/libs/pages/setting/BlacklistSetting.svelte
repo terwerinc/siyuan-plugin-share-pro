@@ -27,6 +27,55 @@
   // 搜索筛选
   let searchTerm = ""
   let filterType: "all" | "NOTEBOOK" | "DOCUMENT" = "all"
+  let searchTimeout: any = null
+
+  // 统一的数据加载方法
+  const loadData = async () => {
+    isLoading = true
+    try {
+      // 将前端的filterType转换为后端需要的类型
+      const backendType = filterType === "all" ? "all" : 
+                         filterType === "NOTEBOOK" ? "notebook" : "document"
+
+      // 统一调用后端接口，同时处理类型筛选和搜索
+      totalItems = await blacklistService.getItemsCount(backendType, searchTerm)
+      totalPages = Math.ceil(totalItems / pageSize)
+      const results = await blacklistService.getItemsPaged(currentPage, pageSize, backendType, searchTerm)
+      
+      // 转换为 DTO 格式
+      blacklistItems = results.map((item) => ({
+        id: 0,
+        type: item.type === "notebook" ? "NOTEBOOK" : "DOCUMENT",
+        targetId: item.id,
+        targetName: item.name,
+        note: item.note,
+        createdAt: new Date(item.addedTime).toISOString(),
+        updatedAt: new Date(item.addedTime).toISOString(),
+      }))
+
+      updateFilteredResults()
+      logger.info("黑名单数据加载完成，共" + totalItems + "项")
+    } catch (error) {
+      logger.error("加载黑名单数据失败:", error)
+      showMessage("加载黑名单数据失败", 7000, "error")
+    } finally {
+      isLoading = false
+    }
+  }
+
+  // 加载黑名单（从本地存储）- 保持向后兼容
+  const loadBlacklist = async () => {
+    await loadData()
+  }
+
+  // 搜索黑名单 - 保持向后兼容
+  const searchBlacklist = async () => {
+    if (!searchTerm.trim()) {
+      // 如果搜索词为空，重新加载所有数据
+      currentPage = 0
+    }
+    await loadData()
+  }
 
   // 添加表单
   let formData = {
@@ -46,37 +95,6 @@
     blacklistService = new LocalBlacklistService(pluginInstance, pluginInstance.settingService)
     await loadBlacklist()
   })
-
-  // 加载黑名单（从本地存储）
-  const loadBlacklist = async () => {
-    isLoading = true
-    try {
-      // 调用本地黑名单服务
-      const allItems = await blacklistService.getAllItems()
-
-      // 转换为 DTO 格式
-      blacklistItems = allItems.map((item) => ({
-        id: 0, // 本地存储没有数据库ID
-        type: item.type === "notebook" ? "NOTEBOOK" : "DOCUMENT",
-        targetId: item.id,
-        targetName: item.name,
-        note: item.note,
-        createdAt: new Date(item.addedTime).toISOString(),
-        updatedAt: new Date(item.addedTime).toISOString(),
-      }))
-
-      totalItems = blacklistItems.length
-      totalPages = Math.ceil(totalItems / pageSize)
-
-      updateFilteredResults()
-      logger.info("黑名单加载完成，共" + totalItems + "项")
-    } catch (error) {
-      logger.error("加载黑名单失败:", error)
-      showMessage("加载黑名单失败", 7000, "error")
-    } finally {
-      isLoading = false
-    }
-  }
 
   // 更新过滤结果
   const updateFilteredResults = () => {
@@ -102,6 +120,35 @@
     const end = start + pageSize
     filteredItems = items.slice(start, end)
     totalPages = Math.ceil(items.length / pageSize)
+  }
+
+  // 处理搜索输入变化
+  const handleSearchInput = () => {
+    // 防抖搜索
+    if (searchTimeout) {
+      clearTimeout(searchTimeout)
+    }
+    
+    searchTimeout = setTimeout(() => {
+      currentPage = 0 // 重置到第一页
+      if (searchTerm.trim()) {
+        searchBlacklist()
+      } else {
+        loadBlacklist()
+      }
+    }, 300)
+  }
+
+  // 处理分页变化
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 0 || newPage >= totalPages) return
+    currentPage = newPage
+    
+    if (searchTerm.trim()) {
+      searchBlacklist()
+    } else {
+      loadBlacklist()
+    }
   }
 
   // 显示添加表单
@@ -207,22 +254,16 @@
     selectedItems = selectedItems
   }
 
-  // 分页处理
-  const handlePageChange = async (page: number) => {
-    currentPage = page
-    updateFilteredResults()
-  }
-
   // 搜索处理
   const handleSearch = () => {
     currentPage = 0
-    updateFilteredResults()
+    loadData()
   }
 
   // 筛选处理
   const handleFilter = () => {
     currentPage = 0
-    updateFilteredResults()
+    loadData()
   }
 
   // 获取类型标签
@@ -301,7 +342,7 @@
           style="width: 200px;"
           placeholder={pluginInstance.i18n?.incrementalShare?.blacklist?.searchPlaceholder || "搜索名称/ID/备注..."}
           bind:value={searchTerm}
-          on:input={handleSearch}
+          on:input={handleSearchInput}
         />
         <select class="b3-select" style="width: 120px;" bind:value={filterType} on:change={handleFilter}>
           <option value="all">{pluginInstance.i18n?.incrementalShare?.blacklist?.allTypes || "全部类型"}</option>

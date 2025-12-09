@@ -31,24 +31,122 @@ export class LocalBlacklistService implements ShareBlacklist {
   }
 
   /**
-   * 获取所有黑名单项
+   * 分页获取黑名单项
+   * @param pageNum 页码（从 0 开始）
+   * @param pageSize 每页大小
+   * @param type 类型筛选（可选，默认为"all"）
+   * @param query 搜索关键词（可选，默认为空）
    */
-  async getAllItems(): Promise<BlacklistItem[]> {
-    this.logger.info("📋 [Local] getAllItems called")
+  async getItemsPaged(
+    pageNum: number,
+    pageSize: number,
+    type: "notebook" | "document" | "all" = "all",
+    query = ""
+  ): Promise<BlacklistItem[]> {
+    this.logger.info(`📋 [Local] getItemsPaged called: page=${pageNum}, size=${pageSize}, type=${type}, query=${query}`)
     try {
-      const items: BlacklistItem[] = []
+      const offset = pageNum * pageSize
 
-      // 获取笔记本级别的黑名单项（从插件配置中获取）
-      const notebookItems = await this.getNotebookBlacklistItems()
-      items.push(...notebookItems)
+      // 根据类型筛选获取数据
+      if (type === "notebook") {
+        // 只获取笔记本数据
+        const notebookItems = await this.getNotebookBlacklistItems()
+        let filteredItems = notebookItems
 
-      // 文档级别的黑名单项存储在各个文档的属性中，无法直接获取所有项
-      // 这里返回空数组，由调用方通过其他方式获取文档级别的黑名单项
+        // 关键词搜索
+        if (query) {
+          filteredItems = notebookItems.filter(
+            (item) =>
+              item.name.toLowerCase().includes(query.toLowerCase()) ||
+              item.note?.toLowerCase().includes(query.toLowerCase())
+          )
+        }
 
-      return items
+        // 分页处理
+        return filteredItems.slice(offset, offset + pageSize)
+      } else if (type === "document") {
+        // 只获取文档数据
+        return await this.getDocumentBlacklistItemsPaged(pageNum, pageSize, query)
+      } else {
+        // 获取所有数据（笔记本 + 文档）
+        // 先获取笔记本数据
+        const notebookItems = await this.getNotebookBlacklistItems()
+        let filteredNotebookItems = notebookItems
+
+        // 关键词搜索
+        if (query) {
+          filteredNotebookItems = notebookItems.filter(
+            (item) =>
+              item.name.toLowerCase().includes(query.toLowerCase()) ||
+              item.note?.toLowerCase().includes(query.toLowerCase())
+          )
+        }
+
+        // 检查请求的数据是否完全在笔记本范围内
+        if (offset + pageSize <= filteredNotebookItems.length) {
+          // 完全在笔记本范围内
+          return filteredNotebookItems.slice(offset, offset + pageSize)
+        } else if (offset < filteredNotebookItems.length) {
+          // 跨越笔记本和文档范围
+          const notebookSlice = filteredNotebookItems.slice(offset)
+          const remainingSlots = pageSize - notebookSlice.length
+          // 获取文档级别的黑名单项
+          const documentItems = await this.getDocumentBlacklistItemsPaged(0, remainingSlots, query)
+          return [...notebookSlice, ...documentItems]
+        } else {
+          // 完全在文档范围内
+          const documentOffset = offset - filteredNotebookItems.length
+          return await this.getDocumentBlacklistItemsPaged(Math.floor(documentOffset / pageSize), pageSize, query)
+        }
+      }
     } catch (error) {
-      this.logger.error("获取所有黑名单项失败:", error)
+      this.logger.error("分页获取黑名单项失败:", error)
       return []
+    }
+  }
+
+  /**
+   * 获取黑名单项总数
+   * @param type 类型筛选（可选，默认为"all"）
+   * @param query 搜索关键词（可选，默认为空）
+   */
+  async getItemsCount(type: "notebook" | "document" | "all" = "all", query = ""): Promise<number> {
+    this.logger.info(`📊 [Local] getItemsCount called: type=${type}, query=${query}`)
+    try {
+      if (type === "notebook") {
+        // 只计算笔记本数据
+        const notebookItems = await this.getNotebookBlacklistItems()
+        if (query) {
+          return notebookItems.filter(
+            (item) =>
+              item.name.toLowerCase().includes(query.toLowerCase()) ||
+              item.note?.toLowerCase().includes(query.toLowerCase())
+          ).length
+        }
+        return notebookItems.length
+      } else if (type === "document") {
+        // 只计算文档数据
+        return await this.getDocumentBlacklistCount(query)
+      } else {
+        // 计算所有数据（笔记本 + 文档）
+        const notebookItems = await this.getNotebookBlacklistItems()
+        let notebookCount = notebookItems.length
+
+        // 关键词搜索
+        if (query) {
+          notebookCount = notebookItems.filter(
+            (item) =>
+              item.name.toLowerCase().includes(query.toLowerCase()) ||
+              item.note?.toLowerCase().includes(query.toLowerCase())
+          ).length
+        }
+
+        const documentCount = await this.getDocumentBlacklistCount(query)
+        return notebookCount + documentCount
+      }
+    } catch (error) {
+      this.logger.error("获取黑名单项总数失败:", error)
+      return 0
     }
   }
 
@@ -184,25 +282,6 @@ export class LocalBlacklistService implements ShareBlacklist {
   }
 
   /**
-   * 搜索黑名单项
-   */
-  async searchItems(query: string): Promise<BlacklistItem[]> {
-    this.logger.info(`🔎 [Local] searchItems: ${query}`)
-    try {
-      // 获取所有项，然后在客户端过滤
-      const allItems = await this.getAllItems()
-      return allItems.filter(
-        (item) =>
-          item.name.toLowerCase().includes(query.toLowerCase()) ||
-          item.note?.toLowerCase().includes(query.toLowerCase())
-      )
-    } catch (error) {
-      this.logger.error("搜索黑名单失败:", error)
-      return []
-    }
-  }
-
-  /**
    * 搜索文档列表
    * @param keyword 搜索关键词
    */
@@ -250,7 +329,7 @@ export class LocalBlacklistService implements ShareBlacklist {
         config.appConfig.incrementalShareConfig = { enabled: true }
       }
 
-      const notebookBlacklist = config.appConfig.incrementalShareConfig.notebookBlacklist || []
+      const notebookBlacklist: any[] = config.appConfig.incrementalShareConfig.notebookBlacklist || []
 
       // 检查是否已存在
       const existingIndex = notebookBlacklist.findIndex((nb) => nb.id === item.id)
@@ -359,21 +438,133 @@ export class LocalBlacklistService implements ShareBlacklist {
   // ====================
 
   /**
+   * 获取文档级别的黑名单项（通过SQL查询）
+   */
+  private async getDocumentBlacklistItems(): Promise<BlacklistItem[]> {
+    try {
+      const { kernelApi } = await ApiUtils.getSiyuanKernelApi(this.pluginInstance)
+
+      // 使用LEFT JOIN查询包含 custom-share-blacklist-document 属性的文档
+      // 参考您提供的示例查询方式
+      const sql = `
+        SELECT DISTINCT b.root_id as id, b.content as content
+        FROM blocks b
+        LEFT JOIN attributes a ON b.root_id = a.block_id
+        WHERE b.type = 'd'
+        AND a.name = 'custom-share-blacklist-document' 
+        AND a.value = 'true'
+      `
+      const result = await kernelApi.sql(sql)
+
+      // 构造最小化的黑名单项
+      const items: BlacklistItem[] = result.map((row) => ({
+        id: row.id,
+        name: row.content || "未命名文档",
+        type: "document",
+        addedTime: Date.now(), // 实际添加时间无法获取，使用当前时间
+        note: "文档黑名单项",
+      }))
+
+      return items
+    } catch (error) {
+      this.logger.error("获取文档黑名单项失败:", error)
+      return []
+    }
+  }
+
+  /**
+   * 获取文档级别的黑名单项数量（通过SQL查询）
+   */
+  private async getDocumentBlacklistCount(query = ""): Promise<number> {
+    try {
+      const { kernelApi } = await ApiUtils.getSiyuanKernelApi(this.pluginInstance)
+
+      // 使用LEFT JOIN查询包含 custom-share-blacklist-document 属性的文档数量
+      let sql = `
+        SELECT COUNT(DISTINCT b.root_id) as count
+        FROM blocks b
+        LEFT JOIN attributes a ON b.root_id = a.block_id
+        WHERE b.type = 'd'
+        AND a.name = 'custom-share-blacklist-document' 
+        AND a.value = 'true'
+      `
+
+      // 如果有搜索关键词，添加搜索条件
+      if (query) {
+        sql += ` AND (b.content LIKE '%${query}%' OR b.tag LIKE '%${query}%')`
+      }
+
+      this.logger.debug("getDocumentBlacklistCount SQL:", sql)
+      const result = await kernelApi.sql(sql)
+      return result.length > 0 ? parseInt(result[0].count) : 0
+    } catch (error) {
+      this.logger.error("获取文档黑名单项数量失败:", error)
+      return 0
+    }
+  }
+
+  /**
+   * 获取文档级别的黑名单项（通过SQL查询，支持分页）
+   * @param pageNum 页码（从0开始）
+   * @param pageSize 每页大小
+   */
+  private async getDocumentBlacklistItemsPaged(
+    pageNum: number,
+    pageSize: number,
+    query = ""
+  ): Promise<BlacklistItem[]> {
+    try {
+      const { kernelApi } = await ApiUtils.getSiyuanKernelApi(this.pluginInstance)
+      const offset = pageNum * pageSize
+
+      // 使用LEFT JOIN查询包含 custom-share-blacklist-document 属性的文档
+      // 参考您提供的示例查询方式，添加分页支持
+      let sql = `
+        SELECT DISTINCT b.root_id as id, b.content as content
+        FROM blocks b
+        LEFT JOIN attributes a ON b.root_id = a.block_id
+        WHERE b.type = 'd'
+        AND a.name = 'custom-share-blacklist-document' 
+        AND a.value = 'true'
+      `
+
+      // 如果有搜索关键词，添加搜索条件
+      if (query) {
+        sql += ` AND (b.content LIKE '%${query}%' OR b.tag LIKE '%${query}%')`
+      }
+
+      // 添加分页
+      sql += ` LIMIT ${pageSize} OFFSET ${offset}`
+
+      this.logger.debug("getDocumentBlacklistItemsPaged SQL:", sql)
+      const result = await kernelApi.sql(sql)
+
+      // 构造最小化的黑名单项
+      const items: BlacklistItem[] = result.map((row) => ({
+        id: row.id,
+        name: row.content || "未命名文档",
+        type: "document",
+        addedTime: Date.now(), // 实际添加时间无法获取，使用当前时间
+        note: "文档黑名单项",
+      }))
+
+      return items
+    } catch (error) {
+      this.logger.error("获取文档黑名单项失败:", error)
+      return []
+    }
+  }
+
+  /**
    * 添加文档到黑名单
    */
   private async addDocumentToBlacklist(item: BlacklistItem): Promise<void> {
     try {
       const { kernelApi } = await ApiUtils.getSiyuanKernelApi(this.pluginInstance)
 
-      // 添加版本信息和更新时间用于兼容性检查
-      const blacklistData = {
-        ...item,
-        _version: "1.0",
-        _addedAt: Date.now(),
-      }
-
+      // 只存储简单的标识，避免属性爆炸
       const attrs = {
-        "custom-share-blacklist-document": JSON.stringify(blacklistData),
+        "custom-share-blacklist-document": "true",
       }
 
       await kernelApi.setBlockAttrs(item.id, attrs)

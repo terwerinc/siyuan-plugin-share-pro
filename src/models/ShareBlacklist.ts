@@ -47,11 +47,6 @@ export interface BlacklistItem {
  */
 export interface ShareBlacklist {
   /**
-   * 获取所有黑名单项
-   */
-  getAllItems(): Promise<BlacklistItem[]>
-
-  /**
    * 添加黑名单项
    */
   addItem(item: BlacklistItem): Promise<void>
@@ -80,11 +75,6 @@ export interface ShareBlacklist {
    * 获取指定类型的黑名单项
    */
   getItemsByType(type: BlacklistItemType): Promise<BlacklistItem[]>
-
-  /**
-   * 搜索黑名单项
-   */
-  searchItems(query: string): Promise<BlacklistItem[]>
 }
 
 /**
