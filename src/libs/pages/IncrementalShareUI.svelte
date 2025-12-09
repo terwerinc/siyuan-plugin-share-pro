@@ -322,7 +322,7 @@
         <div class="group-header">
           <span class="group-title">
             {pluginInstance.i18n.incrementalShare.documentsToShare}
-            <span class="group-count">({filteredDocs?.length || 0})</span>
+            <span class="group-count">{filteredDocs?.length || 0}/{totalDocuments || 0}</span>
           </span>
           {#if (filteredDocs?.length || 0) > 0}
             <label class="select-all">
@@ -388,7 +388,6 @@
           </button>
 
           <div class="pagination-info">
-            {pluginInstance.i18n.incrementalShare.page}
             {(currentPage || 0) + 1} / {totalPages || 1}
           </div>
 
@@ -635,9 +634,9 @@ html[data-theme-mode="dark"]
 .group-count
   color var(--b3-theme-on-surface)
   font-size 14px
-  background var(--b3-theme-secondary)
+  background var(--b3-theme-primary-lightest)
   padding 2px 8px
-  border-radius 10px
+  border-radius 4px
   font-weight 500
 
 .select-all
