@@ -58,7 +58,7 @@ export class BlacklistApiService {
       const { kernelApi } = await ApiUtils.getSiyuanKernelApi(this.pluginInstance)
 
       // 搜索笔记本
-      const res = await kernelApi.lsNotebooks()
+      const res: any = await kernelApi.lsNotebooks()
       if (res && res.notebooks) {
         return res.notebooks
           .filter((nb: any) => nb.name.includes(keyword))
