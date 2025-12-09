@@ -12,7 +12,7 @@
   import { showMessage } from "siyuan"
   import { onMount } from "svelte"
   import { simpleLogger } from "zhi-lib-base"
-  import { getDocumentsCount, getDocumentsPaged, useSiyuanApi } from "../../composables/useSiyuanApi"
+  import { getIncrementalDocumentsCount, getIncrementalDocumentsPaged, useSiyuanApi } from "../../composables/useSiyuanApi"
   import { isDev, SHARE_PRO_STORE_NAME } from "../../Constants"
   import ShareProPlugin from "../../index"
   import { ShareProConfig } from "../../models/ShareProConfig"
@@ -95,7 +95,7 @@
       )
 
       // 获取文档总数（用于显示进度）
-      totalDocuments = await getDocumentsCount(kernelApi, lastShareTime)
+      totalDocuments = await getIncrementalDocumentsCount(kernelApi, lastShareTime)
       totalPages = Math.ceil(totalDocuments / pageSize)
       logger.info(
         `${pluginInstance.i18n.incrementalShare.totalDocs}: ${totalDocuments}, ${pluginInstance.i18n.incrementalShare.page}: ${totalPages}`
@@ -140,7 +140,7 @@
       // 使用分页检测方法，只加载指定页
       changeDetectionResult = await pluginInstance.incrementalShareService.detectChangedDocumentsSinglePage(
         async (pageNum, size) => {
-          return await getDocumentsPaged(kernelApi, pageNum, size, lastShareTime)
+          return await getIncrementalDocumentsPaged(kernelApi, pageNum, size, lastShareTime)
         },
         pageNum,
         pageSize,

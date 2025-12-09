@@ -14,6 +14,9 @@ import { ShareProConfig } from "../models/ShareProConfig"
 
 /**
  * 通用 Siyuan API 封装
+ *
+ * @author terwer
+ * @since 1.15.0
  */
 export const useSiyuanApi = (cfg: ShareProConfig) => {
   const logger = simpleLogger("use-siyuan-api", "share-pro", isDev)
@@ -46,13 +49,14 @@ export const useSiyuanApi = (cfg: ShareProConfig) => {
 }
 
 /**
- * 分页获取所有文档
+ * 分页获取增量分享文档（查询上次分享时间之后有变化的文档 + 从未分享过的文档）
+ *
  * @param kernelApi 思源内核 API
  * @param pageNum 页码（从 0 开始）
  * @param pageSize 每页大小
  * @param lastShareTime 上次分享时间戳（用于增量检测）
  */
-export const getDocumentsPaged = async (
+export const getIncrementalDocumentsPaged = async (
   kernelApi: SiyuanKernelApi,
   pageNum: number,
   pageSize: number,
@@ -67,9 +71,8 @@ export const getDocumentsPaged = async (
 > => {
   const offset = pageNum * pageSize
 
-  // 获取所有文档，按更新时间排序，支持分页
+  // 增量分享模式：查询上次分享时间之后有变化的文档 + 从未分享过的文档
   const timeCondition = generateTimeCondition(lastShareTime)
-
   const sql = `
     SELECT DISTINCT 
       b.root_id as docId,
@@ -77,9 +80,13 @@ export const getDocumentsPaged = async (
       b.updated as modifiedTime,
       b.box as notebookId
     FROM blocks b
+    LEFT JOIN attributes a ON a.block_id = b.id AND a.name = 'custom-share-history'
     WHERE b.id = b.root_id
       AND b.type = 'd'
-      ${timeCondition}
+      AND (
+        ${timeCondition && timeCondition.length > 0 ? `(${timeCondition}) OR` : ""}
+        a.block_id IS NULL
+      )
     ORDER BY b.updated DESC, b.created DESC
     LIMIT ${pageSize} OFFSET ${offset}
   `
@@ -109,22 +116,27 @@ export const getDocumentsPaged = async (
 }
 
 /**
- * 获取文档总数
+ * 获取增量分享文档总数（查询上次分享时间之后有变化的文档 + 从未分享过的文档）
  *
  * @param kernelApi 思源内核 API
  * @param lastShareTime 上次分享时间戳（用于增量检测）
  */
-export const getDocumentsCount = async (kernelApi: SiyuanKernelApi, lastShareTime?: number): Promise<number> => {
-  // lastShareTime:1765160549990，存储的时间戳
-  // updated:20240220222307：是时间拼接的
-  // 时间戳转换成updated这种才行
+export const getIncrementalDocumentsCount = async (
+  kernelApi: SiyuanKernelApi,
+  lastShareTime?: number
+): Promise<number> => {
+  // 增量分享模式：统计上次分享时间之后有变化的文档 + 从未分享过的文档
   const timeCondition = generateTimeCondition(lastShareTime)
   const sql = `
     SELECT COUNT(DISTINCT b.root_id) as total
     FROM blocks b
+    LEFT JOIN attributes a ON a.block_id = b.id AND a.name = 'custom-share-history'
     WHERE b.id = b.root_id
       AND b.type = 'd'
-      ${timeCondition}
+      AND (
+        ${timeCondition && timeCondition.length > 0 ? `(${timeCondition}) OR` : ""}
+        a.block_id IS NULL
+      )
   `
 
   const resData = await kernelApi.sql(sql)
@@ -155,13 +167,13 @@ const convertTimestampToSiyuanDate = (timestamp?: number): string => {
 }
 
 /**
- * 生成时间条件SQL片段
+ * 生成时间条件SQL片段（不包含 AND 前缀）
  * @param lastShareTime 上次分享时间戳
  */
 const generateTimeCondition = (lastShareTime?: number): string => {
   if (lastShareTime && lastShareTime > 0) {
     const lastUpdated = convertTimestampToSiyuanDate(lastShareTime)
-    return `AND b.updated > '${lastUpdated}'`
+    return `b.updated > '${lastUpdated}'`
   }
   return ""
 }

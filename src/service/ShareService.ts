@@ -19,14 +19,15 @@ import { useSiyuanApi } from "../composables/useSiyuanApi"
 import ShareProPlugin from "../index"
 import { ShareOptions } from "../models/ShareOptions"
 import { ShareProConfig } from "../models/ShareProConfig"
-import { updateStatusBar } from "../statusBar"
-import { ApiUtils } from "../utils/ApiUtils"
-import { ImageUtils } from "../utils/ImageUtils"
 import { SingleDocSetting } from "../models/SingleDocSetting"
-import { SiyuanKernelApi } from "zhi-siyuan-api"
-import { SettingKeys } from "../utils/SettingKeys"
-import { AttrUtils } from "../utils/AttrUtils"
+import { updateStatusBar } from "../statusBar"
 import { IShareHistoryService, ShareHistoryItem } from "../types"
+import { ApiUtils } from "../utils/ApiUtils"
+import { AttrUtils } from "../utils/AttrUtils"
+import { ImageUtils } from "../utils/ImageUtils"
+import { SettingKeys } from "../utils/SettingKeys"
+import { shareHistoryCache } from "../utils/ShareHistoryCache"
+import { LocalShareHistory } from "./LocalShareHistory"
 
 /**
  * 分享服务
@@ -38,11 +39,13 @@ class ShareService implements IShareHistoryService {
   private logger: ILogger
   private pluginInstance: ShareProPlugin
   private shareApi: ShareApi
+  private localShareHistory: LocalShareHistory
 
   constructor(pluginInstance: ShareProPlugin) {
     this.pluginInstance = pluginInstance
     this.logger = simpleLogger("share-service", "share-pro", isDev)
     this.shareApi = new ShareApi(pluginInstance)
+    this.localShareHistory = new LocalShareHistory(pluginInstance)
   }
 
   public async getVipInfo(token: string): Promise<ServiceResponse> {
@@ -105,8 +108,46 @@ class ShareService implements IShareHistoryService {
           this.pluginInstance.i18n["shareService"]["shareErrorWithDoc"].replace("[param1]", docId) + resp.msg
         this.addLog(errorMsg, "error")
         showMessage(this.pluginInstance.i18n["shareService"]["msgShareError"] + resp.msg, 7000, "error")
+
+        // 分享失败时也记录历史记录
+        try {
+          const historyItem: ShareHistoryItem = {
+            docId: docId,
+            docTitle: post?.title || "未知文档",
+            shareTime: Date.now(),
+            shareStatus: "failed",
+            errorMessage: resp.msg,
+            docModifiedTime: post?.dateUpdated ? new Date(post.dateUpdated).getTime() : Date.now(),
+          }
+
+          // 保存到本地存储和缓存
+          await this.localShareHistory.addHistory(historyItem)
+          shareHistoryCache.set(docId, historyItem)
+        } catch (historyError) {
+          this.logger.error(`保存分享失败历史记录失败: ${docId}`, historyError)
+        }
+
         return
       }
+
+      // 存储分享历史记录
+      try {
+        const historyItem: ShareHistoryItem = {
+          docId: post.postid,
+          docTitle: post.title,
+          shareTime: Date.now(),
+          shareStatus: "success",
+          shareUrl: resp.data?.shareUrl,
+          docModifiedTime: new Date(post.dateUpdated).getTime(),
+        }
+
+        // 保存到本地存储和缓存
+        await this.localShareHistory.addHistory(historyItem)
+        shareHistoryCache.set(docId, historyItem)
+      } catch (historyError) {
+        this.logger.error(`保存分享历史记录失败: ${docId}`, historyError)
+      }
+
       // 处理分享选项
       await this.updateShareOptions(docId, options)
       const successMsg = this.pluginInstance.i18n["shareService"]["shareSuccessWithDoc"]
@@ -120,6 +161,37 @@ class ShareService implements IShareHistoryService {
       // 异步处理所有媒体资源，确保按顺序执行
       void this.processAllMediaResources(docId, data.media, data.dataViewMedia)
     } catch (e) {
+      // 分享失败时也记录历史记录
+      try {
+        // 尝试获取文档信息，即使在异常情况下
+        let docTitle = "未知文档"
+        let docModifiedTime = Date.now()
+
+        try {
+          const cfg = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
+          const { blogApi } = useSiyuanApi(cfg)
+          const post = await blogApi.getPost(docId)
+          docTitle = post?.title || docTitle
+          docModifiedTime = post?.dateUpdated ? new Date(post.dateUpdated).getTime() : docModifiedTime
+        } catch (innerError) {
+          this.logger.warn(`获取文档信息失败: ${docId}`, innerError)
+        }
+        const historyItem: ShareHistoryItem = {
+          docId: docId,
+          docTitle: docTitle,
+          shareTime: Date.now(),
+          shareStatus: "failed",
+          errorMessage: String(e),
+          docModifiedTime: docModifiedTime,
+        }
+
+        // 保存到本地存储和缓存
+        await this.localShareHistory.addHistory(historyItem)
+        shareHistoryCache.set(docId, historyItem)
+      } catch (historyError) {
+        this.logger.error(`保存分享失败历史记录失败: ${docId}`, historyError)
+      }
+
       const exceptionMsg = this.pluginInstance.i18n["shareService"]["shareErrorWithDoc"].replace("[param1]", docId) + e
       this.addLog(exceptionMsg, "error")
       showMessage(this.pluginInstance.i18n["shareService"]["msgShareError"] + e, 7000, "error")
@@ -137,6 +209,14 @@ class ShareService implements IShareHistoryService {
       await this.updateSingleDocSettings(docId, false, {})
       // 分享选项不用管，会直接删除
       // share 里面的 docAttrs、options 字段 会自动删除，所以不用管
+
+      // 删除本地历史记录
+      try {
+        await this.localShareHistory.removeHistory(docId)
+        shareHistoryCache.invalidate(docId)
+      } catch (historyError) {
+        this.logger.error(`删除分享历史记录失败: ${docId}`, historyError)
+      }
     } catch (e) {
       return {
         code: -1,

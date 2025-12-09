@@ -45,36 +45,9 @@ enum SettingKeys {
   CUSTOM_OUTLINE_LEVEL = "custom-outline-level",
 
   /**
- * 过期时间
+   * 过期时间
    */
   CUSTOM_EXPIRES = "custom-expires",
-
-  // == 增量分享相关 ==
-  
-  /**
-   * 增量分享启用状态
-   */
-  INCREMENTAL_SHARE_ENABLED = "incremental-share-enabled",
-  
-  /**
-   * 上次增量分享时间戳
-   */
-  INCREMENTAL_SHARE_LAST_TIME = "incremental-share-last-time",
-  
-  /**
-   * 增量分享历史记录
-   */
-  INCREMENTAL_SHARE_HISTORY = "incremental-share-history",
-  
-  /**
-   * 笔记本黑名单（逗号分隔的笔记本ID）
-   */
-  INCREMENTAL_SHARE_NOTEBOOK_BLACKLIST = "incremental-share-notebook-blacklist",
-  
-  /**
-   * 文档黑名单（逗号分隔的文档ID）
-   */
-  INCREMENTAL_SHARE_DOC_BLACKLIST = "incremental-share-doc-blacklist",
 }
 
 export { SettingKeys }

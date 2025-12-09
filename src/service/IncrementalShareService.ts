@@ -7,20 +7,21 @@
  *  of this license document, but changing it is not allowed.
  */
 
+import { showMessage } from "siyuan"
 import { simpleLogger } from "zhi-lib-base"
+import { ShareApi } from "../api/share-api"
 import { isDev, SHARE_PRO_STORE_NAME } from "../Constants"
-import { ShareService } from "./ShareService"
+import ShareProPlugin from "../index"
 import { ShareProConfig } from "../models/ShareProConfig"
 import type { ShareHistoryItem } from "../types"
-import { docDTOToHistoryItem } from "../utils/ShareHistoryUtils"
-import { SettingService } from "./SettingService"
-import { showMessage } from "siyuan"
-import { ShareApi } from "../api/share-api"
-import { syncAppConfig, DefaultAppConfig } from "../utils/ShareConfigUtils"
-import ShareProPlugin from "../index"
-import { BlacklistService } from "./BlacklistService"
-import { ShareQueueService } from "./ShareQueueService"
 import { ChangeDetectionWorkerUtil } from "../utils/ChangeDetectionWorkerUtil"
+import { DefaultAppConfig, syncAppConfig } from "../utils/ShareConfigUtils"
+import { shareHistoryCache } from "../utils/ShareHistoryCache"
+import { BlacklistService } from "./BlacklistService"
+import { LocalShareHistory } from "./LocalShareHistory"
+import { SettingService } from "./SettingService"
+import { ShareQueueService } from "./ShareQueueService"
+import { ShareService } from "./ShareService"
 
 /**
  * 重试配置
@@ -112,6 +113,7 @@ export class IncrementalShareService {
   private blacklistService: BlacklistService
   private pluginInstance: ShareProPlugin
   public queueService: ShareQueueService
+  private localShareHistory: LocalShareHistory
 
   // 缓存相关
   private detectionCache: ChangeDetectionResult | null = null
@@ -129,6 +131,7 @@ export class IncrementalShareService {
     this.settingService = settingService
     this.shareApi = new ShareApi(pluginInstance)
     this.blacklistService = blacklistService
+    this.localShareHistory = new LocalShareHistory(pluginInstance)
     this.queueService = new ShareQueueService(pluginInstance)
 
     // 启动时尝试恢复队列
@@ -207,8 +210,8 @@ export class IncrementalShareService {
       const blacklistStatus = await this.checkBlacklist(docIds)
       const blacklistedDocIds = docIds.filter((id) => blacklistStatus[id])
 
-      // 获取当前页分享历史
-      const shareHistory = await this.shareService.getHistoryByIds(docIds)
+      // 获取当前页分享历史（使用本地存储和缓存）
+      const shareHistory = await this.getLocalHistoryByIds(docIds)
 
       // 使用 Web Worker 进行变更检测
       const pageResult = await ChangeDetectionWorkerUtil.detectChanges(pageDocuments, shareHistory, blacklistedDocIds)
@@ -219,6 +222,36 @@ export class IncrementalShareService {
       this.logger.error("检测文档变更失败:", error)
       throw error
     }
+  }
+
+  /**
+   * 通过本地存储获取文档历史记录
+   *
+   * @param docIds 文档ID列表
+   * @returns 分享历史记录列表
+   */
+  private async getLocalHistoryByIds(docIds: string[]): Promise<ShareHistoryItem[]> {
+    const historyItems: ShareHistoryItem[] = []
+
+    for (const docId of docIds) {
+      // 首先尝试从缓存获取
+      let item = shareHistoryCache.get(docId)
+
+      // 如果缓存中没有，则从本地存储获取
+      if (!item) {
+        item = await this.localShareHistory.getHistoryByDocId(docId)
+        // 如果获取到了，放入缓存
+        if (item) {
+          shareHistoryCache.set(docId, item)
+        }
+      }
+
+      if (item) {
+        historyItems.push(item)
+      }
+    }
+
+    return historyItems
   }
 
   /**
@@ -241,6 +274,8 @@ export class IncrementalShareService {
   public clearCache(): void {
     this.detectionCache = null
     this.cacheTimestamp = 0
+    // 同时清除共享缓存
+    shareHistoryCache.clear()
     this.logger.info("缓存已清除")
   }
 
@@ -395,11 +430,29 @@ export class IncrementalShareService {
         const task = (async () => {
           try {
             // 使用智能重试机制分享文档
-            await this.shareDocumentWithRetry(doc.docId)
+            const shareResult = await this.shareDocumentWithRetry(doc.docId)
+
+            // 更新本地历史记录
+            if (shareResult.success) {
+              const historyItem: ShareHistoryItem = {
+                docId: doc.docId,
+                docTitle: doc.docTitle,
+                shareTime: Date.now(),
+                shareStatus: "success",
+                shareUrl: shareResult.shareUrl,
+                docModifiedTime: Date.now(), // 这里应该获取文档的实际修改时间
+              }
+
+              // 保存到本地存储和缓存
+              await this.localShareHistory.addHistory(historyItem)
+              shareHistoryCache.set(doc.docId, historyItem)
+            }
+
             results.push({
               docId: doc.docId,
               docTitle: doc.docTitle,
-              success: true,
+              success: shareResult.success,
+              shareUrl: shareResult.shareUrl,
             })
             this.logger.info(`分享文档成功: ${doc.docTitle}`)
           } catch (error) {
@@ -469,15 +522,36 @@ export class IncrementalShareService {
             await this.queueService.updateTaskStatus(doc.docId, "processing")
 
             // 使用智能重试机制分享文档
-            await this.shareDocumentWithRetry(doc.docId)
+            const shareResult = await this.shareDocumentWithRetry(doc.docId)
 
-            // 更新任务状态为成功
-            await this.queueService.updateTaskStatus(doc.docId, "success")
+            // 更新本地历史记录
+            if (shareResult.success) {
+              const historyItem: ShareHistoryItem = {
+                docId: doc.docId,
+                docTitle: doc.docTitle,
+                shareTime: Date.now(),
+                shareStatus: "success",
+                shareUrl: shareResult.shareUrl,
+                docModifiedTime: Date.now(), // 这里应该获取文档的实际修改时间
+              }
+
+              // 保存到本地存储和缓存
+              await this.localShareHistory.addHistory(historyItem)
+              shareHistoryCache.set(doc.docId, historyItem)
+
+              // 更新任务状态为成功
+              await this.queueService.updateTaskStatus(doc.docId, "success")
+            } else {
+              // 更新任务状态为失败
+              await this.queueService.updateTaskStatus(doc.docId, "failed", shareResult.errorMessage)
+            }
 
             results.push({
               docId: doc.docId,
               docTitle: doc.docTitle,
-              success: true,
+              success: shareResult.success,
+              shareUrl: shareResult.shareUrl,
+              errorMessage: shareResult.errorMessage,
             })
             this.logger.info(`分享文档成功: ${doc.docTitle}`)
           } catch (error) {
@@ -522,7 +596,9 @@ export class IncrementalShareService {
    * - 服务端5xx错误：延迟30秒后重试
    * - 4xx错误：立即失败并记录详细日志
    */
-  private async shareDocumentWithRetry(docId: string): Promise<void> {
+  private async shareDocumentWithRetry(
+    docId: string
+  ): Promise<{ success: boolean; shareUrl?: string; errorMessage?: string }> {
     const retryConfig: RetryConfig = {
       maxRetries: 3,
       initialDelay: 1000, // 1秒
@@ -534,7 +610,21 @@ export class IncrementalShareService {
     for (let attempt = 0; attempt <= retryConfig.maxRetries; attempt++) {
       try {
         await this.shareService.createShare(docId, undefined, undefined)
-        return // 成功则直接返回
+
+        // 获取分享信息以获得分享链接
+        try {
+          const shareInfo = await this.shareService.getSharedDocInfo(docId)
+          if (shareInfo.code === 0 && shareInfo.data) {
+            return {
+              success: true,
+              shareUrl: shareInfo.data.shareUrl,
+            }
+          }
+        } catch (infoError) {
+          this.logger.warn(`获取分享链接失败: ${docId}`, infoError)
+        }
+
+        return { success: true }
       } catch (error: any) {
         lastError = error
         const errorMsg = error?.message || String(error)
@@ -543,7 +633,7 @@ export class IncrementalShareService {
         // 4xx错误：立即失败，不重试
         if (statusCode >= 400 && statusCode < 500) {
           this.logger.error(`[4xx错误] 文档 ${docId} 分享失败，状态码: ${statusCode}，错误信息: ${errorMsg}`)
-          throw error
+          return { success: false, errorMessage: errorMsg }
         }
 
         // 5xx错误：延迟30秒后重试
@@ -571,15 +661,15 @@ export class IncrementalShareService {
           continue
         }
 
-        // 达到最大重试次数，抛出错误
+        // 达到最大重试次数，返回错误
         this.logger.error(
           `文档 ${docId} 分享失败，已达到最大重试次数 (${retryConfig.maxRetries})，最后错误: ${errorMsg}`
         )
-        throw lastError
+        return { success: false, errorMessage: errorMsg }
       }
     }
 
-    throw lastError
+    return { success: false, errorMessage: lastError?.message || String(lastError) }
   }
 
   /**

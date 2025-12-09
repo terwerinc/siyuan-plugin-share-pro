@@ -52,11 +52,6 @@ export interface ShareHistoryItem {
  */
 export interface ShareHistory {
   /**
-   * 获取所有历史记录
-   */
-  getAllHistory(): Promise<ShareHistoryItem[]>
-
-  /**
    * 添加历史记录
    */
   addHistory(item: ShareHistoryItem): Promise<void>
@@ -72,17 +67,7 @@ export interface ShareHistory {
   removeHistory(docId: string): Promise<void>
 
   /**
-   * 清空所有历史记录
-   */
-  clearHistory(): Promise<void>
-
-  /**
    * 获取指定文档的历史记录
    */
   getHistoryByDocId(docId: string): Promise<ShareHistoryItem | undefined>
-
-  /**
-   * 获取指定时间范围内的历史记录
-   */
-  getHistoryByTimeRange(startTime: number, endTime: number): Promise<ShareHistoryItem[]>
 }
