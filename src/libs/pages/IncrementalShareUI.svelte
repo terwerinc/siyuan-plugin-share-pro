@@ -35,6 +35,7 @@
   let selectedDocs = new Set<string>()
   let searchTerm = ""
   let keyInfo: any = null
+  let isStatsCollapsed = true  // 统计区域默认折叠
 
   // 统一的文档列表（新文档和更新文档合并）
   let combinedDocs: Array<{ docId: string; docTitle: string; shareTime?: number; type: "new" | "updated" }> = []
@@ -264,6 +265,11 @@
     selectedDocs = selectedDocs
   }
 
+  // 切换统计区域折叠状态
+  const toggleStatsCollapse = () => {
+    isStatsCollapsed = !isStatsCollapsed
+  }
+
   const toggleDocSelection = (docId: string) => {
     if (selectedDocs.has(docId)) {
       selectedDocs.delete(docId)
@@ -359,14 +365,24 @@
     </div>
   {:else if changeDetectionResult}
     <div class="share-stats">
-      <div class="stat-item">
-        <span class="stat-number">{changeDetectionResult.newDocuments?.length || 0}</span>
-        <span class="stat-label">{pluginInstance.i18n.incrementalShare.newDocuments}</span>
+      <div class="stat-header">
+        <button class="collapse-toggle" on:click={toggleStatsCollapse}>
+          {isStatsCollapsed ? pluginInstance.i18n.incrementalShare.expandStats : pluginInstance.i18n.incrementalShare.collapseStats}
+          <span class="toggle-icon">{isStatsCollapsed ? '▶' : '▼'}</span>
+        </button>
       </div>
-      <div class="stat-item">
-        <span class="stat-number">{changeDetectionResult.updatedDocuments?.length || 0}</span>
-        <span class="stat-label">{pluginInstance.i18n.incrementalShare.updatedDocuments}</span>
-      </div>
+      {#if !isStatsCollapsed}
+        <div class="stat-content">
+          <div class="stat-item">
+            <span class="stat-number">{changeDetectionResult.newDocuments?.length || 0}</span>
+            <span class="stat-label">{pluginInstance.i18n.incrementalShare.newDocuments}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">{changeDetectionResult.updatedDocuments?.length || 0}</span>
+            <span class="stat-label">{pluginInstance.i18n.incrementalShare.updatedDocuments}</span>
+          </div>
+        </div>
+      {/if}
     </div>
 
     <div class="document-section">
@@ -648,13 +664,44 @@ html[data-theme-mode="dark"]
 
 .share-stats
   display flex
-  gap 24px
+  flex-direction column
+  gap 8px
   margin-bottom 20px
   padding 16px
   background var(--b3-theme-surface)
   border-radius 8px
   border 1px solid var(--b3-border-color)
   box-shadow 0 2px 4px rgba(0, 0, 0, 0.05)
+
+.stat-header
+  display flex
+  justify-content flex-start
+
+.collapse-toggle
+  display flex
+  align-items center
+  gap 6px
+  background transparent
+  border none
+  color var(--b3-theme-on-background)
+  font-size 14px
+  font-weight 500
+  cursor pointer
+  padding 4px 8px
+  border-radius 4px
+  transition all 0.2s ease
+
+  &:hover
+    background var(--b3-theme-hover)
+
+.toggle-icon
+  font-size 12px
+
+.stat-content
+  display flex
+  gap 24px
+  justify-content flex-start
+  margin-top 8px
 
 .stat-item
   display flex

@@ -265,6 +265,8 @@
     "resetLastShareTime": "Reset share time",
     "resetLastShareTimeTip": "After reset, all documents will be rechecked for changes",
     "resetConfirm": "Are you sure you want to reset the share time? This will recheck all documents for changes.",
+    "expandStats": "Expand Stats",
+    "collapseStats": "Collapse Stats",
     "blacklist": {
       "title": "Blacklist Management",
       "add": "Add",

@@ -270,6 +270,8 @@
     "resetLastShareTime": "重置分享时间",
     "resetLastShareTimeTip": "重置后将重新检测所有文档的变更状态",
     "resetConfirm": "确定要重置分享时间吗？这将重新检测所有文档的变更状态。",
+    "expandStats": "展开统计",
+    "collapseStats": "收起统计",
     "blacklist": {
       "title": "黑名单管理",
       "add": "添加",
