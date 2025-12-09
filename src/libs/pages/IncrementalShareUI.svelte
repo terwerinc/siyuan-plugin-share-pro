@@ -13,9 +13,9 @@
   import { onMount } from "svelte"
   import { simpleLogger } from "zhi-lib-base"
   import {
-    getIncrementalDocumentsCount,
-    getIncrementalDocumentsPaged,
-    useSiyuanApi,
+      getIncrementalDocumentsCount,
+      getIncrementalDocumentsPaged,
+      useSiyuanApi,
   } from "../../composables/useSiyuanApi"
   import { isDev } from "../../Constants"
   import ShareProPlugin from "../../index"

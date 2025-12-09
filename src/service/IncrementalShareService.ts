@@ -212,7 +212,6 @@ export class IncrementalShareService {
 
       // 获取当前页分享历史（使用本地存储和缓存）
       const shareHistory = await this.getLocalHistoryByIds(docIds)
-      debugger
 
       // 使用 Web Worker 进行变更检测
       const pageResult = await ChangeDetectionWorkerUtil.detectChanges(pageDocuments, shareHistory, blacklistedDocIds)
