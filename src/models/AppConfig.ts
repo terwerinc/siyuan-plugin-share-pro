@@ -61,6 +61,13 @@ interface AppConfig {
   incrementalShareConfig?: {
     enabled: boolean
     lastShareTime?: number
+    notebookBlacklist?: Array<{
+      id: string
+      name: string
+      type: "notebook"
+      addedTime: number
+      note?: string
+    }>
   }
 
   // 加上字符串索引签名，兼容 AppConfigInput 约束

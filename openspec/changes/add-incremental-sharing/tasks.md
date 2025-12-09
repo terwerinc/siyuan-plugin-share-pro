@@ -18,7 +18,6 @@
 - [x] 创建 IncrementalShareUI.svelte 组件，实现分组式文档树展示和选择功能
 - [x] 实现「已分享文档的更新」分组的展示和交互逻辑
 - [x] 实现「新增文档」分组的展示和默认折叠功能
-- [x] 创建 ShareBlacklistUI.svelte 组件，实现黑名单管理界面
 - [x] 在增量分享界面中标识黑名单项目的状态
 - [ ] 在新UI模式中集成增量分享入口和界面
 - [ ] 在设置页面添加黑名单管理配置项
@@ -49,7 +48,7 @@
 - [x] 黑名单管理系统（ShareBlacklist 接口定义）
 - [x] 文档变更检测算法（detectChangedDocuments 方法）
 - [x] 批量分享功能（bulkShareDocuments 方法）
-- [x] UI 组件开发完成（IncrementalShareUI.svelte、ShareBlacklistUI.svelte）
+- [x] UI 组件开发完成（IncrementalShareUI.svelte）
 - [x] 国际化翻译文件更新
 - [x] 批量分享并发控制（限制5个并发）
 - [x] 智能重试机制（网络错误3次重试、5xx延迟30秒重试、4xx立即失败）

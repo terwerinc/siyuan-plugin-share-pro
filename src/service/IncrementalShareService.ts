@@ -17,7 +17,7 @@ import type { ShareHistoryItem } from "../types"
 import { ChangeDetectionWorkerUtil } from "../utils/ChangeDetectionWorkerUtil"
 import { DefaultAppConfig, syncAppConfig } from "../utils/ShareConfigUtils"
 import { shareHistoryCache } from "../utils/ShareHistoryCache"
-import { BlacklistService } from "./BlacklistService"
+import { LocalBlacklistService } from "./LocalBlacklistService"
 import { LocalShareHistory } from "./LocalShareHistory"
 import { SettingService } from "./SettingService"
 import { ShareQueueService } from "./ShareQueueService"
@@ -110,7 +110,7 @@ export class IncrementalShareService {
   private shareService: ShareService
   private settingService: SettingService
   private shareApi: ShareApi
-  private blacklistService: BlacklistService
+  private blacklistService: LocalBlacklistService
   private pluginInstance: ShareProPlugin
   public queueService: ShareQueueService
   private localShareHistory: LocalShareHistory
@@ -124,7 +124,7 @@ export class IncrementalShareService {
     pluginInstance: ShareProPlugin,
     shareService: ShareService,
     settingService: SettingService,
-    blacklistService: BlacklistService
+    blacklistService: LocalBlacklistService
   ) {
     this.pluginInstance = pluginInstance
     this.shareService = shareService

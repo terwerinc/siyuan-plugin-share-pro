@@ -8,19 +8,19 @@
   -->
 
 <script lang="ts">
+  import { Dialog, showMessage } from "siyuan"
+  import { onMount } from "svelte"
   import { simpleLogger } from "zhi-lib-base"
   import { isDev } from "../../../Constants"
   import ShareProPlugin from "../../../index"
-  import { Dialog, showMessage } from "siyuan"
-  import { onMount } from "svelte"
-  import { BlacklistService } from "../../../service/BlacklistService"
-  import type { BlacklistDTO, BlacklistType, AddBlacklistRequest } from "../../../types"
+  import { LocalBlacklistService } from "../../../service/LocalBlacklistService"
+  import type { AddBlacklistRequest, BlacklistDTO, BlacklistType } from "../../../types"
 
   const logger = simpleLogger("blacklist-setting", "share-pro", isDev)
   export let pluginInstance: ShareProPlugin
   export let dialog: Dialog
 
-  let blacklistService: BlacklistService
+  let blacklistService: LocalBlacklistService
   let isLoading = false
   let blacklistItems: BlacklistDTO[] = []
   let filteredItems: BlacklistDTO[] = []
@@ -46,20 +46,20 @@
   }
 
   onMount(async () => {
-    blacklistService = new BlacklistService(pluginInstance)
+    blacklistService = new LocalBlacklistService(pluginInstance, pluginInstance.settingService)
     await loadBlacklist()
   })
 
-  // 加载黑名单（从 Java 后端）
+  // 加载黑名单（从本地存储）
   const loadBlacklist = async () => {
     isLoading = true
     try {
-      // 调用 Java 后端 API
+      // 调用本地黑名单服务
       const allItems = await blacklistService.getAllItems()
 
       // 转换为 DTO 格式
       blacklistItems = allItems.map((item) => ({
-        id: item.dbId || 0,
+        id: 0, // 本地存储没有数据库ID
         type: item.type === "notebook" ? "NOTEBOOK" : "DOCUMENT",
         targetId: item.id,
         targetName: item.name,
@@ -144,7 +144,7 @@
         note: formData.note.trim() || undefined,
       }
 
-      // 调用 Java 后端 API
+      // 调用本地黑名单服务
       await blacklistService.addItem({
         id: request.targetId,
         name: request.targetName,
@@ -179,10 +179,9 @@
 
     isLoading = true
     try {
-      // 调用 Java 后端 API
-      for (const dbId of selectedItems) {
-        const item = blacklistItems.find((i) => i.id === dbId)
-        if (item) {
+      // 调用本地黑名单服务
+      for (const item of filteredItems) {
+        if (selectedItems.has(item.id)) {
           await blacklistService.removeItem(item.targetId)
         }
       }

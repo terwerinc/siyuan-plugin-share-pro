@@ -11,6 +11,7 @@ import { App, Dialog, getFrontend, IObject, Plugin, showMessage } from "siyuan"
 import { ILogger, simpleLogger } from "zhi-lib-base"
 
 import "../index.styl"
+import pkg from "../package.json"
 import {
   DEFAULT_SIYUAN_API_URL,
   DEFAULT_SIYUAN_AUTH_TOKEN,
@@ -20,15 +21,14 @@ import {
   SHARE_SERVICE_ENDPOINT_DEV,
   SHARE_SERVICE_ENDPOINT_PROD,
 } from "./Constants"
+import ShareSetting from "./libs/pages/ShareSetting.svelte"
 import { Main } from "./main"
 import { ShareProConfig } from "./models/ShareProConfig"
-import { initStatusBar } from "./statusBar"
-import ShareSetting from "./libs/pages/ShareSetting.svelte"
-import { ShareService } from "./service/ShareService"
-import { SettingService } from "./service/SettingService"
 import { IncrementalShareService } from "./service/IncrementalShareService"
-import { BlacklistService } from "./service/BlacklistService"
-import pkg from "../package.json"
+import { LocalBlacklistService } from "./service/LocalBlacklistService"
+import { SettingService } from "./service/SettingService"
+import { ShareService } from "./service/ShareService"
+import { initStatusBar } from "./statusBar"
 
 export default class ShareProPlugin extends Plugin {
   private logger: ILogger
@@ -48,7 +48,8 @@ export default class ShareProPlugin extends Plugin {
     this.main = new Main(this)
     this.shareService = new ShareService(this)
     this.settingService = new SettingService(this)
-    const blacklistService = new BlacklistService(this)
+    // 使用本地黑名单服务替代原来的黑名单服务
+    const blacklistService = new LocalBlacklistService(this, this.settingService)
     this.incrementalShareService = new IncrementalShareService(
       this,
       this.shareService,
