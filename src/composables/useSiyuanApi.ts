@@ -69,10 +69,13 @@ export const getIncrementalDocumentsPaged = async (
     notebookId?: string
   }>
 > => {
+  const logger = simpleLogger("use-siyuan-api", "share-pro", isDev)
   const offset = pageNum * pageSize
 
-  // 增量分享模式：查询上次分享时间之后有变化的文档 + 从未分享过的文档
-  const timeCondition = generateTimeCondition(lastShareTime)
+  // 增量分享模式：查询两类文档：
+  // 1. 从未分享过的文档 (a.block_id IS NULL)
+  // 2. 已分享但在上次分享时间之后有更新的文档
+  const whereCondition = buildIncrementalShareWhereCondition(lastShareTime)
   const sql = `
     SELECT DISTINCT 
       b.root_id as docId,
@@ -83,14 +86,11 @@ export const getIncrementalDocumentsPaged = async (
     LEFT JOIN attributes a ON a.block_id = b.id AND a.name = 'custom-share-history'
     WHERE b.id = b.root_id
       AND b.type = 'd'
-      AND (
-        ${timeCondition && timeCondition.length > 0 ? `(${timeCondition}) OR` : ""}
-        a.block_id IS NULL
-      )
+      ${whereCondition}
     ORDER BY b.updated DESC, b.created DESC
     LIMIT ${pageSize} OFFSET ${offset}
   `
-
+  logger.debug("getIncrementalDocumentsPaged SQL:", sql)
   const resData = await kernelApi.sql(sql)
   if (!resData || resData.length === 0) {
     return []
@@ -98,7 +98,7 @@ export const getIncrementalDocumentsPaged = async (
 
   return resData.map((row: any) => ({
     docId: row.docId,
-    docTitle: row.docTitle || "未命名文档",
+    docTitle: row.docTitle || "Untitled Document",
     // modifiedTime 看起来是形如 "20251208000004" 的字符串，需要转换为 Unix 时间戳
     modifiedTime:
       row.modifiedTime && typeof row.modifiedTime === "string"
@@ -125,20 +125,20 @@ export const getIncrementalDocumentsCount = async (
   kernelApi: SiyuanKernelApi,
   lastShareTime?: number
 ): Promise<number> => {
-  // 增量分享模式：统计上次分享时间之后有变化的文档 + 从未分享过的文档
-  const timeCondition = generateTimeCondition(lastShareTime)
+  const logger = simpleLogger("use-siyuan-api", "share-pro", isDev)
+  // 增量分享模式：统计两类文档：
+  // 1. 从未分享过的文档 (a.block_id IS NULL)
+  // 2. 已分享但在上次分享时间之后有更新的文档
+  const whereCondition = buildIncrementalShareWhereCondition(lastShareTime)
   const sql = `
     SELECT COUNT(DISTINCT b.root_id) as total
     FROM blocks b
     LEFT JOIN attributes a ON a.block_id = b.id AND a.name = 'custom-share-history'
     WHERE b.id = b.root_id
       AND b.type = 'd'
-      AND (
-        ${timeCondition && timeCondition.length > 0 ? `(${timeCondition}) OR` : ""}
-        a.block_id IS NULL
-      )
+      ${whereCondition}
   `
-
+  logger.debug("getIncrementalDocumentsCount SQL:", sql)
   const resData = await kernelApi.sql(sql)
   if (!resData || resData.length === 0 || !resData[0].total) {
     return 0
@@ -176,4 +176,28 @@ const generateTimeCondition = (lastShareTime?: number): string => {
     return `b.updated > '${lastUpdated}'`
   }
   return ""
+}
+
+/**
+ * 构建增量分享的WHERE条件SQL片段
+ * @param lastShareTime 上次分享时间戳
+ * @returns WHERE条件SQL片段（包含AND前缀）
+ */
+const buildIncrementalShareWhereCondition = (lastShareTime?: number): string => {
+  const timeCondition = generateTimeCondition(lastShareTime)
+
+  const unsharedDocumentCondition = "a.block_id IS NULL" // 从未分享过的文档
+  let sharedDocumentWithUpdatesCondition = "" // 已分享但在上次分享时间之后有更新的文档
+
+  if (timeCondition && timeCondition.length > 0) {
+    sharedDocumentWithUpdatesCondition = `(a.block_id IS NOT NULL AND ${timeCondition})`
+  }
+
+  if (sharedDocumentWithUpdatesCondition && sharedDocumentWithUpdatesCondition.length > 0) {
+    // 有时间条件时：查询从未分享的文档 或 已分享但在上次分享时间之后有更新的文档
+    return `AND (${unsharedDocumentCondition} OR ${sharedDocumentWithUpdatesCondition})`
+  } else {
+    // 没有时间条件时（首次分享）：只查询从未分享的文档
+    return `AND ${unsharedDocumentCondition}`
+  }
 }
