@@ -172,12 +172,12 @@
   // 添加黑名单项
   const handleAddItem = async () => {
     if (!formData.targetName.trim()) {
-      showMessage(pluginInstance.i18n?.incrementalShare?.blacklist?.nameRequired || "请输入名称", 3000, "error")
+      showMessage(pluginInstance.i18n.incrementalShare.blacklist.nameRequired, 3000, "error")
       return
     }
 
     if (!formData.targetId.trim()) {
-      showMessage(pluginInstance.i18n?.incrementalShare?.blacklist?.targetIdRequired || "请输入目标ID", 3000, "error")
+      showMessage(pluginInstance.i18n.incrementalShare.blacklist.targetIdRequired, 3000, "error")
       return
     }
 
@@ -199,12 +199,12 @@
         note: request.note,
       })
 
-      showMessage(pluginInstance.i18n?.incrementalShare?.blacklist?.addSuccess || "添加成功", 3000, "info")
+      showMessage(pluginInstance.i18n.incrementalShare.blacklist.addSuccess, 3000, "info")
       showAddForm = false
       await loadBlacklist()
     } catch (error) {
       logger.error("添加黑名单项失败:", error)
-      showMessage(pluginInstance.i18n?.incrementalShare?.blacklist?.addError || "添加失败", 7000, "error")
+      showMessage(pluginInstance.i18n.incrementalShare.blacklist.addError, 7000, "error")
     } finally {
       isLoading = false
     }
@@ -213,12 +213,12 @@
   // 删除选中项
   const handleDeleteItems = async () => {
     if (selectedItems.size === 0) {
-      showMessage(pluginInstance.i18n?.incrementalShare?.blacklist?.noSelection || "请选择要删除的项目", 3000, "error")
+      showMessage(pluginInstance.i18n.incrementalShare.blacklist.noSelection, 3000, "error")
       return
     }
 
     const confirmed = confirm(
-      pluginInstance.i18n?.incrementalShare?.blacklist?.deleteConfirm ||
+      pluginInstance.i18n.incrementalShare.blacklist.deleteConfirm ||
         `确定要删除选中的 ${selectedItems.size} 个项目吗？`
     )
     if (!confirmed) return
@@ -232,13 +232,13 @@
         }
       }
 
-      showMessage(pluginInstance.i18n?.incrementalShare?.blacklist?.deleteSuccess || "删除成功", 3000, "info")
+      showMessage(pluginInstance.i18n.incrementalShare.blacklist.deleteSuccess, 3000, "info")
       selectedItems.clear()
       selectedItems = selectedItems
       await loadBlacklist()
     } catch (error) {
       logger.error("删除黑名单项失败:", error)
-      showMessage(pluginInstance.i18n?.incrementalShare?.blacklist?.deleteError || "删除失败", 7000, "error")
+      showMessage(pluginInstance.i18n.incrementalShare.blacklist.deleteError, 7000, "error")
     } finally {
       isLoading = false
     }
@@ -269,8 +269,8 @@
   // 获取类型标签
   const getTypeLabel = (type: BlacklistType) => {
     return type === "NOTEBOOK"
-      ? pluginInstance.i18n?.incrementalShare?.blacklist?.notebook || "笔记本"
-      : pluginInstance.i18n?.incrementalShare?.blacklist?.document || "文档"
+      ? pluginInstance.i18n.incrementalShare.blacklist.notebook
+      : pluginInstance.i18n.incrementalShare.blacklist.document
   }
 
   // 格式化时间
@@ -339,24 +339,24 @@
       <div class="search-filter-row">
         <input
           class="b3-text-field"
-          style="width: 200px;"
-          placeholder={pluginInstance.i18n?.incrementalShare?.blacklist?.searchPlaceholder || "搜索名称/ID/备注..."}
+          style="flex: 1; min-width: 150px;"
+          placeholder={pluginInstance.i18n.incrementalShare.blacklist.searchPlaceholder}
           bind:value={searchTerm}
           on:input={handleSearchInput}
         />
         <select class="b3-select" style="width: 120px;" bind:value={filterType} on:change={handleFilter}>
-          <option value="all">{pluginInstance.i18n?.incrementalShare?.blacklist?.allTypes || "全部类型"}</option>
-          <option value="NOTEBOOK">{pluginInstance.i18n?.incrementalShare?.blacklist?.notebook || "笔记本"}</option>
-          <option value="DOCUMENT">{pluginInstance.i18n?.incrementalShare?.blacklist?.document || "文档"}</option>
+          <option value="all">{pluginInstance.i18n.incrementalShare.blacklist.allTypes}</option>
+          <option value="NOTEBOOK">{pluginInstance.i18n.incrementalShare.blacklist.notebook}</option>
+          <option value="DOCUMENT">{pluginInstance.i18n.incrementalShare.blacklist.document}</option>
         </select>
         {#if !showAddForm}
-          <button class="b3-button b3-button--outline" on:click={showAddFormFn} disabled={isLoading}>
-            {pluginInstance.i18n?.incrementalShare?.blacklist?.add || "添加"}
+          <button class="b3-button b3-button--primary" style="white-space: nowrap;" on:click={showAddFormFn} disabled={isLoading}>
+            {pluginInstance.i18n.incrementalShare.blacklist.add}
           </button>
         {/if}
         {#if selectedItems.size > 0}
-          <button class="b3-button b3-button--cancel" on:click={handleDeleteItems} disabled={isLoading}>
-            {pluginInstance.i18n?.incrementalShare?.blacklist?.delete || "删除"} ({selectedItems.size})
+          <button class="b3-button b3-button--cancel" style="white-space: nowrap;" on:click={handleDeleteItems} disabled={isLoading}>
+            {pluginInstance.i18n.incrementalShare.blacklist.delete} ({selectedItems.size})
           </button>
         {/if}
       </div>
@@ -366,9 +366,9 @@
     {#if showAddForm}
       <div class="fn__block form-item add-form-block">
         <div class="add-form-header">
-          <span>{pluginInstance.i18n?.incrementalShare?.blacklist?.addItem || "添加黑名单项"}</span>
-          <button class="b3-button b3-button--cancel" on:click={cancelAdd}>
-            {pluginInstance.i18n?.incrementalShare?.blacklist?.cancel || "取消"}
+          <span style="flex: 1;">{pluginInstance.i18n.incrementalShare.blacklist.addItem}</span>
+          <button class="b3-button b3-button--error" on:click={cancelAdd}>
+            {pluginInstance.i18n.incrementalShare.blacklist.cancel}
           </button>
         </div>
         <span class="fn__hr" />
@@ -376,26 +376,26 @@
           <div class="form-row">
             <div class="form-col">
               <label
-                >{pluginInstance.i18n?.incrementalShare?.blacklist?.type || "类型"}
+                >{pluginInstance.i18n.incrementalShare.blacklist.type}
                 <span style="color:red">*</span></label
               >
               <select class="b3-select fn__block" bind:value={formData.type} on:change={handleTypeChange}>
-                <option value="DOCUMENT">{pluginInstance.i18n?.incrementalShare?.blacklist?.document || "文档"}</option>
+                <option value="DOCUMENT">{pluginInstance.i18n.incrementalShare.blacklist.document}</option>
                 <option value="NOTEBOOK"
-                  >{pluginInstance.i18n?.incrementalShare?.blacklist?.notebook || "笔记本"}</option
+                  >{pluginInstance.i18n.incrementalShare.blacklist.notebook}</option
                 >
               </select>
             </div>
             <div class="form-col">
               <label
-                >{pluginInstance.i18n?.incrementalShare?.blacklist?.targetName || "名称"}
+                >{pluginInstance.i18n.incrementalShare.blacklist.targetName}
                 <span style="color:red">*</span></label
               >
               <div class="search-input-container">
                 <input
                   class="b3-text-field fn__block"
                   bind:value={searchKeyword}
-                  placeholder={pluginInstance.i18n?.incrementalShare?.blacklist?.targetNamePlaceholder || "输入关键词搜索文档或笔记本"}
+                  placeholder={pluginInstance.i18n.incrementalShare.blacklist.targetNamePlaceholder}
                   on:input={searchTargets}
                 />
                 {#if isSearching}
@@ -418,17 +418,17 @@
           </div>
           <div class="form-row">
             <div class="form-col">
-              <label>{pluginInstance.i18n?.incrementalShare?.blacklist?.note || "备注"}</label>
+              <label>{pluginInstance.i18n.incrementalShare.blacklist.note}</label>
               <input
                 class="b3-text-field fn__block"
                 bind:value={formData.note}
-                placeholder={pluginInstance.i18n?.incrementalShare?.blacklist?.notePlaceholder || "请输入备注（可选）"}
+                placeholder={pluginInstance.i18n.incrementalShare.blacklist.notePlaceholder}
               />
             </div>
           </div>
           <div class="form-actions">
-            <button class="b3-button b3-button--text" on:click={handleAddItem} disabled={isLoading || !formData.targetId}>
-              {pluginInstance.i18n?.incrementalShare?.blacklist?.confirmAdd || "确定添加"}
+            <button class="b3-button b3-button--primary" on:click={handleAddItem} disabled={isLoading || !formData.targetId}>
+              {pluginInstance.i18n.incrementalShare.blacklist.confirmAdd}
             </button>
           </div>
         </div>
@@ -438,7 +438,7 @@
     <!-- 黑名单列表 -->
     <div class="fn__block form-item">
       <div class="b3-label__text form-item-tip">
-        {pluginInstance.i18n?.incrementalShare?.blacklist?.manageTip || "管理不需要分享的笔记本或文档"}（共 {totalItems}
+        {pluginInstance.i18n.incrementalShare.blacklist.manageTip}（共 {totalItems}
         项）
       </div>
       <span class="fn__hr" />
@@ -451,11 +451,11 @@
             <thead>
               <tr>
                 <th style="width: 40px;"><input type="checkbox" /></th>
-                <th>{pluginInstance.i18n?.incrementalShare?.blacklist?.targetName || "名称"}</th>
-                <th style="width: 120px;">{pluginInstance.i18n?.incrementalShare?.blacklist?.type || "类型"}</th>
-                <th>{pluginInstance.i18n?.incrementalShare?.blacklist?.note || "备注"}</th>
+                <th>{pluginInstance.i18n.incrementalShare.blacklist.targetName}</th>
+                <th style="width: 120px;">{pluginInstance.i18n.incrementalShare.blacklist.type}</th>
+                <th>{pluginInstance.i18n.incrementalShare.blacklist.note}</th>
                 <th style="width: 150px;"
-                  >{pluginInstance.i18n?.incrementalShare?.blacklist?.createdAt || "创建时间"}</th
+                  >{pluginInstance.i18n.incrementalShare.blacklist.createdAt}</th
                 >
               </tr>
             </thead>
@@ -490,7 +490,7 @@
               disabled={currentPage === 0 || isLoading}
               on:click={() => handlePageChange(currentPage - 1)}
             >
-              {pluginInstance.i18n?.incrementalShare?.blacklist?.prevPage || "上一页"}
+              {pluginInstance.i18n.incrementalShare.blacklist.prevPage}
             </button>
             <span class="page-info">
               第 {currentPage + 1} / {totalPages} 页
@@ -500,30 +500,30 @@
               disabled={currentPage >= totalPages - 1 || isLoading}
               on:click={() => handlePageChange(currentPage + 1)}
             >
-              {pluginInstance.i18n?.incrementalShare?.blacklist?.nextPage || "下一页"}
+              {pluginInstance.i18n.incrementalShare.blacklist.nextPage}
             </button>
           </div>
         {/if}
       {:else}
         <div class="blacklist-empty">
-          {pluginInstance.i18n?.incrementalShare?.blacklist?.noItems || "暂无黑名单项目"}
+          {pluginInstance.i18n.incrementalShare.blacklist.noItems}
         </div>
       {/if}
-    </div>
-
-    <!-- 底部按钮 -->
-    <div class="b3-dialog__action">
-      <button class="b3-button b3-button--cancel" on:click={onCancel}>{pluginInstance.i18n.cancel}</button>
     </div>
   </div>
 </div>
 
 <style>
+  .config__tab-container{
+      overflow: hidden;
+  }
+
   .form-item {
     padding: 10px;
-    width: 94%;
+    width: 100%;
     margin: auto;
     font-size: 14px;
+    box-sizing: border-box;
   }
 
   .form-item-tip {
@@ -537,6 +537,18 @@
     gap: 10px;
     align-items: center;
     margin-bottom: 12px;
+    flex-wrap: wrap; /* 允许换行以适应小屏幕 */
+  }
+  
+  @media screen and (max-width: 768px) {
+    .search-filter-row {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    
+    .search-filter-row > * {
+      margin-bottom: 8px;
+    }
   }
 
   /* 添加表单区域 */
@@ -545,6 +557,7 @@
     border: 1px solid var(--b3-border-color);
     border-radius: 4px;
     padding: 16px;
+    margin-bottom: 16px;
   }
 
   .add-form-header {
@@ -553,6 +566,12 @@
     align-items: center;
     margin-bottom: 12px;
     font-weight: 500;
+    min-height: 32px; /* 确保有足够的高度显示内容 */
+    width: 100%;
+  }
+  
+  .add-form-header button {
+    flex-shrink: 0; /* 防止按钮被压缩 */
   }
 
   .add-form-content {

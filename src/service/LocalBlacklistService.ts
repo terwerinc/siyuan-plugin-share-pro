@@ -37,13 +37,15 @@ export class LocalBlacklistService implements ShareBlacklist {
    * @param type 类型筛选（可选，默认为"all"）
    * @param query 搜索关键词（可选，默认为空）
    */
-  async getItemsPaged(
+  public async getItemsPaged(
     pageNum: number,
     pageSize: number,
     type: "notebook" | "document" | "all" = "all",
     query = ""
   ): Promise<BlacklistItem[]> {
-    this.logger.info(`📋 [Local] getItemsPaged called: page=${pageNum}, size=${pageSize}, type=${type}, query=${query}`)
+    this.logger.debug(
+      `📋 [Local] getItemsPaged called: page=${pageNum}, size=${pageSize}, type=${type}, query=${query}`
+    )
     try {
       const offset = pageNum * pageSize
 
@@ -110,8 +112,8 @@ export class LocalBlacklistService implements ShareBlacklist {
    * @param type 类型筛选（可选，默认为"all"）
    * @param query 搜索关键词（可选，默认为空）
    */
-  async getItemsCount(type: "notebook" | "document" | "all" = "all", query = ""): Promise<number> {
-    this.logger.info(`📊 [Local] getItemsCount called: type=${type}, query=${query}`)
+  public async getItemsCount(type: "notebook" | "document" | "all" = "all", query = ""): Promise<number> {
+    this.logger.debug(`📊 [Local] getItemsCount called: type=${type}, query=${query}`)
     try {
       if (type === "notebook") {
         // 只计算笔记本数据
@@ -153,8 +155,8 @@ export class LocalBlacklistService implements ShareBlacklist {
   /**
    * 添加黑名单项
    */
-  async addItem(item: BlacklistItem): Promise<void> {
-    this.logger.info(`🚫 [Local] addItem: ${item.name} (${item.type})`)
+  public async addItem(item: BlacklistItem): Promise<void> {
+    this.logger.debug(`🚫 [Local] addItem: ${item.name} (${item.type})`)
     try {
       if (item.type === "notebook") {
         // 笔记本级别的黑名单存储在插件配置中
@@ -172,8 +174,8 @@ export class LocalBlacklistService implements ShareBlacklist {
   /**
    * 移除黑名单项
    */
-  async removeItem(id: string): Promise<void> {
-    this.logger.info(`✅ [Local] removeItem: ${id}`)
+  public async removeItem(id: string): Promise<void> {
+    this.logger.debug(`✅ [Local] removeItem: ${id}`)
     try {
       // 需要先确定是笔记本还是文档级别的黑名单项
       // 这里采用一种简单的方式：先尝试从笔记本黑名单中移除，如果失败再尝试从文档黑名单中移除
@@ -192,8 +194,8 @@ export class LocalBlacklistService implements ShareBlacklist {
   /**
    * 检查指定ID是否在黑名单中
    */
-  async isInBlacklist(id: string): Promise<boolean> {
-    this.logger.info(`🔍 [Local] isInBlacklist: ${id}`)
+  public async isInBlacklist(id: string): Promise<boolean> {
+    this.logger.debug(`🔍 [Local] isInBlacklist: ${id}`)
     try {
       const result = await this.areInBlacklist([id])
       return result[id] ?? false
@@ -207,32 +209,23 @@ export class LocalBlacklistService implements ShareBlacklist {
    * 批量检查多个ID是否在黑名单中
    */
   async areInBlacklist(ids: string[]): Promise<Record<string, boolean>> {
-    this.logger.info(`🔍 [Local] areInBlacklist: ${ids.length} items`)
+    this.logger.debug(`🔍 [Local] areInBlacklist: ${ids.length} items`)
     try {
       const result: Record<string, boolean> = {}
 
       // 分离笔记本ID和文档ID
-      const notebookIds: string[] = []
-      const documentIds: string[] = []
+      // 其实无法区分，传过来的都是文档ID，那么我们换个思路
+      // 1、documentIds直接使用ids
+      // 2、notebookIds可以查询呀，封装一个方法 getNotebookIdsFromBlacklist(ds: string[])
+      // 注意各自在内部判断即可，外部无需担心
 
-      // 简单区分：假设笔记本ID较短，文档ID较长（这只是一个启发式方法，实际可能需要更好的区分方式）
-      for (const id of ids) {
-        if (id.length < 20) {
-          notebookIds.push(id)
-        } else {
-          documentIds.push(id)
-        }
-      }
-
-      // 检查笔记本黑名单
-      if (notebookIds.length > 0) {
-        const notebookResult = await this.areNotebooksInBlacklist(notebookIds)
+      // 统一检查笔记本/文档黑名单
+      if (ids.length > 0) {
+        // 检测笔记本黑名单
+        const notebookResult = await this.areNotebooksInBlacklist(ids)
         Object.assign(result, notebookResult)
-      }
-
-      // 检查文档黑名单
-      if (documentIds.length > 0) {
-        const documentResult = await this.areDocumentsInBlacklist(documentIds)
+        // 检测文档黑名单
+        const documentResult = await this.areDocumentsInBlacklist(ids)
         Object.assign(result, documentResult)
       }
 
@@ -248,8 +241,8 @@ export class LocalBlacklistService implements ShareBlacklist {
   /**
    * 清空黑名单
    */
-  async clearBlacklist(): Promise<void> {
-    this.logger.info("🧹 [Local] clearBlacklist called")
+  public async clearBlacklist(): Promise<void> {
+    this.logger.debug("🧹 [Local] clearBlacklist called")
     try {
       // 清空笔记本黑名单
       await this.clearNotebookBlacklist()
@@ -264,16 +257,16 @@ export class LocalBlacklistService implements ShareBlacklist {
 
   /**
    * 获取指定类型的黑名单项
+   *
+   * @deprecated 未分页，不推荐使用
    */
-  async getItemsByType(type: BlacklistItemType): Promise<BlacklistItem[]> {
-    this.logger.info(`📑 [Local] getItemsByType: ${type}`)
+  public async getItemsByType(type: BlacklistItemType): Promise<BlacklistItem[]> {
+    this.logger.debug(`📑 [Local] getItemsByType: ${type}`)
     try {
       if (type === "notebook") {
         return await this.getNotebookBlacklistItems()
       } else {
-        // 无法直接获取所有文档级别的黑名单项
-        // 需要调用方通过其他方式获取
-        return []
+        return await this.getDocumentBlacklistItems()
       }
     } catch (error) {
       this.logger.error("按类型获取黑名单失败:", error)
@@ -349,7 +342,7 @@ export class LocalBlacklistService implements ShareBlacklist {
       // 同步到服务端
       await syncAppConfig(this.settingService, config)
 
-      this.logger.info(`添加笔记本到黑名单: ${item.name}`)
+      this.logger.debug(`添加笔记本到黑名单: ${item.name}`)
     } catch (error) {
       this.logger.error("添加笔记本到黑名单失败:", error)
       throw error
@@ -376,7 +369,7 @@ export class LocalBlacklistService implements ShareBlacklist {
         // 同步到服务端
         await syncAppConfig(this.settingService, config)
 
-        this.logger.info(`从黑名单中移除笔记本: ${id}`)
+        this.logger.debug(`从黑名单中移除笔记本: ${id}`)
       }
     } catch (error) {
       this.logger.error("从黑名单中移除笔记本失败:", error)
@@ -391,12 +384,14 @@ export class LocalBlacklistService implements ShareBlacklist {
     try {
       const config = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
       const notebookBlacklist = config.appConfig?.incrementalShareConfig?.notebookBlacklist || []
+      const dbNotebookIdSet = new Set(notebookBlacklist.map((item) => item.id))
 
-      const notebookIdSet = new Set(notebookBlacklist.map((item) => item.id))
+      // 获取当前文档所在的笔记本列表
+      const docNotebookIds: string[] = await this.getNotebookIdsFromBlacklist(ids)
 
       const result: Record<string, boolean> = {}
-      for (const id of ids) {
-        result[id] = notebookIdSet.has(id)
+      for (const id of docNotebookIds) {
+        result[id] = dbNotebookIdSet.has(id)
       }
 
       return result
@@ -405,6 +400,27 @@ export class LocalBlacklistService implements ShareBlacklist {
       const result: Record<string, boolean> = {}
       ids.forEach((id) => (result[id] = false))
       return result
+    }
+  }
+
+  private async getNotebookIdsFromBlacklist(ids: string[]): Promise<string[]> {
+    try {
+      // 直接用 sql 查询思源笔记
+      // 查询当前文档所在的笔记本集合
+      const { kernelApi } = await ApiUtils.getSiyuanKernelApi(this.pluginInstance)
+      const sql = `
+        SELECT DISTINCT b.root_id as id, b.box as notebookId
+        FROM blocks b
+        WHERE b.type = 'd' and b.root_id in (${ids.join(",")})
+      `
+      this.logger.debug("getNotebookIdsFromBlacklist SQL:", sql)
+      const resData = await kernelApi.sql(sql)
+      // 注意box去重，因为多个文档可共享笔记本
+      const notebookIdSet = new Set<string>(resData.map((row: any) => row.notebookId as string))
+      return Array.from(notebookIdSet)
+    } catch (error) {
+      this.logger.error("获取笔记本黑名单失败:", error)
+      return []
     }
   }
 
@@ -425,7 +441,7 @@ export class LocalBlacklistService implements ShareBlacklist {
         // 同步到服务端
         await syncAppConfig(this.settingService, config)
 
-        this.logger.info("清空笔记本黑名单")
+        this.logger.debug("清空笔记本黑名单")
       }
     } catch (error) {
       this.logger.error("清空笔记本黑名单失败:", error)
@@ -439,6 +455,8 @@ export class LocalBlacklistService implements ShareBlacklist {
 
   /**
    * 获取文档级别的黑名单项（通过SQL查询）
+   *
+   * @deprecated 未分页，不推荐使用
    */
   private async getDocumentBlacklistItems(): Promise<BlacklistItem[]> {
     try {
@@ -568,7 +586,7 @@ export class LocalBlacklistService implements ShareBlacklist {
       }
 
       await kernelApi.setBlockAttrs(item.id, attrs)
-      this.logger.info(`添加文档到黑名单: ${item.name}`)
+      this.logger.debug(`添加文档到黑名单: ${item.name}`)
     } catch (error) {
       this.logger.error("添加文档到黑名单失败:", error)
       throw error
@@ -588,7 +606,7 @@ export class LocalBlacklistService implements ShareBlacklist {
       }
 
       await kernelApi.setBlockAttrs(id, attrs)
-      this.logger.info(`从黑名单中移除文档: ${id}`)
+      this.logger.debug(`从黑名单中移除文档: ${id}`)
     } catch (error) {
       this.logger.error("从黑名单中移除文档失败:", error)
       throw error
