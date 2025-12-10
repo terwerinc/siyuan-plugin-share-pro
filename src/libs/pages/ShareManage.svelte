@@ -161,7 +161,7 @@
                   onclick="window.cancelShareFromSharePro('${docId}','${row.title}')" 
                   title="${pluginInstance.i18n.manage.actionCancel}">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M8 1C4.1 1 1 4.1 1 8s3.1 7 7 7 7-3.1 7-7-3.1-7-7-7zm3.5 10.5l-1 1-2.5-2.5-2.5 2.5-1-1 2.5-2.5-2.5-2.5 1-1 2.5 2.5 2.5-2.5 1 1-2.5 2.5 2.5 2.5z"/>
+                <path d="M8 1.5c-3.6 0-6.5 2.9-6.5 6.5s2.9 6.5 6.5 6.5 6.5-2.9 6.5-6.5-2.9-6.5-6.5-6.5zm3.7 8.2l-1.2 1.2-2.5-2.5-2.5 2.5-1.2-1.2 2.5-2.5-2.5-2.5 1.2-1.2 2.5 2.5 2.5-2.5 1.2 1.2-2.5 2.5 2.5 2.5z"/>
               </svg>
               <span class="action-text">${pluginInstance.i18n.manage.actionCancelShort}</span>
             </span>
@@ -171,7 +171,7 @@
                   onclick="window.setHomeFromSharePro('${docId}','${row.title}',${settingConfig?.appConfig?.homePageId === docId})" 
                   title="${settingConfig?.appConfig?.homePageId === docId ? pluginInstance.i18n.manage.actionSetAlready : pluginInstance.i18n.manage.actionSetHome}">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M8 1l2 4h4l-3 3 1 4-4-2-4 2 1-4-3-3h4l2-4z"/>
+                <path d="M8 1.5l2 4h4l-3 3 1 4-4-2-4 2 1-4-3-3h4l2-4zm0 2.3l-1.1 2.2-2.4.4 1.8 1.7-.4 2.4 2.1-1.1 2.1 1.1-.4-2.4 1.8-1.7-2.4-.4-1.1-2.2z"/>
               </svg>
               <span class="action-text">${pluginInstance.i18n.manage.actionSetHomeShort}</span>
             </span>
@@ -181,7 +181,7 @@
                   onclick="window.viewDocFromSharePro('${docId}','${row.title}')" 
                   title="${pluginInstance.i18n.manage.actionViewDoc}">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M8 2c-3.3 0-6 2.7-6 6s2.7 6 6 6 6-2.7 6-6-2.7-6-6-6zm0 10c-2.2 0-4-1.8-4-4s1.8-4 4-4 4 1.8 4 4-1.8 4-4 4zm-1-7h2v5h-2v-5z"/>
+                <path d="M3 2c-.6 0-1 .4-1 1v10c0 .6.4 1 1 1h10c.6 0 1-.4 1-1v-5h-1v5h-10v-10h5v-1h-5zm8 0v1h2.6l-5.3 5.3.7.7 5.3-5.3v2.6h1v-5h-5z"/>
               </svg>
               <span class="action-text">${pluginInstance.i18n.manage.actionViewDocShort}</span>
             </span>
@@ -191,7 +191,7 @@
                   onclick="window.goToOriginalDocFromSharePro('${docId}')" 
                   title="${pluginInstance.i18n.manage.actionGotoDoc}">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M8 2c-3.3 0-6 2.7-6 6s2.7 6 6 6 6-2.7 6-6-2.7-6-6-6zm0 10c-2.2 0-4-1.8-4-4s1.8-4 4-4 4 1.8 4 4-1.8 4-4 4zm-1-4h2v3h-2v-3z"/>
+                <path d="M12 2h-2v3h2v2h3v2h-3v3h-2v-3h-2v3h-3v-2h3v-2h-3v-2h3v-3h2v3h2v-3h2zm-4 4h-2v2h2v-2z"/>
               </svg>
               <span class="action-text">${pluginInstance.i18n.manage.actionGotoDocShort}</span>
             </span>
@@ -201,12 +201,29 @@
                   data-doc-id="${docId}" 
                   title="${pluginInstance.i18n.manage.copyDocId}">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M13 5h-3c-.6 0-1-.4-1-1v-3h-6v12h5v1h-6c-.6 0-1-.4-1-1v-12c0-.6.4-1 1-1h7c.6 0 1 .4 1 1v3h3v7h-1v-7zm-3-2.5v1.5h1.5l-1.5-1.5zm-6 11v-10h5v3c0 .6.4 1 1 1h3v6h-9z"/>
+                <path d="M11 1.5h-5c-.3 0-.5.2-.5.5v1h-4c-.3 0-.5.2-.5.5v9c0 .3.2.5.5.5h4v1h-4c-.8 0-1.5-.7-1.5-1.5v-9c0-.8.7-1.5 1.5-1.5h4v-1c0-.3.2-.5.5-.5h5c.3 0 .5.2.5.5v1h3v7h-3v1h3c.8 0 1.5-.7 1.5-1.5v-7c0-.8-.7-1.5-1.5-1.5zm-1 .5v1h1v-1h-1zm-6 10v-8h4v1c0 .3.2.5.5.5h3v6h-7.5z"/>
               </svg>
               <span class="action-text">${pluginInstance.i18n.manage.copyDocIdShort}</span>
             </span>
           </div>
         `;
+      },
+      onMouseOver: (e) => {
+        const target = e.target as HTMLElement;
+        // 为操作项添加popover提示
+        if (target.classList.contains('action-item')) {
+          const title = target.getAttribute('title');
+          if (title) {
+            showPopover(e, title);
+          }
+        }
+      },
+      onMouseOut: (e) => {
+        const target = e.target as HTMLElement;
+        // 鼠标离开操作项时延迟隐藏popover（1秒）
+        if (target.classList.contains('action-item')) {
+          hidePopover(1000); // 延迟1秒隐藏
+        }
       },
       onClick: (e) => {
         const target = e.target as HTMLElement;
@@ -425,7 +442,7 @@
   /* Action items styles - 使用组件前缀限定，避免样式冲突 */
   :global(#share-manage .action-container)
     display: flex
-    gap: 8px
+    gap: 4px  /* 减小间距 */
     align-items: center
 
   :global(#share-manage .action-item)
@@ -433,7 +450,7 @@
     flex-direction: column
     align-items: center
     justify-content: center
-    width: 50px
+    width: 40px  /* 减小宽度 */
     cursor: pointer
     border-radius: 6px
     transition: all 0.2s ease

@@ -65,6 +65,8 @@ class PopoverManager {
     this.popoverElement.style.pointerEvents = "none"
     this.popoverElement.style.transform = "translateX(-50%)"
     this.popoverElement.style.left = "50%"
+    this.popoverElement.style.opacity = "0"
+    this.popoverElement.style.transition = "opacity 0.1s ease-in-out"
 
     // 定位popover
     const rect = (event.target as HTMLElement).getBoundingClientRect()
@@ -73,21 +75,35 @@ class PopoverManager {
 
     // 添加到文档中
     document.body.appendChild(this.popoverElement)
+
+    // 立即显示popover（添加一个小延迟以确保元素已添加到DOM中）
+    setTimeout(() => {
+      if (this.popoverElement) {
+        this.popoverElement.style.opacity = "1"
+      }
+    }, 10)
   }
 
   /**
    * 隐藏 popover
-   * @param delay 延迟隐藏的时间（毫秒），默认为100ms
+   * @param delay 延迟隐藏的时间（毫秒），默认为0ms（立即隐藏）
    */
-  public hidePopover(delay = 100): void {
+  public hidePopover(delay = 0): void {
     if (this.popoverTimeout) {
       clearTimeout(this.popoverTimeout)
     }
 
     this.popoverTimeout = setTimeout(() => {
       if (this.popoverElement) {
-        this.popoverElement.remove()
-        this.popoverElement = null
+        // 添加淡出效果
+        this.popoverElement.style.opacity = "0"
+        // 等待淡出动画完成后移除元素
+        setTimeout(() => {
+          if (this.popoverElement) {
+            this.popoverElement.remove()
+            this.popoverElement = null
+          }
+        }, 100)
       }
       this.popoverTimeout = null
     }, delay)
@@ -110,9 +126,9 @@ const showPopover = (event: MouseEvent, title: string, offsetX = 0, offsetY = -3
 
 /**
  * 隐藏 popover
- * @param delay 延迟隐藏的时间（毫秒），默认为100ms
+ * @param delay 延迟隐藏的时间（毫秒），默认为0ms（立即隐藏）
  */
-const hidePopover = (delay = 100): void => {
+const hidePopover = (delay = 0): void => {
   popoverManager.hidePopover(delay)
 }
 
