@@ -1,5 +1,85 @@
 # Changelog
 
+## [1.15.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.14.0...share-pro-v1.15.0) (2025-12-10)
+
+
+### Features
+
+* add incremental sharing ([caea391](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/caea391bbdf6e5ccf45dc5831774b1cfe79f1b9e))
+* **blacklist:** add blacklist management feature and UI integration ([e7734ad](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/e7734ad8e3c66a716af48da6925a3e625a0f7fc3))
+* **blacklist:** add blacklist management page with search and pagination ([33bbad9](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/33bbad9c81a7de668f9121a35450679c437833ee))
+* **blacklist:** add intelligent search for documents and notebooks ([6802f71](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/6802f7187ff0dc79830dea4c665e34bf5776d6e6))
+* **blacklist:** design and add blacklist management API and types ([8d6300b](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/8d6300bd7f4b82a9f65eb78818ab9fe912e7ff16))
+* **config:** add incremental share configuration option ([60c1055](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/60c1055cc8d48c563fede47f2844f9d40b4539fa))
+* **core:** add incremental sharing service with settings integration ([db70668](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/db70668d4b718835bbab37cfafb3d1bdd7fb7bc2))
+* **incremental-share:** add reset share time functionality ([363171a](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/363171ac09503528c8a9c5af18e426aa977c8242))
+* **incremental-share:** implement incremental share with blacklist filtering and UI ([e5bddcd](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/e5bddcdf9cc2f1021dd57b98dfdfa654c5a5f174))
+* **incremental-share:** implement true pagination and unified UI for incremental document detection ([6195b50](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/6195b50dabd1addceeb758379d1a9bc448aab6ab))
+* **incremental-share:** improve document handling and UI robustness ([b08c7bc](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/b08c7bc24f2b34647c9920a160ef3bbbb4fa72f3))
+* **incremental-sharing:** add blacklist feature and grouped UI for incremental sharing ([9a63c5b](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/9a63c5b294c5e0009810caea399288368ef2e095))
+* **incrementalShare:** add collapsible stats section to share UI ([708a348](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/708a348120a0043c73527d57e8683fa0dcc75911))
+* **incrementalShare:** add incremental share feature and setting page ([bcb3857](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/bcb3857058a57c075c2951d7b4ff3ec4612c79a2))
+* **incrementalShare:** add notebook blacklist support and refresh button ([f54a2c8](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/f54a2c8938657e915a87b21915c5cf3a559baabb))
+* **incrementalShare:** improve UI and add new localization keys ([5cdffc5](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/5cdffc5fc320c87c1b0607ffba49a7970ae57a87))
+* **popover:** add fade in/out animations for popover display ([165ed51](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/165ed5155ae20a5ae16c3ea9d2a9947a6a2b170f))
+* **share-manage:** add Chinese character limited popover for titles ([a5ac18d](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/a5ac18d697e0027bdce286da3d978b5ea3598156))
+* **share-manage:** enhance document title and share action interactions ([30fc788](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/30fc788b47f7e21f806769d2f1695991291a567d))
+* **share-ui:** add share management dialog with incremental share UI integration ([025f33f](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/025f33f81ac4a663d3a1489402e5941a82426f85))
+* **share-ui:** enhance share UI with single and non-single doc modes ([978c3d5](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/978c3d5c5bfe679075eba420d2d7b0227bb02f6b))
+* **share-ui:** replace share manage tab with dialog ([3d49be5](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/3d49be52ca7db370965c39271d16bbf06a0e0fa2))
+* **share-ui:** replace share manage tab with dialog and integrate blacklist ([eba28b0](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/eba28b0222cbac1354597cae20ab432faf22f922))
+* **share:** add blacklist management tab to share settings ([1b502eb](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/1b502eb46b2fd4ab63e9be0e852cb21b3c84aa10))
+* **share:** add incremental, referenced, and subdocument sharing proposal ([578c6a9](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/578c6a9b122a02dd3ee71c5f0e53d06f781ba276))
+* **share:** add local share history persistence and caching ([4c5ed16](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/4c5ed16d5db23f54d33ba7f723eb2723656a58f5))
+* **share:** add referenced document sharing functionality ([54738bf](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/54738bfc0e5b05b76f0718145fcf28be21583fcd))
+* **share:** implement incremental share with caching, queue management, and virtual scrolling ([ba4380e](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/ba4380e82fcdc1c3554851920b673654bb388904))
+* **share:** implement layered incremental share configuration ([d814ef8](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/d814ef88e6ce1b03790282bed2590a3b345e557b))
+* **sharing:** add subdocument sharing functionality ([420c208](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/420c2080b52f152cbc322bdbacb5cf8ffc826c9f))
+* **sharing:** implement incremental sharing with change detection and blacklist ([965ad42](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/965ad422b92f9a9b61bc75e4ae0e9302fdb914a2))
+* **topbar:** add incremental share UI and improve i18n safety ([8407231](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/840723193a5dc13d0fc6118fcec76f55e902f9db))
+* **types:** add exports for service-dto and blacklist-api ([d8a6d9d](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/d8a6d9d533b49daa5b3c87597071d0d8f2284c4e))
+* **types:** add initial type definitions for share and service API ([2a34a84](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/2a34a844e4d0b84a7b0588a8624b3f32fb4489c9))
+* **types:** add type definitions for svelte-virtual-list module ([f69f073](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/f69f073ba11d931aa3ac43496bd113e3441e792a))
+* **ui:** update incremental share and manage icons in UI ([41a5881](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/41a588173a3f0c176d29639842c298fcde970d00))
+
+
+### Bug Fixes
+
+* **constants:** dev env ([8db42a8](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/8db42a8b25c7f3f4dcc2835057c02c28add550f0))
+* **incremental-share-ui:** improve virtual list layout and increase visible item count ([51298d3](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/51298d3e99da231ec441f7379b4784c552a20ab3))
+* **service:** add type annotation to kernelApi.lsNotebooks response ([275b8a7](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/275b8a709562ee0d888cc3bdadff4e5896048a50))
+* **share:** convert data correctly in getHistoryByIds method ([7e80f57](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/7e80f571d5e894740f7774530a96a798586d6ff6))
+* **tasks:** mark incremental sharing features as completed in task list ([3935217](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/39352174ac00290bb9997ed1892a7aee33997b42))
+* **topbar:** enable incremental share by default when config is missing ([ef63e7f](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/ef63e7f612d957c2022916eab2542fd208d4b6a2))
+* **utils:** replace empty string with null for attribute removal ([d7448b3](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/d7448b3b866595669cebea54547e4b9118ac6cea))
+
+
+### Code Refactoring
+
+* **api:** optimize incremental share document query conditions ([3a30283](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/3a3028315bb333adc5724c55083e24d1ec81ab6c))
+* **blacklist:** implement paged local blacklist loading and search with debounce ([8064938](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/8064938a2d85f97de5b1d61bbc77a22fa7ecfcbf))
+* **blacklist:** remove legacy blacklist design docs and implementations ([9fa1093](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/9fa10937f428705b4f8cfe944dbe9f13e33de0fb))
+* **blacklist:** replace backend blacklist with local storage service ([eb6cfd6](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/eb6cfd63049e3f13c269c0e32cbe78c1c547d0c0))
+* **blacklist:** replace optional chaining with direct access in i18n fields ([62c4863](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/62c48639796d9cdf4354c2cd369a5879f6f38072))
+* **core:** clean up imports and exports and add svelte-virtual-list typings ([a6d40e8](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/a6d40e818ec431f2f619e3714072a0d422c3df6b))
+* **i18n:** remove incremental share translations from en_US and zh_CN ([d7a1770](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/d7a1770ae2de84755fa3f497dbb5ee3c1182de44))
+* **incremental-share:** remove outdated daily work summaries ([8ffffde](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/8ffffde0373c9f82b0f9f2791f6029efe89cdac5))
+* **incremental-share:** simplify change detection and add search filter ([6e13271](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/6e1327168ede98eab996bc7672d8696b820891f0))
+* **service:** paginate blacklist checks to reduce server load ([ba264b5](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/ba264b552f8921994e48f8ed3f367abf76710596))
+* **service:** remove doc existence validation from updateSingleDocSettings ([02350c4](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/02350c4b2917a75069a24276043e7ef54ecb603e))
+* **setting:** centralize custom attribute keys in SettingKeys ([c0c25fe](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/c0c25feaa7ece303ea330934cd082e4f385414fa))
+* **share:** clean up share service and remove mock blacklist ([d5e1819](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/d5e1819aa61dee9dec4b0e8c4e3164c024639d42))
+* **share:** simplify share history fetching logic ([7b9d626](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/7b9d626afaaba2b3649077f95d6fcf4d907e47ea))
+* **svg:** update SVG icon contents and attributes ([59dac56](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/59dac5697d21ccbb199b780ac8153114da442f16))
+* **utils:** simplify import and shareStatus assignment in ShareHistoryUtils ([06fb274](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/06fb2749e241b36a39aaf3c89d60184f3ad6f8fc))
+
+
+### Miscellaneous
+
+* **license:** update copyright years to 2025 ([5871ab1](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/5871ab1e25b3fc5a034563645ca149183ecade3c))
+* **license:** update copyright years to 2025 ([f0d3524](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/f0d3524b9f14c19946c600af126add8bcd0ecaa0))
+* revert WIP commit from main branch ([bc7b8ac](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/bc7b8ace04767c2e067107e379903b6329deb098))
+
 ## [1.14.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.13.2...share-pro-v1.14.0) (2025-11-13)
 ### Features
 * compress icon images ([91c05c5](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/91c05c509e1da5144d47a668b2119304e1294212))
