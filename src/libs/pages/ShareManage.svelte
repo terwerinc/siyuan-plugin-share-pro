@@ -15,7 +15,9 @@
   import { KeyInfo } from "../../models/KeyInfo"
   import { ShareProConfig } from "../../models/ShareProConfig"
   import { SettingService } from "../../service/SettingService"
+  import { hidePopover, showPopover } from "../../utils/popoverUtils"
   import { syncAppConfig } from "../../utils/ShareConfigUtils"
+  import { getChineseCharCount, truncateByChineseChar } from "../../utils/utils"
   import Bench from "../components/bench/Bench.svelte"
 
   const logger = simpleLogger("share-manage", "share-pro", isDev)
@@ -48,11 +50,32 @@
       html: true,
       sort: false,
       formatter: (cell) => {
-        if (cell.length > 25) {
-          return `<span title="${cell}">${cell.substring(0, 25)}...</span>`
+        // 限制最多显示6个汉字字符（区分中英文）
+        const maxLength = 6;
+        
+        // 计算标题中的汉字字符数
+        const chineseCharCount = getChineseCharCount(cell);
+        
+        if (chineseCharCount > maxLength) {
+          // 截取前6个汉字字符并添加popover
+          const truncated = truncateByChineseChar(cell, maxLength);
+          // 注意：这里我们不直接在HTML中添加事件监听器，而是在表格渲染后通过JavaScript处理
+          return `<span class="title-popover" data-title="${cell}">${truncated}...</span>`;
         } else {
-          return cell
+          return cell;
         }
+      },
+      onMouseOver: (e) => {
+        const target = e.target as HTMLElement;
+        if (target.classList.contains('title-popover')) {
+          const title = target.getAttribute('data-title');
+          if (title) {
+            showPopover(e, title);
+          }
+        }
+      },
+      onMouseOut: (e) => {
+        hidePopover();
       },
       onClick: (e) => {},
     },
@@ -244,13 +267,13 @@
     textFirstPage={pluginInstance.i18n.manage.tableFirstPage}
   />
 </div>
-
 <style lang="stylus">
   #share-manage
     padding 10px
+    position: relative
 
   .loading-indicator-container
-    position: fixed
+    position: absolute
     top: 0
     left: 0
     right: 0
@@ -261,7 +284,6 @@
     align-items: center
     justify-content: center
     z-index: 1000
-
   /* 确保蒙版层在最上层 */
 
   .loading-indicator
@@ -285,4 +307,23 @@
       transform: rotate(0deg)
     100%
       transform: rotate(360deg)
-</style>
+
+  /* Title popover styles */
+  .title-popover
+    position: relative
+    cursor: pointer
+
+  .title-popover:hover::after
+    content: attr(data-title)
+    position: absolute
+    bottom: 100%
+    left: 50%
+    transform: translateX(-50%)
+    background: #333
+    color: white
+    padding: 4px 8px
+    border-radius: 4px
+    white-space: nowrap
+    z-index: 1001
+    font-size: 12px
+    pointer-events: none</style>

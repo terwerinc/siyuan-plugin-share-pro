@@ -33,7 +33,7 @@ class WidgetInvoke {
       title: this.pluginInstance.i18n.manageDoc,
       content: `<div id="share-manage-dialog-content"></div>`,
       width: "75vw",
-      height: "55vh",
+      height: this.pluginInstance.isMobile ? "90vh" : document.body.clientHeight > 768 ? "62vh" : "75vh",
     })
 
     // 等待DOM更新后挂载ShareManage组件
