@@ -10,7 +10,7 @@
 import { showMessage } from "siyuan"
 import { Post } from "zhi-blog-api"
 import { ILogger, simpleLogger } from "zhi-lib-base"
-import { isDev, SHARE_PRO_STORE_NAME } from "../Constants"
+import { isDev, NULL_VALUE_FOR_SIYUAN_ATTR_REMOVE, SHARE_PRO_STORE_NAME } from "../Constants"
 import { ServiceResponse, ShareApi } from "../api/share-api"
 import { useDataTable } from "../composables/useDataTable"
 import { useEmbedBlock } from "../composables/useEmbedBlock"
@@ -228,12 +228,23 @@ class ShareService implements IShareHistoryService {
 
   public async updateSingleDocSettings(docId: string, isShare: boolean, settings: Partial<SingleDocSetting>) {
     const { kernelApi } = await ApiUtils.getSiyuanKernelApi(this.pluginInstance)
+
+    // 验证docId有效性
+    try {
+      // 尝试获取文档属性以验证文档是否存在
+      await kernelApi.getBlockAttrs(docId)
+    } catch (error) {
+      this.logger.warn(`文档不存在或无效: ${docId}`, error)
+      // 如果文档不存在，则不执行任何操作
+      return
+    }
+
     let toAttrs: Record<string, string> = AttrUtils.toAttrs(settings)
     if (!isShare) {
       toAttrs = AttrUtils.toAttrs({})
     }
     const attrs = {
-      [SettingKeys.CUSTOM_PUBLISH_TIME]: isShare ? new Date().getTime().toString() : "",
+      [SettingKeys.CUSTOM_PUBLISH_TIME]: isShare ? new Date().getTime().toString() : NULL_VALUE_FOR_SIYUAN_ATTR_REMOVE,
       ...toAttrs,
     }
 

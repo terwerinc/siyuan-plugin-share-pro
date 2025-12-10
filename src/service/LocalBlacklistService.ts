@@ -8,7 +8,7 @@
  */
 
 import { simpleLogger } from "zhi-lib-base"
-import { isDev, SHARE_PRO_STORE_NAME } from "../Constants"
+import { isDev, NULL_VALUE_FOR_SIYUAN_ATTR_REMOVE, SHARE_PRO_STORE_NAME } from "../Constants"
 import ShareProPlugin from "../index"
 import { BlacklistItem, BlacklistItemType, ShareBlacklist } from "../models/ShareBlacklist"
 import { ShareProConfig } from "../models/ShareProConfig"
@@ -591,6 +591,16 @@ export class LocalBlacklistService implements ShareBlacklist {
     try {
       const { kernelApi } = await ApiUtils.getSiyuanKernelApi(this.pluginInstance)
 
+      // 验证docId有效性
+      try {
+        // 尝试获取文档属性以验证文档是否存在
+        await kernelApi.getBlockAttrs(item.id)
+      } catch (error) {
+        this.logger.warn(`文档不存在或无效: ${item.id}`, error)
+        // 如果文档不存在，则不执行任何操作
+        return
+      }
+
       // 只存储简单的标识，避免属性爆炸
       const attrs = {
         "custom-share-blacklist-document": "true",
@@ -611,9 +621,19 @@ export class LocalBlacklistService implements ShareBlacklist {
     try {
       const { kernelApi } = await ApiUtils.getSiyuanKernelApi(this.pluginInstance)
 
+      // 验证docId有效性
+      try {
+        // 尝试获取文档属性以验证文档是否存在
+        await kernelApi.getBlockAttrs(id)
+      } catch (error) {
+        this.logger.warn(`文档不存在或无效: ${id}`, error)
+        // 如果文档不存在，则不执行任何操作
+        return
+      }
+
       // 删除文档黑名单属性
       const attrs = {
-        "custom-share-blacklist-document": null,
+        "custom-share-blacklist-document": NULL_VALUE_FOR_SIYUAN_ATTR_REMOVE,
       }
 
       await kernelApi.setBlockAttrs(id, attrs)

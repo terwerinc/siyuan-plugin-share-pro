@@ -16,3 +16,4 @@ export const SHARE_PRO_STORE_NAME = "share-pro.json"
 export const SHARE_SERVICE_ENDPOINT_DEV = "http://localhost:8086"
 export const SHARE_SERVICE_ENDPOINT_PROD = "https://api.terwergreen.com"
 export const SHARE_LIST_PAGE_SIZE = 10
+export const NULL_VALUE_FOR_SIYUAN_ATTR_REMOVE = null

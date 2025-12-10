@@ -8,7 +8,7 @@
  */
 
 import { simpleLogger } from "zhi-lib-base"
-import { isDev } from "../Constants"
+import { isDev, NULL_VALUE_FOR_SIYUAN_ATTR_REMOVE } from "../Constants"
 import ShareProPlugin from "../index"
 import { ShareHistory, ShareHistoryItem } from "../models/ShareHistory"
 import { ApiUtils } from "../utils/ApiUtils"
@@ -32,6 +32,16 @@ export class LocalShareHistory implements ShareHistory {
     try {
       const { kernelApi } = await ApiUtils.getSiyuanKernelApi(this.pluginInstance)
 
+      // 验证docId有效性
+      try {
+        // 尝试获取文档属性以验证文档是否存在
+        await kernelApi.getBlockAttrs(item.docId)
+      } catch (error) {
+        this.logger.warn(`文档不存在或无效: ${item.docId}`, error)
+        // 如果文档不存在，则不执行任何操作
+        return
+      }
+
       // 添加版本信息和更新时间用于兼容性检查
       const historyData = {
         ...item,
@@ -54,6 +64,16 @@ export class LocalShareHistory implements ShareHistory {
     this.logger.info(`🔄 [Local] updateHistory: ${docId}`)
     try {
       const { kernelApi } = await ApiUtils.getSiyuanKernelApi(this.pluginInstance)
+
+      // 验证docId有效性
+      try {
+        // 尝试获取文档属性以验证文档是否存在
+        await kernelApi.getBlockAttrs(docId)
+      } catch (error) {
+        this.logger.warn(`文档不存在或无效: ${docId}`, error)
+        // 如果文档不存在，则不执行任何操作
+        return
+      }
 
       // 先获取现有记录
       const existingItem = await this.getHistoryByDocId(docId)
@@ -85,9 +105,19 @@ export class LocalShareHistory implements ShareHistory {
     try {
       const { kernelApi } = await ApiUtils.getSiyuanKernelApi(this.pluginInstance)
 
+      // 验证docId有效性
+      try {
+        // 尝试获取文档属性以验证文档是否存在
+        await kernelApi.getBlockAttrs(docId)
+      } catch (error) {
+        this.logger.warn(`文档不存在或无效: ${docId}`, error)
+        // 如果文档不存在，则不执行任何操作
+        return
+      }
+
       // 删除分享历史属性
       const attrs = {
-        "custom-share-history": null,
+        "custom-share-history": NULL_VALUE_FOR_SIYUAN_ATTR_REMOVE,
       }
 
       await kernelApi.setBlockAttrs(docId, attrs)

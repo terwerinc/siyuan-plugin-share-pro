@@ -12,6 +12,7 @@ import { ApiUtils } from "./ApiUtils"
 import { SettingKeys } from "./SettingKeys"
 import { SingleDocSetting } from "../models/SingleDocSetting"
 import { isEmptyString } from "./utils"
+import { NULL_VALUE_FOR_SIYUAN_ATTR_REMOVE } from "../Constants"
 
 /**
  * 通用属性读取
@@ -88,7 +89,7 @@ class AttrUtils {
     fieldMappings.forEach(({ objectKey, settingKey, isNumber }) => {
       // 首先检查 from 是否存在
       if (!from || typeof from !== "object") {
-        attrs[settingKey] = ""
+        attrs[settingKey] = NULL_VALUE_FOR_SIYUAN_ATTR_REMOVE
         return attrs
       }
       // 1. 获取原始值（直接从接口键名获取）
@@ -110,7 +111,7 @@ class AttrUtils {
       attrs[settingKey] =
         isDefined && isValueValid
           ? value!.toString() // 非空断言（因前序检查已确保安全）
-          : ""
+          : NULL_VALUE_FOR_SIYUAN_ATTR_REMOVE
     })
 
     // 类型断言（因 Partial 转完整 Record）
