@@ -417,10 +417,12 @@ export class LocalBlacklistService implements ShareBlacklist {
       // 直接用 sql 查询思源笔记
       // 查询当前文档所在的笔记本集合
       const { kernelApi } = await ApiUtils.getSiyuanKernelApi(this.pluginInstance)
+      // 正确转义ID并添加引号
+      const escapedIds = ids.map((id) => `'${id.replace(/'/g, "''")}'`).join(",")
       const sql = `
         SELECT DISTINCT b.root_id as id, b.box as notebookId
         FROM blocks b
-        WHERE b.type = 'd' and b.root_id in (${ids.join(",")})
+        WHERE b.type = 'd' and b.root_id in (${escapedIds})
       `
       this.logger.debug("getNotebookIdsFromBlacklist SQL:", sql)
       const resData = await kernelApi.sql(sql)

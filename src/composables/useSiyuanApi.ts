@@ -56,13 +56,15 @@ export const useSiyuanApi = (cfg: ShareProConfig) => {
  * @param pageSize 每页大小
  * @param lastShareTime 上次分享时间戳（用于增量检测）
  * @param searchTerm 搜索词
+ * @param notebookBlacklist 笔记本黑名单列表
  */
 export const getIncrementalDocumentsPaged = async (
   kernelApi: SiyuanKernelApi,
   pageNum: number,
   pageSize: number,
   lastShareTime?: number, // 增量时间戳
-  searchTerm?: string // 搜索词
+  searchTerm?: string, // 搜索词
+  notebookBlacklist?: string[] // 笔记本黑名单列表
 ): Promise<
   Array<{
     docId: string
@@ -73,12 +75,34 @@ export const getIncrementalDocumentsPaged = async (
 > => {
   const logger = simpleLogger("use-siyuan-api", "share-pro", isDev)
   const offset = pageNum * pageSize
-  // 增量分享模式：查询两类文档：
-  // 1. 从未分享过的文档 (a.block_id IS NULL)
-  // 2. 已分享但在上次分享时间之后有更新的文档
-  let whereCondition = buildIncrementalShareWhereCondition(lastShareTime)
 
-  // 添加搜索条件
+  // 构建完整的WHERE条件
+  let whereCondition = " AND b.type = 'd'"
+
+  // 1. 添加增量分享条件
+  const timeCondition = generateTimeCondition(lastShareTime)
+  const unsharedDocumentCondition = "a.block_id IS NULL" // 从未分享过的文档
+  let sharedDocumentWithUpdatesCondition = "" // 已分享但在上次分享时间之后有更新的文档
+  if (timeCondition && timeCondition.length > 0) {
+    sharedDocumentWithUpdatesCondition = `(a.block_id IS NOT NULL AND ${timeCondition})`
+  }
+  if (sharedDocumentWithUpdatesCondition && sharedDocumentWithUpdatesCondition.length > 0) {
+    // 有时间条件时：查询从未分享的文档 或 已分享但在上次分享时间之后有更新的文档
+    whereCondition += ` AND (${unsharedDocumentCondition} OR ${sharedDocumentWithUpdatesCondition})`
+  } else {
+    // 没有时间条件时（首次分享）：只查询从未分享的文档
+    whereCondition += ` AND ${unsharedDocumentCondition}`
+  }
+
+  // 2. 添加文档黑名单条件
+  whereCondition += ` AND (a2.block_id IS NULL OR (a2.block_id IS NOT NULL AND a2.value != 'true'))`
+  // 3. 添加笔记本黑名单条件
+  if (notebookBlacklist && notebookBlacklist.length > 0) {
+    const escapedNotebookIds = notebookBlacklist.map((id) => `'${id.replace(/'/g, "''")}'`).join(",")
+    whereCondition += ` AND b.box NOT IN (${escapedNotebookIds})`
+  }
+
+  // 4. 添加搜索条件
   if (searchTerm && searchTerm.trim() !== "") {
     whereCondition += ` AND b.content LIKE '%${searchTerm.replace(/'/g, "''")}%'`
   }
@@ -91,8 +115,8 @@ export const getIncrementalDocumentsPaged = async (
       b.box as notebookId
     FROM blocks b
     LEFT JOIN attributes a ON a.block_id = b.id AND a.name = 'custom-share-history'
+    LEFT JOIN attributes a2 ON a2.block_id = b.id AND a2.name = 'custom-share-blacklist-document'
     WHERE b.id = b.root_id
-      AND b.type = 'd'
       ${whereCondition}
     ORDER BY b.updated DESC, b.created DESC
     LIMIT ${pageSize} OFFSET ${offset}
@@ -128,19 +152,43 @@ export const getIncrementalDocumentsPaged = async (
  * @param kernelApi 思源内核 API
  * @param lastShareTime 上次分享时间戳（用于增量检测）
  * @param searchTerm 搜索词
+ * @param notebookBlacklist 笔记本黑名单列表
  */
 export const getIncrementalDocumentsCount = async (
   kernelApi: SiyuanKernelApi,
   lastShareTime?: number,
-  searchTerm?: string
+  searchTerm?: string,
+  notebookBlacklist?: string[]
 ): Promise<number> => {
   const logger = simpleLogger("use-siyuan-api", "share-pro", isDev)
-  // 增量分享模式：统计两类文档：
-  // 1. 从未分享过的文档 (a.block_id IS NULL)
-  // 2. 已分享但在上次分享时间之后有更新的文档
-  let whereCondition = buildIncrementalShareWhereCondition(lastShareTime)
 
-  // 添加搜索条件
+  // 构建完整的WHERE条件
+  let whereCondition = " AND b.type = 'd'"
+
+  // 1. 添加增量分享条件
+  const timeCondition = generateTimeCondition(lastShareTime)
+  const unsharedDocumentCondition = "a.block_id IS NULL" // 从未分享过的文档
+  let sharedDocumentWithUpdatesCondition = "" // 已分享但在上次分享时间之后有更新的文档
+  if (timeCondition && timeCondition.length > 0) {
+    sharedDocumentWithUpdatesCondition = `(a.block_id IS NOT NULL AND ${timeCondition})`
+  }
+  if (sharedDocumentWithUpdatesCondition && sharedDocumentWithUpdatesCondition.length > 0) {
+    // 有时间条件时：查询从未分享的文档 或 已分享但在上次分享时间之后有更新的文档
+    whereCondition += ` AND (${unsharedDocumentCondition} OR ${sharedDocumentWithUpdatesCondition})`
+  } else {
+    // 没有时间条件时（首次分享）：只查询从未分享的文档
+    whereCondition += ` AND ${unsharedDocumentCondition}`
+  }
+
+  // 2. 添加文档黑名单条件
+  whereCondition += ` AND (a2.block_id IS NULL OR (a2.block_id IS NOT NULL AND a2.value != 'true'))`
+  // 3. 添加笔记本黑名单条件
+  if (notebookBlacklist && notebookBlacklist.length > 0) {
+    const escapedNotebookIds = notebookBlacklist.map((id) => `'${id.replace(/'/g, "''")}'`).join(",")
+    whereCondition += ` AND b.box NOT IN (${escapedNotebookIds})`
+  }
+
+  // 4. 添加搜索条件
   if (searchTerm && searchTerm.trim() !== "") {
     whereCondition += ` AND b.content LIKE '%${searchTerm.replace(/'/g, "''")}%'`
   }
@@ -149,8 +197,8 @@ export const getIncrementalDocumentsCount = async (
     SELECT COUNT(DISTINCT b.root_id) as total
     FROM blocks b
     LEFT JOIN attributes a ON a.block_id = b.id AND a.name = 'custom-share-history'
+    LEFT JOIN attributes a2 ON a2.block_id = b.id AND a2.name = 'custom-share-blacklist-document'
     WHERE b.id = b.root_id
-      AND b.type = 'd'
       ${whereCondition}
   `
   logger.debug("getIncrementalDocumentsCount SQL:", sql)
@@ -191,28 +239,4 @@ const generateTimeCondition = (lastShareTime?: number): string => {
     return `b.updated > '${lastUpdated}'`
   }
   return ""
-}
-
-/**
- * 构建增量分享的WHERE条件SQL片段
- * @param lastShareTime 上次分享时间戳
- * @returns WHERE条件SQL片段（包含AND前缀）
- */
-const buildIncrementalShareWhereCondition = (lastShareTime?: number): string => {
-  const timeCondition = generateTimeCondition(lastShareTime)
-
-  const unsharedDocumentCondition = "a.block_id IS NULL" // 从未分享过的文档
-  let sharedDocumentWithUpdatesCondition = "" // 已分享但在上次分享时间之后有更新的文档
-
-  if (timeCondition && timeCondition.length > 0) {
-    sharedDocumentWithUpdatesCondition = `(a.block_id IS NOT NULL AND ${timeCondition})`
-  }
-
-  if (sharedDocumentWithUpdatesCondition && sharedDocumentWithUpdatesCondition.length > 0) {
-    // 有时间条件时：查询从未分享的文档 或 已分享但在上次分享时间之后有更新的文档
-    return `AND (${unsharedDocumentCondition} OR ${sharedDocumentWithUpdatesCondition})`
-  } else {
-    // 没有时间条件时（首次分享）：只查询从未分享的文档
-    return `AND ${unsharedDocumentCondition}`
-  }
 }

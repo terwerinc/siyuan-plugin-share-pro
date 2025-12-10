@@ -17,7 +17,7 @@
       getIncrementalDocumentsPaged,
       useSiyuanApi,
   } from "../../composables/useSiyuanApi"
-  import { isDev } from "../../Constants"
+  import { isDev, SHARE_PRO_STORE_NAME } from "../../Constants"
   import ShareProPlugin from "../../index"
   import { ShareProConfig } from "../../models/ShareProConfig"
   import type { ChangeDetectionResult } from "../../service/IncrementalShareService"
@@ -157,8 +157,11 @@
         }`
       )
 
+      const notebookBlacklist = cfg.appConfig?.incrementalShareConfig?.notebookBlacklist ?? []
+      const nbIds = notebookBlacklist.map((nb) => nb.id)
+
       // 获取文档总数（用于显示进度）
-      totalDocuments = await getIncrementalDocumentsCount(kernelApi, lastShareTime, searchTerm)
+      totalDocuments = await getIncrementalDocumentsCount(kernelApi, lastShareTime, searchTerm, nbIds)
       totalPages = Math.ceil(totalDocuments / pageSize)
       logger.info(
         `${pluginInstance.i18n.incrementalShare.totalDocs}: ${totalDocuments}, ${pluginInstance.i18n.incrementalShare.page}: ${totalPages}`
@@ -197,10 +200,14 @@
         }`
       )
 
+      // 获取笔记本黑名单
+      const notebookBlacklist = cfg.appConfig?.incrementalShareConfig?.notebookBlacklist ?? []
+      const nbIds = notebookBlacklist.map((nb) => nb.id)
+
       // 使用分页检测方法，只加载指定页，传递搜索词
       changeDetectionResult = await pluginInstance.incrementalShareService.detectChangedDocumentsSinglePage(
         async (pageNum, size) => {
-          return await getIncrementalDocumentsPaged(kernelApi, pageNum, size, lastShareTime, searchTerm)
+          return await getIncrementalDocumentsPaged(kernelApi, pageNum, size, lastShareTime, searchTerm, nbIds)
         },
         pageNum,
         pageSize
@@ -254,6 +261,14 @@
   const handleSearch = () => {
     // 重新加载文档，将搜索词传递给后端
     loadDocuments()
+  }
+  
+  // 刷新按钮处理函数
+  const handleRefresh = async () => {
+    // 重新加载配置
+    cfg = await pluginInstance.safeLoad(SHARE_PRO_STORE_NAME)
+    // 重新加载文档
+    await loadDocuments()
   }
 
   const handleSelectAll = () => {
@@ -351,7 +366,7 @@
         {pluginInstance.i18n.incrementalShare.bulkShare}
         ({selectedDocs.size})
       </button>
-      <button class="btn-default" on:click={loadDocuments} disabled={isLoading}>
+      <button class="btn-default" on:click={handleRefresh} disabled={isLoading}>
         {@html icons.iconRefresh}
         {pluginInstance.i18n.incrementalShare.refresh}
       </button>

@@ -245,6 +245,9 @@
       selectedItems.clear()
       selectedItems = selectedItems
       await loadBlacklist()
+      
+      // 触发配置变化事件，通知其他组件刷新
+      // 暂时注释掉错误的事件触发代码
     } catch (error) {
       logger.error("删除黑名单项失败:", error)
       showMessage(pluginInstance.i18n.incrementalShare.blacklist.deleteError, 7000, "error")
