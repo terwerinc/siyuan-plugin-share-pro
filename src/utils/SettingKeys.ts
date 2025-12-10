@@ -48,6 +48,16 @@ enum SettingKeys {
    * 过期时间
    */
   CUSTOM_EXPIRES = "custom-expires",
+
+  /**
+   * 分享历史记录
+   */
+  CUSTOM_SHARE_HISTORY = "custom-share-history",
+
+  /**
+   * 文档黑名单标识
+   */
+  CUSTOM_SHARE_BLACKLIST_DOCUMENT = "custom-share-blacklist-document",
 }
 
 export { SettingKeys }

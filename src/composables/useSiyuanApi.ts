@@ -11,6 +11,7 @@ import { simpleLogger } from "zhi-lib-base"
 import { SiYuanApiAdaptor, SiyuanConfig, SiyuanKernelApi } from "zhi-siyuan-api"
 import { isDev } from "../Constants"
 import { ShareProConfig } from "../models/ShareProConfig"
+import { SettingKeys } from "../utils/SettingKeys"
 
 /**
  * 通用 Siyuan API 封装
@@ -114,8 +115,8 @@ export const getIncrementalDocumentsPaged = async (
       b.updated as modifiedTime,
       b.box as notebookId
     FROM blocks b
-    LEFT JOIN attributes a ON a.block_id = b.id AND a.name = 'custom-share-history'
-    LEFT JOIN attributes a2 ON a2.block_id = b.id AND a2.name = 'custom-share-blacklist-document'
+    LEFT JOIN attributes a ON a.block_id = b.id AND a.name = '${SettingKeys.CUSTOM_SHARE_HISTORY}'
+    LEFT JOIN attributes a2 ON a2.block_id = b.id AND a2.name = '${SettingKeys.CUSTOM_SHARE_BLACKLIST_DOCUMENT}'
     WHERE b.id = b.root_id
       ${whereCondition}
     ORDER BY b.updated DESC, b.created DESC
@@ -196,8 +197,8 @@ export const getIncrementalDocumentsCount = async (
   const sql = `
     SELECT COUNT(DISTINCT b.root_id) as total
     FROM blocks b
-    LEFT JOIN attributes a ON a.block_id = b.id AND a.name = 'custom-share-history'
-    LEFT JOIN attributes a2 ON a2.block_id = b.id AND a2.name = 'custom-share-blacklist-document'
+    LEFT JOIN attributes a ON a.block_id = b.id AND a.name = '${SettingKeys.CUSTOM_SHARE_HISTORY}'
+    LEFT JOIN attributes a2 ON a2.block_id = b.id AND a2.name = '${SettingKeys.CUSTOM_SHARE_BLACKLIST_DOCUMENT}'
     WHERE b.id = b.root_id
       ${whereCondition}
   `

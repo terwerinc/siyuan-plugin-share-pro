@@ -13,6 +13,7 @@ import ShareProPlugin from "../index"
 import { BlacklistItem, BlacklistItemType, ShareBlacklist } from "../models/ShareBlacklist"
 import { ShareProConfig } from "../models/ShareProConfig"
 import { ApiUtils } from "../utils/ApiUtils"
+import { SettingKeys } from "../utils/SettingKeys"
 import { DefaultAppConfig, syncAppConfig } from "../utils/ShareConfigUtils"
 import { BlacklistApiService } from "./BlacklistApiService"
 import { SettingService } from "./SettingService"
@@ -591,19 +592,9 @@ export class LocalBlacklistService implements ShareBlacklist {
     try {
       const { kernelApi } = await ApiUtils.getSiyuanKernelApi(this.pluginInstance)
 
-      // 验证docId有效性
-      try {
-        // 尝试获取文档属性以验证文档是否存在
-        await kernelApi.getBlockAttrs(item.id)
-      } catch (error) {
-        this.logger.warn(`文档不存在或无效: ${item.id}`, error)
-        // 如果文档不存在，则不执行任何操作
-        return
-      }
-
       // 只存储简单的标识，避免属性爆炸
       const attrs = {
-        "custom-share-blacklist-document": "true",
+        [SettingKeys.CUSTOM_SHARE_BLACKLIST_DOCUMENT]: "true",
       }
 
       await kernelApi.setBlockAttrs(item.id, attrs)
@@ -621,19 +612,9 @@ export class LocalBlacklistService implements ShareBlacklist {
     try {
       const { kernelApi } = await ApiUtils.getSiyuanKernelApi(this.pluginInstance)
 
-      // 验证docId有效性
-      try {
-        // 尝试获取文档属性以验证文档是否存在
-        await kernelApi.getBlockAttrs(id)
-      } catch (error) {
-        this.logger.warn(`文档不存在或无效: ${id}`, error)
-        // 如果文档不存在，则不执行任何操作
-        return
-      }
-
       // 删除文档黑名单属性
       const attrs = {
-        "custom-share-blacklist-document": NULL_VALUE_FOR_SIYUAN_ATTR_REMOVE,
+        [SettingKeys.CUSTOM_SHARE_BLACKLIST_DOCUMENT]: NULL_VALUE_FOR_SIYUAN_ATTR_REMOVE,
       }
 
       await kernelApi.setBlockAttrs(id, attrs)
@@ -657,7 +638,7 @@ export class LocalBlacklistService implements ShareBlacklist {
       for (const id of ids) {
         try {
           const attrs = await kernelApi.getBlockAttrs(id)
-          result[id] = !!attrs["custom-share-blacklist-document"]
+          result[id] = !!attrs[SettingKeys.CUSTOM_SHARE_BLACKLIST_DOCUMENT]
         } catch (error) {
           // 如果获取文档属性失败，认为不在黑名单中
           this.logger.warn(`获取文档${id}属性失败:`, error)

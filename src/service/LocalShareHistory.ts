@@ -12,6 +12,7 @@ import { isDev, NULL_VALUE_FOR_SIYUAN_ATTR_REMOVE } from "../Constants"
 import ShareProPlugin from "../index"
 import { ShareHistory, ShareHistoryItem } from "../models/ShareHistory"
 import { ApiUtils } from "../utils/ApiUtils"
+import { SettingKeys } from "../utils/SettingKeys"
 
 /**
  * 本地分享历史记录实现
@@ -32,16 +33,6 @@ export class LocalShareHistory implements ShareHistory {
     try {
       const { kernelApi } = await ApiUtils.getSiyuanKernelApi(this.pluginInstance)
 
-      // 验证docId有效性
-      try {
-        // 尝试获取文档属性以验证文档是否存在
-        await kernelApi.getBlockAttrs(item.docId)
-      } catch (error) {
-        this.logger.warn(`文档不存在或无效: ${item.docId}`, error)
-        // 如果文档不存在，则不执行任何操作
-        return
-      }
-
       // 添加版本信息和更新时间用于兼容性检查
       const historyData = {
         ...item,
@@ -50,7 +41,7 @@ export class LocalShareHistory implements ShareHistory {
       }
 
       const attrs = {
-        "custom-share-history": JSON.stringify(historyData),
+        [SettingKeys.CUSTOM_SHARE_HISTORY]: JSON.stringify(historyData),
       }
 
       await kernelApi.setBlockAttrs(item.docId, attrs)
@@ -64,16 +55,6 @@ export class LocalShareHistory implements ShareHistory {
     this.logger.info(`🔄 [Local] updateHistory: ${docId}`)
     try {
       const { kernelApi } = await ApiUtils.getSiyuanKernelApi(this.pluginInstance)
-
-      // 验证docId有效性
-      try {
-        // 尝试获取文档属性以验证文档是否存在
-        await kernelApi.getBlockAttrs(docId)
-      } catch (error) {
-        this.logger.warn(`文档不存在或无效: ${docId}`, error)
-        // 如果文档不存在，则不执行任何操作
-        return
-      }
 
       // 先获取现有记录
       const existingItem = await this.getHistoryByDocId(docId)
@@ -90,7 +71,7 @@ export class LocalShareHistory implements ShareHistory {
       }
 
       const attrs = {
-        "custom-share-history": JSON.stringify(updatedItem),
+        [SettingKeys.CUSTOM_SHARE_HISTORY]: JSON.stringify(updatedItem),
       }
 
       await kernelApi.setBlockAttrs(docId, attrs)
@@ -105,19 +86,9 @@ export class LocalShareHistory implements ShareHistory {
     try {
       const { kernelApi } = await ApiUtils.getSiyuanKernelApi(this.pluginInstance)
 
-      // 验证docId有效性
-      try {
-        // 尝试获取文档属性以验证文档是否存在
-        await kernelApi.getBlockAttrs(docId)
-      } catch (error) {
-        this.logger.warn(`文档不存在或无效: ${docId}`, error)
-        // 如果文档不存在，则不执行任何操作
-        return
-      }
-
       // 删除分享历史属性
       const attrs = {
-        "custom-share-history": NULL_VALUE_FOR_SIYUAN_ATTR_REMOVE,
+        [SettingKeys.CUSTOM_SHARE_HISTORY]: NULL_VALUE_FOR_SIYUAN_ATTR_REMOVE,
       }
 
       await kernelApi.setBlockAttrs(docId, attrs)
@@ -133,8 +104,8 @@ export class LocalShareHistory implements ShareHistory {
       const { kernelApi } = await ApiUtils.getSiyuanKernelApi(this.pluginInstance)
       const attrs = await kernelApi.getBlockAttrs(docId)
 
-      if (attrs["custom-share-history"]) {
-        const item = JSON.parse(attrs["custom-share-history"])
+      if (attrs[SettingKeys.CUSTOM_SHARE_HISTORY]) {
+        const item = JSON.parse(attrs[SettingKeys.CUSTOM_SHARE_HISTORY])
 
         // 版本兼容性检查
         if (item._version === "1.0") {
