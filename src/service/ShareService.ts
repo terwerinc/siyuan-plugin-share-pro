@@ -228,17 +228,6 @@ class ShareService implements IShareHistoryService {
 
   public async updateSingleDocSettings(docId: string, isShare: boolean, settings: Partial<SingleDocSetting>) {
     const { kernelApi } = await ApiUtils.getSiyuanKernelApi(this.pluginInstance)
-
-    // 验证docId有效性
-    try {
-      // 尝试获取文档属性以验证文档是否存在
-      await kernelApi.getBlockAttrs(docId)
-    } catch (error) {
-      this.logger.warn(`文档不存在或无效: ${docId}`, error)
-      // 如果文档不存在，则不执行任何操作
-      return
-    }
-
     let toAttrs: Record<string, string> = AttrUtils.toAttrs(settings)
     if (!isShare) {
       toAttrs = AttrUtils.toAttrs({})
