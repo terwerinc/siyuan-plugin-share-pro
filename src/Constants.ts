@@ -2,7 +2,7 @@
  *            GNU GENERAL PUBLIC LICENSE
  *               Version 3, 29 June 2007
  *
- *  Copyright (C) 2022-2024 Terwer, Inc. <https://terwer.space/>
+ *  Copyright (C) 2022-2025 Terwer, Inc. <https://terwer.space/>
  *  Everyone is permitted to copy and distribute verbatim copies
  *  of this license document, but changing it is not allowed.
  */
@@ -16,3 +16,4 @@ export const SHARE_PRO_STORE_NAME = "share-pro.json"
 export const SHARE_SERVICE_ENDPOINT_DEV = "http://localhost:8086"
 export const SHARE_SERVICE_ENDPOINT_PROD = "https://api.terwergreen.com"
 export const SHARE_LIST_PAGE_SIZE = 10
+export const NULL_VALUE_FOR_SIYUAN_ATTR_REMOVE = null

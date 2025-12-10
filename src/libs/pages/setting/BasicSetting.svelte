@@ -2,7 +2,7 @@
   -            GNU GENERAL PUBLIC LICENSE
   -               Version 3, 29 June 2007
   -
-  -  Copyright (C) 2024 Terwer, Inc. <https://terwer.space/>
+  -  Copyright (C) 2024-2025 Terwer, Inc. <https://terwer.space/>
   -  Everyone is permitted to copy and distribute verbatim copies
   -  of this license document, but changing it is not allowed.
   -->
@@ -69,8 +69,7 @@
   <div class="config__tab-container">
     {#if vipInfo.code === 1 || vipInfo.code === 403}
       <div class="fn__block form-item no-register">
-        {pluginInstance.i18n.keyInfo.notValid}！
-        详细信息：{vipInfo.msg}
+        {pluginInstance.i18n.keyInfo.notValid}！ 详细信息：{vipInfo.msg}
       </div>
     {:else}
       <div class="fn__block form-item registered">

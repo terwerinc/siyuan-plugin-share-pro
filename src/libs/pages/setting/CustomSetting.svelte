@@ -2,7 +2,7 @@
   -            GNU GENERAL PUBLIC LICENSE
   -               Version 3, 29 June 2007
   -
-  -  Copyright (C) 2024 Terwer, Inc. <https://terwer.space/>
+  -  Copyright (C) 2024-2025 Terwer, Inc. <https://terwer.space/>
   -  Everyone is permitted to copy and distribute verbatim copies
   -  of this license document, but changing it is not allowed.
   -->
@@ -11,7 +11,7 @@
 <script lang="ts">
   import { ShareProConfig } from "../../../models/ShareProConfig"
   import { onMount } from "svelte"
-  import {DEFAULT_SIYUAN_LANG, isDev, SHARE_PRO_STORE_NAME} from "../../../Constants"
+  import { DEFAULT_SIYUAN_LANG, isDev, SHARE_PRO_STORE_NAME } from "../../../Constants"
   import { ApiUtils } from "../../../utils/ApiUtils"
   import { Dialog, showMessage } from "siyuan"
   import { simpleLogger } from "zhi-lib-base"

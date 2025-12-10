@@ -13,27 +13,27 @@
   import { onMount } from "svelte"
   import { Post } from "zhi-blog-api"
   import { simpleLogger } from "zhi-lib-base"
+  import { SiyuanKernelApi } from "zhi-siyuan-api"
   import { useSiyuanApi } from "../../composables/useSiyuanApi"
   import { isDev, SHARE_PRO_STORE_NAME } from "../../Constants"
   import ShareProPlugin from "../../index"
+  import { WidgetInvoke } from "../../invoke/widgetInvoke"
+  import { KeyInfo } from "../../models/KeyInfo"
   import { ShareOptions } from "../../models/ShareOptions"
   import { ShareProConfig } from "../../models/ShareProConfig"
   import { SingleDocSetting } from "../../models/SingleDocSetting"
   import { ShareService } from "../../service/ShareService"
-  import { PasswordUtils } from "../../utils/PasswordUtils"
-  import { icons } from "../../utils/svg"
-  import { SiyuanKernelApi } from "zhi-siyuan-api"
-  import { SettingKeys } from "../../utils/SettingKeys"
   import { AttrUtils } from "../../utils/AttrUtils"
-  import {KeyInfo} from "../../models/KeyInfo";
-  import {WidgetInvoke} from "../../invoke/widgetInvoke";
+  import { PasswordUtils } from "../../utils/PasswordUtils"
+  import { SettingKeys } from "../../utils/SettingKeys"
+  import { icons } from "../../utils/svg"
 
   export let pluginInstance: ShareProPlugin
   export let shareService: ShareService
   export let vipInfo: {
-      code: number
-      msg: string
-      data: KeyInfo
+    code: number
+    msg: string
+    data: KeyInfo
   }
   export let docId: string = "" // 可选参数,无文档ID时显示简化版UI
 
@@ -82,9 +82,10 @@
     // 层级1: 全局用户偏好设置（非文档级别）
     // 存储位置：本地配置/服务端配置（appConfig）
     userPreferences: {
-      showPassword: false,              // 密码显示偏好
-      incrementalShareConfig: {         // 增量分享配置
-        enabled: true,                  // 默认启用
+      showPassword: false, // 密码显示偏好
+      incrementalShareConfig: {
+        // 增量分享配置
+        enabled: true, // 默认启用
       },
     },
 
@@ -103,19 +104,23 @@
     // 有敏感信息，服务端存储
     // 2、shareOptions，有敏感信息，服务端存储，例如分享密码
     shareOptions: {
-      passwordEnabled: false,  // 密码保护开关
-      password: "",            // 分享密码（敏感信息）
+      passwordEnabled: false, // 密码保护开关
+      password: "", // 分享密码（敏感信息）
     } as ShareOptions,
   }
 
   // ========================================
   // 公共方法
   // ========================================
-  const showManageTab=()=>{
-      const keyInfo = vipInfo.data
-      widgetInvoke.showShareManageTab(keyInfo)
+  const showManageDialog = async () => {
+    const keyInfo = vipInfo.data
+    void widgetInvoke.showShareManageDialog(keyInfo)
   }
-
+  
+  // const showManageTab = () => {
+  //   const keyInfo = vipInfo.data
+  //   void widgetInvoke.showShareManageTab(keyInfo)
+  // }
   // ========================================
   // 单文档模式专属方法
   // ========================================
@@ -304,7 +309,7 @@
 
     // 加载配置
     const cfg = await pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
-    
+
     // 加载增量分享配置
     formData.userPreferences.incrementalShareConfig.enabled = cfg?.appConfig?.incrementalShareConfig?.enabled ?? true
 
@@ -341,11 +346,11 @@
     }
 
     logger.info("[Non-Single-Doc] Initializing non-single-doc mode")
-    
+
     // 加载增量分享配置
     const cfg = await pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
     formData.userPreferences.incrementalShareConfig.enabled = cfg?.appConfig?.incrementalShareConfig?.enabled ?? true
-    
+
     // 非单文档模式不需要加载文档数据，UI会自动隐藏需要docId的功能
     logger.info("[Non-Single-Doc] Initialization complete, showing limited UI")
   }
@@ -383,7 +388,7 @@
           <!-- 非单文档模式：显示通用标题 -->
           <div class="share-title">{pluginInstance.i18n["sharePro"]}</div>
         {/if}
-        
+
         <!-- 全局功能按钮：不需要docId，始终显示 -->
         <div class="global-actions">
           {#if formData.userPreferences.incrementalShareConfig.enabled === true}
@@ -395,11 +400,7 @@
               {@html icons.iconIncremental}
             </span>
           {/if}
-          <span
-            class="action-btn"
-            title={pluginInstance.i18n["manageDoc"]}
-            on:click={() => showManageTab()}
-          >
+          <span class="action-btn" title={pluginInstance.i18n["manageDoc"]} on:click={() => showManageDialog()}>
             {@html icons.iconManage}
           </span>
           <span
@@ -510,7 +511,7 @@
                     {#if formData.userPreferences.showPassword}
                       <path
                         fill="currentColor"
-                        d="M11.83 9L15 12.16V12a3 3 0 0 0-3-3h-.17m-4.3.8l1.55 1.55c-.05.21-.08.42-.08.65a3 3 0 0 0 3 3c.22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53a5 5 0 0 1-5-5c0-.79.2-1.53.53-2.2M2 4.27l2.28 2.28l.45.45C3.08 8.3 1.78 10 1 12c1.73 4.39 6 7.5 11 7.5c1.55 0 3.03-.3 4.38-.84l.43.42L19.73 22 21 20.73 3.27 3M12 7a5 5 0 0 1 5 5c0 .64-.13 1.26-.36 1.82l2.93 2.93c1.5-1.25 2.7-2.89 3.43-4.75c-1.73-4.39-6-7.5-11-7.5c-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7Z"
+                        d="M11.83 9L15 12.16V12a3 3 0 0 0-3-3h-.17m-4.3.8l1.55 1.55c-.05.21-.08.42-.08.65a3 3 0 0 0 3 3c.22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53a5 5 0 0 1-5-5c0-.79.2-1.53.53-2.2M2 4.27l2.28 2.28l.45.45C3.08 8.3 1.78 10 1 12c1.73 4.39 6 7.5 11 7.5c1.55 0 3.03-.3 4.38-.84l.43.42L19.73 22 21 20.73 3.27 3M12 7a5 5 0 0 1 5 5c0 .64-.13 1.26-.36 1.82l2.93 2.93c1.5-1.25 2.7-2.89 3.43-4.75c-1.73-4.39-6-7.5-11-7.5S2.73 16.39 1 12c1.73-4.39 6-7.5 11-7.5M3.18 12a9.821 9.821 0 0 0 17.64 0a9.821 9.821 0 0 0-17.64 0z"
                       />
                     {:else}
                       <path

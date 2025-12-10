@@ -8,36 +8,48 @@
   -->
 
 <script lang="ts">
-  import { showMessage } from "siyuan"
+  import VirtualList from "@sveltejs/svelte-virtual-list"
+  import { Dialog, showMessage } from "siyuan"
   import { onMount } from "svelte"
   import { simpleLogger } from "zhi-lib-base"
+  import {
+      getIncrementalDocumentsCount,
+      getIncrementalDocumentsPaged,
+      useSiyuanApi,
+  } from "../../composables/useSiyuanApi"
   import { isDev, SHARE_PRO_STORE_NAME } from "../../Constants"
   import ShareProPlugin from "../../index"
   import { ShareProConfig } from "../../models/ShareProConfig"
   import type { ChangeDetectionResult } from "../../service/IncrementalShareService"
   import { icons } from "../../utils/svg"
+  import BlacklistSetting from "./setting/BlacklistSetting.svelte"
+  import ShareManage from "./ShareManage.svelte"
+ // 添加黑名单管理组件导入
 
   export let pluginInstance: ShareProPlugin
+  export let cfg: ShareProConfig
 
   const logger = simpleLogger("incremental-share-ui", "share-pro", isDev)
-  let config: ShareProConfig
   let isLoading = false
   let changeDetectionResult: ChangeDetectionResult | null = null
-  let selectedNewDocs = new Set<string>()
-  let selectedUpdatedDocs = new Set<string>()
-  let expandedGroups = {
-    newDocuments: true,
-    updatedDocuments: true,
-    unchangedDocuments: false,
-  }
+  let selectedDocs = new Set<string>()
   let searchTerm = ""
-  let filteredNewDocs: any[] = []
-  let filteredUpdatedDocs: any[] = []
-  let filteredUnchangedDocs: any[] = []
-  let selectAllNew = false
-  let selectAllUpdated = false
+  let keyInfo: any = null
+  let isStatsCollapsed = true  // 统计区域默认折叠
+
+  // 统一的文档列表（新文档和更新文档合并）
+  let combinedDocs: Array<{ docId: string; docTitle: string; shareTime?: number; type: "new" | "updated" }> = []
+  let filteredDocs: Array<{ docId: string; docTitle: string; shareTime?: number; type: "new" | "updated" }> = []
+  let selectAll = false
+
+  // 分页相关状态
+  let currentPage = 0
+  let pageSize = 5 // 每页显示5条记录
+  let totalDocuments = 0
+  let totalPages = 0
+
   const formatTime = (timestamp: number) => {
-    if (!timestamp || timestamp === 0) return "从未分享"
+    if (!timestamp || timestamp === 0) return pluginInstance.i18n.incrementalShare.neverShared
     try {
       return new Date(timestamp).toLocaleString("zh-CN", {
         year: "numeric",
@@ -47,161 +59,300 @@
         minute: "2-digit",
       })
     } catch (error) {
-      return "无效日期"
+      return pluginInstance.i18n.incrementalShare.invalidDate
     }
   }
 
+  // 打开分享管理弹窗
+  const openShareManageDialog = async () => {
+    // 获取最新的vipInfo
+    const vipInfo = await pluginInstance.shareService.getVipInfo(cfg?.serviceApiConfig?.token ?? "")
+    if (vipInfo.code !== 0) {
+      const vipTip = vipInfo.msg ?? pluginInstance.i18n?.unknownError
+      showMessage(vipTip + "，" + pluginInstance.i18n?.openLicensePage, 7000, "error")
+      return
+    }
+    
+    keyInfo = vipInfo.data
+
+    const dialog = new Dialog({
+      title: pluginInstance.i18n.manageDoc,
+      content: `<div id="share-manage-dialog-content"></div>`,
+      width: "75vw",
+      height: "55vh",
+    })
+
+    // 等待DOM更新后挂载ShareManage组件
+    setTimeout(() => {
+      const container = document.getElementById("share-manage-dialog-content")
+      if (container) {
+        new ShareManage({
+          target: container,
+          props: {
+            pluginInstance: pluginInstance,
+            keyInfo: keyInfo,
+            pageSize: 5, // 传递较小的分页大小
+          },
+        })
+      }
+    }, 0)
+  }
+
+  // 打开黑名单管理弹窗
+  const openBlacklistManageDialog = async () => {
+    const dialog = new Dialog({
+      title: pluginInstance.i18n.incrementalShare.blacklist.title,
+      content: `<div id="blacklist-manage-dialog-content"></div>`,
+      width: "75vw",
+      height: "55vh",
+    })
+
+    // 等待DOM更新后挂载BlacklistSetting组件
+    setTimeout(() => {
+      const container = document.getElementById("blacklist-manage-dialog-content")
+      if (container) {
+        new BlacklistSetting({
+          target: container,
+          props: {
+            pluginInstance: pluginInstance,
+            dialog: dialog,
+          },
+        })
+      }
+    }, 0)
+  }
+
   onMount(async () => {
-    config = await pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
     await loadDocuments()
   })
+
+  const getLastShareTime = async () => {
+    // 本地存储的最后分享时间
+    const lastShareTime = cfg.appConfig?.incrementalShareConfig?.lastShareTime
+    // 实际上第一次分享的时候或者历史用户并不存在，但是人家已经分享过，需要处理
+    // 可以这么做，查找一篇最新分享的文档，取分享时间
+    if (lastShareTime && lastShareTime > 0) {
+      return lastShareTime
+    } else {
+      const latestShareDoc = await pluginInstance.incrementalShareService.getLatestShareDoc()
+      if (!latestShareDoc) {
+        return lastShareTime
+      }
+      // createAtTimestamp:1765160549990
+      return latestShareDoc.createAtTimestamp
+    }
+  }
 
   const loadDocuments = async () => {
     isLoading = true
     try {
-      const allDocuments = await getAllDocuments()
-      changeDetectionResult = await pluginInstance.incrementalShareService.detectChangedDocuments(allDocuments)
-      updateFilteredResults()
-      logger.info("文档变更检测结果:", changeDetectionResult)
+      // 获取思源 API
+      const { kernelApi } = useSiyuanApi(cfg)
+
+      // 获取上次分享时间戳（用于增量检测）
+      const lastShareTime = await getLastShareTime()
+      logger.info(
+        `${pluginInstance.i18n.incrementalShare.lastShareTime}: ${
+          lastShareTime || pluginInstance.i18n.incrementalShare.neverShared
+        }`
+      )
+
+      const notebookBlacklist = cfg.appConfig?.incrementalShareConfig?.notebookBlacklist ?? []
+      const nbIds = notebookBlacklist.map((nb) => nb.id)
+
+      // 获取文档总数（用于显示进度）
+      totalDocuments = await getIncrementalDocumentsCount(kernelApi, lastShareTime, searchTerm, nbIds)
+      totalPages = Math.ceil(totalDocuments / pageSize)
+      logger.info(
+        `${pluginInstance.i18n.incrementalShare.totalDocs}: ${totalDocuments}, ${pluginInstance.i18n.incrementalShare.page}: ${totalPages}`
+      )
+
+      // 重置分页状态
+      currentPage = 0
+      changeDetectionResult = {
+        newDocuments: [],
+        updatedDocuments: [],
+      }
+
+      // 加载第一页
+      await loadDocumentsByPage(0)
+
+      logger.info(`${pluginInstance.i18n.incrementalShare.shareStats}:`, changeDetectionResult)
     } catch (error) {
-      logger.error("加载文档失败:", error)
+      logger.error(`${pluginInstance.i18n.incrementalShare.loadError}:`, error)
       showMessage(pluginInstance.i18n.incrementalShare.loadError, 7000, "error")
     } finally {
       isLoading = false
     }
   }
 
-  const getAllDocuments = async () => {
+  // 加载指定页码的文档
+  const loadDocumentsByPage = async (pageNum: number) => {
+    isLoading = true
     try {
-      const mockDocuments = [
-        { docId: "20231201-mock001", docTitle: "Mock 文档1 - 已分享未更新", modifiedTime: Date.now() - 1000 * 60 * 60 * 24 * 8, notebookId: "mock-nb1", notebookName: "Mock 笔记木1" },
-        { docId: "20231202-mock002", docTitle: "Mock 文档2 - 已分享有更新", modifiedTime: Date.now() - 1000 * 60 * 60, notebookId: "mock-nb1", notebookName: "Mock 笔记木1" },
-        { docId: "20231203-mock003", docTitle: "Mock 文档3 - 分享失败", modifiedTime: Date.now() - 1000 * 60 * 60 * 24 * 2, notebookId: "mock-nb1", notebookName: "Mock 笔记木1" },
-        { docId: "20231205-mock005", docTitle: "Mock 文档5 - 新增文档", modifiedTime: Date.now() - 1000 * 60 * 30, notebookId: "mock-nb2", notebookName: "Mock 笔记木2" },
-      ]
-      logger.info(`获取到 ${mockDocuments.length} 个文档（Mock 数据）`)
-      return mockDocuments
+      const { kernelApi } = useSiyuanApi(cfg)
+
+      // 获取上次分享时间戳（用于增量检测）
+      const lastShareTime = await getLastShareTime()
+      logger.info(
+        `${pluginInstance.i18n.incrementalShare.lastShareTime}: ${
+          lastShareTime || pluginInstance.i18n.incrementalShare.neverShared
+        }`
+      )
+
+      // 获取笔记本黑名单
+      const notebookBlacklist = cfg.appConfig?.incrementalShareConfig?.notebookBlacklist ?? []
+      const nbIds = notebookBlacklist.map((nb) => nb.id)
+
+      // 使用分页检测方法，只加载指定页，传递搜索词
+      changeDetectionResult = await pluginInstance.incrementalShareService.detectChangedDocumentsSinglePage(
+        async (pageNum, size) => {
+          return await getIncrementalDocumentsPaged(kernelApi, pageNum, size, lastShareTime, searchTerm, nbIds)
+        },
+        pageNum,
+        pageSize
+      )
+
+      // 更新合并文档列表
+      if (changeDetectionResult) {
+        // 合并新文档和更新文档
+        combinedDocs = [
+          ...changeDetectionResult.newDocuments.map((doc) => ({
+            ...doc,
+            type: "new" as const,
+          })),
+          ...changeDetectionResult.updatedDocuments.map((doc) => ({
+            ...doc,
+            type: "updated" as const,
+          })),
+        ]
+
+        // 更新过滤后的文档列表（目前不过滤，直接显示所有）
+        filteredDocs = combinedDocs
+      }
+
+      // 更新分页状态
+      currentPage = pageNum
     } catch (error) {
-      logger.error("获取文档列表失败:", error)
-      return []
+      logger.error(`${pluginInstance.i18n.incrementalShare.loadError}:`, error)
+      showMessage(pluginInstance.i18n.incrementalShare.loadError, 7000, "error")
+
+      // 在加载失败时使用mock数据
+      // useMockData()
+    } finally {
+      isLoading = false
     }
   }
 
-  const updateFilteredResults = () => {
-    if (!changeDetectionResult) return
-    const filterDocs = (docs: any[]) => {
-      if (!searchTerm) return docs
-      return docs.filter((doc) => doc.docTitle.toLowerCase().includes(searchTerm.toLowerCase()))
+  // 加载下一页文档
+  const loadNextPage = async () => {
+    if (currentPage < totalPages - 1) {
+      await loadDocumentsByPage(currentPage + 1)
     }
-    filteredNewDocs = filterDocs(changeDetectionResult.newDocuments)
-    filteredUpdatedDocs = filterDocs(changeDetectionResult.updatedDocuments)
-    filteredUnchangedDocs = filterDocs(changeDetectionResult.unchangedDocuments)
   }
 
-  const handleSearch = () => updateFilteredResults()
+  // 加载上一页文档
+  const loadPrevPage = async () => {
+    if (currentPage > 0) {
+      await loadDocumentsByPage(currentPage - 1)
+    }
+  }
 
-  const handleSelectAllNew = () => {
-    if (selectAllNew) {
-      filteredNewDocs.forEach((doc) => selectedNewDocs.add(doc.docId))
+  const handleSearch = () => {
+    // 重新加载文档，将搜索词传递给后端
+    loadDocuments()
+  }
+  
+  // 刷新按钮处理函数
+  const handleRefresh = async () => {
+    // 重新加载配置
+    cfg = await pluginInstance.safeLoad(SHARE_PRO_STORE_NAME)
+    // 重新加载文档
+    await loadDocuments()
+  }
+
+  const handleSelectAll = () => {
+    if (selectAll) {
+      filteredDocs.forEach((doc) => selectedDocs.add(doc.docId))
     } else {
-      filteredNewDocs.forEach((doc) => selectedNewDocs.delete(doc.docId))
+      filteredDocs.forEach((doc) => selectedDocs.delete(doc.docId))
     }
-    selectedNewDocs = selectedNewDocs
+    selectedDocs = selectedDocs
   }
 
-  const handleSelectAllUpdated = () => {
-    if (selectAllUpdated) {
-      filteredUpdatedDocs.forEach((doc) => selectedUpdatedDocs.add(doc.docId))
-    } else {
-      filteredUpdatedDocs.forEach((doc) => selectedUpdatedDocs.delete(doc.docId))
-    }
-    selectedUpdatedDocs = selectedUpdatedDocs
+  // 切换统计区域折叠状态
+  const toggleStatsCollapse = () => {
+    isStatsCollapsed = !isStatsCollapsed
   }
 
-  const toggleDocSelection = (docId: string, type: "new" | "updated") => {
-    if (type === "new") {
-      if (selectedNewDocs.has(docId)) {
-        selectedNewDocs.delete(docId)
-      } else {
-        selectedNewDocs.add(docId)
-      }
-      selectedNewDocs = selectedNewDocs
-      selectAllNew = selectedNewDocs.size === filteredNewDocs.length && filteredNewDocs.length > 0
+  const toggleDocSelection = (docId: string) => {
+    if (selectedDocs.has(docId)) {
+      selectedDocs.delete(docId)
     } else {
-      if (selectedUpdatedDocs.has(docId)) {
-        selectedUpdatedDocs.delete(docId)
-      } else {
-        selectedUpdatedDocs.add(docId)
-      }
-      selectedUpdatedDocs = selectedUpdatedDocs
-      selectAllUpdated = selectedUpdatedDocs.size === filteredUpdatedDocs.length && filteredUpdatedDocs.length > 0
+      selectedDocs.add(docId)
     }
+    selectedDocs = selectedDocs
+    selectAll = selectedDocs.size === filteredDocs.length && filteredDocs.length > 0
   }
 
   const handleBulkShare = async () => {
-    const selectedDocs = [
-      ...Array.from(selectedNewDocs).map((docId) => ({
-        docId,
-        docTitle: filteredNewDocs.find((d) => d.docId === docId)?.docTitle || "",
-      })),
-      ...Array.from(selectedUpdatedDocs).map((docId) => ({
-        docId,
-        docTitle: filteredUpdatedDocs.find((d) => d.docId === docId)?.docTitle || "",
-      })),
-    ]
+    const selectedDocsArray = Array.from(selectedDocs)
+      .map((docId) => {
+        const doc = combinedDocs.find((d) => d.docId === docId)
+        return {
+          docId,
+          docTitle: doc?.docTitle || "",
+        }
+      })
+      .filter((doc) => doc.docTitle) // 过滤掉找不到的文档
 
-    if (selectedDocs.length === 0) {
+    if (selectedDocsArray.length === 0) {
       showMessage(pluginInstance.i18n.incrementalShare.noSelection, 3000, "error")
       return
     }
 
     isLoading = true
     try {
-      const result = await pluginInstance.incrementalShareService.bulkShareDocuments(selectedDocs)
+      const result = await pluginInstance.incrementalShareService.bulkShareDocuments(selectedDocsArray)
 
       if (result.successCount > 0) {
         showMessage(
-          `${pluginInstance.i18n.incrementalShare.shareSuccess}: ${result.successCount} ${
-            pluginInstance.i18n.incrementalShare.documents
-          }`,
+          `${pluginInstance.i18n.incrementalShare.shareSuccess}: ${result.successCount} ${pluginInstance.i18n.incrementalShare.documents}`,
           3000,
           "info"
         )
         await loadDocuments()
-        selectedNewDocs.clear()
-        selectedUpdatedDocs.clear()
-        selectAllNew = false
-        selectAllUpdated = false
+        selectedDocs.clear()
+        selectAll = false
       }
 
       if (result.failedCount > 0) {
         showMessage(
-          `${pluginInstance.i18n.incrementalShare.shareFailed}: ${result.failedCount} ${
-            pluginInstance.i18n.incrementalShare.documents
-          }`,
+          `${pluginInstance.i18n.incrementalShare.shareFailed}: ${result.failedCount} ${pluginInstance.i18n.incrementalShare.documents}`,
           7000,
           "error"
         )
       }
     } catch (error) {
-      logger.error("批量分享失败:", error)
+      logger.error(`${pluginInstance.i18n.incrementalShare.shareError}:`, error)
       showMessage(pluginInstance.i18n.incrementalShare.shareError, 7000, "error")
     } finally {
       isLoading = false
     }
   }
-
-  const toggleGroup = (group: keyof typeof expandedGroups) => {
-    expandedGroups[group] = !expandedGroups[group]
-    expandedGroups = expandedGroups
-  }
-
-  $: if (changeDetectionResult) updateFilteredResults()
 </script>
 
 <div class="incremental-share-ui">
   <div class="share-header">
-    <h3>{pluginInstance.i18n.incrementalShare.title}</h3>
+    <div class="header-title">
+      <h3>{pluginInstance.i18n.incrementalShare.title}</h3>
+      <button class="btn-icon" on:click={openShareManageDialog} title={pluginInstance.i18n.manageDoc}>
+        {@html icons.iconManage}
+      </button>
+      <button class="btn-icon" on:click={openBlacklistManageDialog} title={pluginInstance.i18n.incrementalShare.blacklist.title}>
+        {@html icons.iconBan}
+      </button>
+    </div>
     <div class="header-actions">
       <input
         type="text"
@@ -210,16 +361,12 @@
         bind:value={searchTerm}
         on:input={handleSearch}
       />
-      <button
-        class="btn-primary"
-        on:click={handleBulkShare}
-        disabled={isLoading || selectedNewDocs.size + selectedUpdatedDocs.size === 0}
-      >
+      <button class="btn-primary" on:click={handleBulkShare} disabled={isLoading || selectedDocs.size === 0}>
         {@html icons.iconBulk}
         {pluginInstance.i18n.incrementalShare.bulkShare}
-        ({selectedNewDocs.size + selectedUpdatedDocs.size})
+        ({selectedDocs.size})
       </button>
-      <button class="btn-default" on:click={loadDocuments} disabled={isLoading}>
+      <button class="btn-default" on:click={handleRefresh} disabled={isLoading}>
         {@html icons.iconRefresh}
         {pluginInstance.i18n.incrementalShare.refresh}
       </button>
@@ -233,139 +380,111 @@
     </div>
   {:else if changeDetectionResult}
     <div class="share-stats">
-      <div class="stat-item">
-        <span class="stat-number">{changeDetectionResult.newDocuments.length}</span>
-        <span class="stat-label">{pluginInstance.i18n.incrementalShare.newDocuments}</span>
+      <div class="stat-header">
+        <button class="collapse-toggle" on:click={toggleStatsCollapse}>
+          {isStatsCollapsed ? pluginInstance.i18n.incrementalShare.expandStats : pluginInstance.i18n.incrementalShare.collapseStats}
+          <span class="toggle-icon">{isStatsCollapsed ? '▶' : '▼'}</span>
+        </button>
       </div>
-      <div class="stat-item">
-        <span class="stat-number">{changeDetectionResult.updatedDocuments.length}</span>
-        <span class="stat-label">{pluginInstance.i18n.incrementalShare.updatedDocuments}</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-number">{changeDetectionResult.unchangedDocuments.length}</span>
-        <span class="stat-label">{pluginInstance.i18n.incrementalShare.unchangedDocuments}</span>
-      </div>
-      <div class="stat-item blacklisted">
-        <span class="stat-number">{changeDetectionResult.blacklistedCount || 0}</span>
-        <span class="stat-label">{pluginInstance.i18n.incrementalShare.blacklistedDocuments}</span>
-      </div>
+      {#if !isStatsCollapsed}
+        <div class="stat-content">
+          <div class="stat-item">
+            <span class="stat-number">{changeDetectionResult.newDocuments?.length || 0}</span>
+            <span class="stat-label">{pluginInstance.i18n.incrementalShare.newDocuments}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">{changeDetectionResult.updatedDocuments?.length || 0}</span>
+            <span class="stat-label">{pluginInstance.i18n.incrementalShare.updatedDocuments}</span>
+          </div>
+        </div>
+      {/if}
     </div>
 
-    <div class="document-groups">
-      <!-- 新增文档 -->
+    <div class="document-section">
+      <!-- 统一的文档列表 -->
       <div class="document-group">
-        <div class="group-header" on:click={() => toggleGroup("newDocuments")}>
+        <div class="group-header">
           <span class="group-title">
-            {@html expandedGroups.newDocuments ? icons.iconChevronDown : icons.iconChevronRight}
-            {pluginInstance.i18n.incrementalShare.newDocumentsGroup}
-            <span class="group-count">({filteredNewDocs.length})</span>
+            {pluginInstance.i18n.incrementalShare.documentsToShare}
+            <span class="group-count">{filteredDocs?.length || 0}/{totalDocuments || 0}</span>
           </span>
-          {#if filteredNewDocs.length > 0}
+          {#if (filteredDocs?.length || 0) > 0}
             <label class="select-all">
-              <input type="checkbox" bind:checked={selectAllNew} on:change={handleSelectAllNew} />
+              <input type="checkbox" bind:checked={selectAll} on:change={handleSelectAll} />
               {pluginInstance.i18n.incrementalShare.selectAll}
             </label>
           {/if}
         </div>
-        {#if expandedGroups.newDocuments}
-          <div class="group-content">
-            {#if filteredNewDocs.length === 0}
-              <div class="empty-message">
-                {pluginInstance.i18n.incrementalShare.noNewDocuments}
-              </div>
-            {:else}
-              {#each filteredNewDocs as doc}
+        <div class="group-content">
+          {#if (filteredDocs?.length || 0) === 0}
+            <div class="empty-message">
+              {pluginInstance.i18n.incrementalShare.noDocumentsToShare}
+            </div>
+          {:else}
+            <!-- 使用虚拟滚动 -->
+            <div class="virtual-list-container">
+              <VirtualList items={filteredDocs || []} let:item itemHeight={30}>
                 <div class="document-item">
                   <label class="document-checkbox">
                     <input
                       type="checkbox"
-                      checked={selectedNewDocs.has(doc.docId)}
-                      on:change={() => toggleDocSelection(doc.docId, "new")}
+                      checked={selectedDocs?.has(item.docId) || false}
+                      on:change={() => toggleDocSelection(item.docId)}
                     />
-                    <span class="document-title">{doc.docTitle}</span>
+                    <div class="document-info">
+                      <div class="document-title-wrapper">
+                        <span class="document-title"
+                          >{item.docTitle || pluginInstance.i18n.incrementalShare.noTitle}</span
+                        >
+                        <span class={`document-type document-type--${item.type || "new"}`}>
+                          {item.type === "updated"
+                            ? pluginInstance.i18n.incrementalShare.updated
+                            : pluginInstance.i18n.incrementalShare.new}
+                        </span>
+                      </div>
+                      <div class="document-meta">
+                        {#if item.shareTime && item.shareTime > 0}
+                          <span class="document-time">
+                            {pluginInstance.i18n.incrementalShare.lastShared}: {formatTime(item.shareTime)}
+                          </span>
+                        {:else}
+                          <span class="document-time">
+                            {pluginInstance.i18n.incrementalShare.lastShared}: {pluginInstance.i18n.incrementalShare
+                              .neverShared}
+                          </span>
+                        {/if}
+                      </div>
+                    </div>
                   </label>
-                  <span class="document-time">{formatTime(doc.shareTime)}</span>
                 </div>
-              {/each}
-            {/if}
-          </div>
-        {/if}
-      </div>
-
-      <!-- 更新文档 -->
-      <div class="document-group">
-        <div class="group-header" on:click={() => toggleGroup("updatedDocuments")}>
-          <span class="group-title">
-            {@html expandedGroups.updatedDocuments ? icons.iconChevronDown : icons.iconChevronRight}
-            {pluginInstance.i18n.incrementalShare.updatedDocumentsGroup}
-            <span class="group-count">({filteredUpdatedDocs.length})</span>
-          </span>
-          {#if filteredUpdatedDocs.length > 0}
-            <label class="select-all">
-              <input type="checkbox" bind:checked={selectAllUpdated} on:change={handleSelectAllUpdated} />
-              {pluginInstance.i18n.incrementalShare.selectAll}
-            </label>
+              </VirtualList>
+            </div>
           {/if}
         </div>
-        {#if expandedGroups.updatedDocuments}
-          <div class="group-content">
-            {#if filteredUpdatedDocs.length === 0}
-              <div class="empty-message">
-                {pluginInstance.i18n.incrementalShare.noUpdatedDocuments}
-              </div>
-            {:else}
-              {#each filteredUpdatedDocs as doc}
-                <div class="document-item">
-                  <label class="document-checkbox">
-                    <input
-                      type="checkbox"
-                      checked={selectedUpdatedDocs.has(doc.docId)}
-                      on:change={() => toggleDocSelection(doc.docId, "updated")}
-                    />
-                    <span class="document-title">{doc.docTitle}</span>
-                  </label>
-                  <span class="document-time"
-                    >{pluginInstance.i18n.incrementalShare.lastShared}: {formatTime(
-                      doc.shareTime
-                    )}</span
-                  >
-                </div>
-              {/each}
-            {/if}
-          </div>
-        {/if}
       </div>
 
-      <!-- 未变更文档 -->
-      <div class="document-group">
-        <div class="group-header" on:click={() => toggleGroup("unchangedDocuments")}>
-          <span class="group-title">
-            {@html expandedGroups.unchangedDocuments ? icons.iconChevronDown : icons.iconChevronRight}
-            {pluginInstance.i18n.incrementalShare.unchangedDocumentsGroup}
-            <span class="group-count">({filteredUnchangedDocs.length})</span>
-          </span>
-        </div>
-        {#if expandedGroups.unchangedDocuments}
-          <div class="group-content">
-            {#if filteredUnchangedDocs.length === 0}
-              <div class="empty-message">
-                {pluginInstance.i18n.incrementalShare.noUnchangedDocuments}
-              </div>
-            {:else}
-              {#each filteredUnchangedDocs as doc}
-                <div class="document-item no-select">
-                  <span class="document-title">{doc.docTitle}</span>
-                  <span class="document-time"
-                    >{pluginInstance.i18n.incrementalShare.lastShared}: {formatTime(
-                      doc.shareTime
-                    )}</span
-                  >
-                </div>
-              {/each}
-            {/if}
+      <!-- 分页控件 -->
+      {#if (totalPages || 0) > 1}
+        <div class="pagination-controls">
+          <button class="pagination-btn" on:click={loadPrevPage} disabled={currentPage === 0 || isLoading}>
+            {@html icons.iconChevronLeft}
+            {pluginInstance.i18n.incrementalShare.prevPage}
+          </button>
+
+          <div class="pagination-info">
+            {(currentPage || 0) + 1} / {totalPages || 1}
           </div>
-        {/if}
-      </div>
+
+          <button
+            class="pagination-btn"
+            on:click={loadNextPage}
+            disabled={currentPage === (totalPages || 1) - 1 || isLoading}
+          >
+            {pluginInstance.i18n.incrementalShare.nextPage}
+            {@html icons.iconChevronRight}
+          </button>
+        </div>
+      {/if}
     </div>
   {:else}
     <div class="empty-state">
@@ -374,291 +493,455 @@
   {/if}
 </div>
 
-<style>
-  .incremental-share-ui {
-    padding: 16px;
-    font-family: var(--b3-font-family);
-  }
+<style lang="stylus">
+.incremental-share-ui
+  padding 16px
+  font-family var(--b3-font-family)
+  background var(--b3-theme-background)
+  border-radius 8px
+  max-width 1200px
+  margin 0 auto
+  height 100%
+  max-height 80vh
+  display flex
+  flex-direction column
 
-  .share-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--b3-border-color);
-  }
+.share-header
+  display flex
+  justify-content space-between
+  align-items center
+  margin-bottom 20px
+  padding-bottom 16px
+  border-bottom 1px solid var(--b3-border-color)
+  background var(--b3-theme-surface)
+  border-radius 6px
+  padding 16px
+  box-shadow 0 1px 2px rgba(0, 0, 0, 0.05)
 
-  .share-header h3 {
-    margin: 0;
-    color: var(--b3-theme-on-background);
-  }
+.header-title
+  display flex
+  align-items center
+  gap 12px
 
-  .header-actions {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
+  h3
+    margin 0
+    color var(--b3-theme-on-background)
 
-  .b3-text-field {
-    width: 200px;
-  }
+  .btn-icon
+    padding 6px
+    border none
+    background transparent
+    border-radius 4px
+    cursor pointer
+    transition all 0.3s ease
+    display flex
+    align-items center
+    justify-content center
+    width 32px
+    height 32px
 
-  .header-actions button {
-    padding: 3px 10px;
-    font-size: 13px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    white-space: nowrap;
-    flex-shrink: 0;
-    height: 26px;
-    line-height: 20px;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-  }
+    &:hover
+      background-color var(--b3-theme-hover)
+
+    &:active
+      background-color var(--b3-theme-secondary)
+
+.header-actions
+  display flex
+  gap 8px
+  align-items center
+
+  .b3-text-field
+    width 200px
+    border-radius 4px
+    border 1px solid var(--b3-border-color)
+    padding 4px 8px
+    transition all 0.2s ease
+
+    &:focus
+      outline none
+      border-color var(--b3-theme-primary)
+      box-shadow 0 0 0 2px rgba(0, 115, 230, 0.2)
+
+  button
+    padding 3px 10px
+    font-size 13px
+    border none
+    border-radius 4px
+    cursor pointer
+    transition all 0.3s ease
+    white-space nowrap
+    flex-shrink 0
+    height 26px
+    line-height 20px
+    display inline-flex
+    align-items center
+    gap 4px
+    box-shadow 0 1px 2px rgba(0, 0, 0, 0.05)
 
   /* 主要按钮 - 批量分享 */
-  .header-actions .btn-primary {
-    color: #ffffff;
-    background-color: #0073e6;
-  }
+  .btn-primary
+    color #ffffff
+    background-color #0073e6
 
-  .header-actions .btn-primary:hover:not(:disabled) {
-    background-color: #005bb5;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
+    &:hover:not(:disabled)
+      background-color #005bb5
+      box-shadow 0 2px 4px rgba(0, 0, 0, 0.1)
 
-  .header-actions .btn-primary:active:not(:disabled) {
-    background-color: #004999;
-    transform: translateY(1px);
-  }
+    &:active:not(:disabled)
+      background-color #004999
+      transform translateY(1px)
 
-  .header-actions .btn-primary:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    background-color: #d9d9d9;
-    color: rgba(0, 0, 0, 0.5);
-  }
+    &:disabled
+      opacity 0.6
+      cursor not-allowed
+      background-color #d9d9d9
+      color rgba(0, 0, 0, 0.5)
 
   /* 次要按钮 - 刷新 */
-  .header-actions .btn-default {
-    color: rgba(0, 0, 0, 0.88);
-    background-color: #ffffff;
-    border: 1px solid #d9d9d9;
-  }
+  .btn-default
+    color rgba(0, 0, 0, 0.88)
+    background-color #ffffff
+    border 1px solid #d9d9d9
 
-  .header-actions .btn-default:hover:not(:disabled) {
-    color: #0073e6;
-    border-color: #0073e6;
-  }
+    &:hover:not(:disabled)
+      color #0073e6
+      border-color #0073e6
 
-  .header-actions .btn-default:active:not(:disabled) {
-    color: #005bb5;
-    border-color: #005bb5;
-  }
+    &:active:not(:disabled)
+      color #005bb5
+      border-color #005bb5
 
-  .header-actions .btn-default:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    color: rgba(0, 0, 0, 0.25);
-    background-color: rgba(0, 0, 0, 0.04);
-    border-color: #d9d9d9;
-  }
+    &:disabled
+      opacity 0.6
+      cursor not-allowed
+      color rgba(0, 0, 0, 0.25)
+      background-color rgba(0, 0, 0, 0.04)
+      border-color #d9d9d9
 
-  /* 暗黑模式 */
-  html[data-theme-mode="dark"] .header-actions .btn-primary {
-    background-color: #177ddc;
-  }
+/* 暗黑模式 */
+html[data-theme-mode="dark"]
+  .header-actions
+    .btn-primary
+      background-color #177ddc
 
-  html[data-theme-mode="dark"] .header-actions .btn-primary:hover:not(:disabled) {
-    background-color: #1765ad;
-  }
+      &:hover:not(:disabled)
+        background-color #1765ad
 
-  html[data-theme-mode="dark"] .header-actions .btn-primary:disabled {
-    background-color: rgba(255, 255, 255, 0.08);
-    color: rgba(255, 255, 255, 0.5);
-  }
+      &:disabled
+        background-color rgba(255, 255, 255, 0.08)
+        color rgba(255, 255, 255, 0.5)
 
-  html[data-theme-mode="dark"] .header-actions .btn-default {
-    color: rgba(255, 255, 255, 0.85);
-    background-color: transparent;
-    border-color: #434343;
-  }
+    .btn-default
+      color rgba(255, 255, 255, 0.85)
+      background-color transparent
+      border-color #434343
 
-  html[data-theme-mode="dark"] .header-actions .btn-default:hover:not(:disabled) {
-    color: #177ddc;
-    border-color: #177ddc;
-  }
+      &:hover:not(:disabled)
+        color #177ddc
+        border-color #177ddc
 
-  html[data-theme-mode="dark"] .header-actions .btn-default:disabled {
-    color: rgba(255, 255, 255, 0.3);
-    background-color: rgba(255, 255, 255, 0.08);
-    border-color: #434343;
-  }
+      &:disabled
+        color rgba(255, 255, 255, 0.3)
+        background-color rgba(255, 255, 255, 0.08)
+        border-color #434343
 
-  .loading {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 40px;
-    gap: 12px;
-  }
+  .btn-icon
+    &:hover
+      background-color rgba(255, 255, 255, 0.1)
 
-  .spinner {
-    width: 20px;
-    height: 20px;
-    border: 2px solid var(--b3-border-color);
-    border-top: 2px solid var(--b3-theme-primary);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-  }
+    &:active
+      background-color rgba(255, 255, 255, 0.2)
 
-  @keyframes spin {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
-  }
+.loading
+  display flex
+  align-items center
+  justify-content center
+  padding 40px
+  gap 12px
+  background var(--b3-theme-surface)
+  border-radius 8px
+  box-shadow 0 2px 8px rgba(0, 0, 0, 0.1)
 
-  .share-stats {
-    display: flex;
-    gap: 24px;
-    margin-bottom: 20px;
-    padding: 16px;
-    background: var(--b3-theme-surface);
-    border-radius: 8px;
-    border: 1px solid var(--b3-border-color);
-  }
+.spinner
+  width 24px
+  height 24px
+  border 3px solid var(--b3-border-color)
+  border-top 3px solid var(--b3-theme-primary)
+  border-radius 50%
+  animation spin 1s linear infinite
 
-  .stat-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-width: 80px;
-  }
+@keyframes spin
+  0%
+    transform rotate(0deg)
+  100%
+    transform rotate(360deg)
 
-  .stat-item.blacklisted {
-    color: var(--b3-theme-error);
-  }
+.share-stats
+  display flex
+  flex-direction column
+  gap 8px
+  margin-bottom 20px
+  padding 16px
+  background var(--b3-theme-surface)
+  border-radius 8px
+  border 1px solid var(--b3-border-color)
+  box-shadow 0 2px 4px rgba(0, 0, 0, 0.05)
 
-  .stat-number {
-    font-size: 24px;
-    font-weight: bold;
-    color: var(--b3-theme-primary);
-  }
+.stat-header
+  display flex
+  justify-content flex-start
 
-  .stat-label {
-    font-size: 12px;
-    color: var(--b3-theme-on-surface);
-    margin-top: 4px;
-  }
+.collapse-toggle
+  display flex
+  align-items center
+  gap 6px
+  background transparent
+  border none
+  color var(--b3-theme-on-background)
+  font-size 14px
+  font-weight 500
+  cursor pointer
+  padding 4px 8px
+  border-radius 4px
+  transition all 0.2s ease
 
-  .document-groups {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
+  &:hover
+    background var(--b3-theme-hover)
 
-  .document-group {
-    border: 1px solid var(--b3-border-color);
-    border-radius: 8px;
-    overflow: hidden;
-  }
+.toggle-icon
+  font-size 12px
 
-  .group-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 16px;
-    background: var(--b3-theme-surface);
-    cursor: pointer;
-    user-select: none;
-  }
+.stat-content
+  display flex
+  gap 24px
+  justify-content flex-start
+  margin-top 8px
 
-  .group-header:hover {
-    background: var(--b3-theme-surface-light);
-  }
+.stat-item
+  display flex
+  flex-direction column
+  align-items center
+  min-width 80px
+  padding 12px
+  border-radius 6px
+  transition all 0.2s ease
 
-  .group-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 500;
-    color: var(--b3-theme-on-background);
-  }
+  &:hover
+    background var(--b3-theme-hover)
+    transform translateY(-2px)
 
-  .group-count {
-    color: var(--b3-theme-on-surface);
-    font-size: 14px;
-  }
+  &.blacklisted
+    color var(--b3-theme-error)
 
-  .select-all {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 14px;
-    cursor: pointer;
-  }
+.stat-number
+  font-size 24px
+  font-weight bold
+  color var(--b3-theme-primary)
+  text-shadow 0 1px 2px rgba(0, 0, 0, 0.1)
 
-  .group-content {
-    padding: 0;
-  }
+.stat-label
+  font-size 12px
+  color var(--b3-theme-on-surface)
+  margin-top 4px
 
-  .document-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--b3-border-color);
-    transition: background-color 0.2s;
-  }
+.document-section
+  display flex
+  flex-direction column
+  gap 16px
+  flex 1
+  height 100%
+  overflow hidden
+  min-height 0
 
-  .document-item:hover {
-    background: var(--b3-theme-surface-light);
-  }
+.document-group
+  border 1px solid var(--b3-border-color)
+  border-radius 8px
+  overflow hidden
+  box-shadow 0 2px 4px rgba(0, 0, 0, 0.05)
+  flex 1
+  display flex
+  flex-direction column
+  min-height 0
 
-  .document-item:last-child {
-    border-bottom: none;
-  }
+.group-header
+  display flex
+  justify-content space-between
+  align-items center
+  padding 12px 16px
+  background var(--b3-theme-surface)
+  user-select none
+  font-weight 500
+  border-bottom 1px solid var(--b3-border-color)
 
-  .document-item.no-select {
-    padding-left: 40px;
-  }
+.group-title
+  display flex
+  align-items center
+  gap 8px
+  font-weight 500
+  color var(--b3-theme-on-background)
 
-  .document-checkbox {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    flex: 1;
-  }
+.group-count
+  color var(--b3-theme-on-surface)
+  font-size 14px
+  background var(--b3-theme-primary-lightest)
+  padding 2px 8px
+  border-radius 4px
+  font-weight 500
 
-  .document-title {
-    font-size: 14px;
-    color: var(--b3-theme-on-background);
-  }
+.select-all
+  display flex
+  align-items center
+  gap 6px
+  font-size 14px
+  cursor pointer
 
-  .document-time {
-    font-size: 12px;
-    color: var(--b3-theme-on-surface);
-  }
+.group-content
+  padding 0
+  display flex
+  flex-direction column
+  height 100%
+  flex 1
+  min-height 0
+  overflow-y auto
+  overflow-x hidden
 
-  .empty-message {
-    padding: 20px;
-    text-align: center;
-    color: var(--b3-theme-on-surface);
-    font-size: 14px;
-  }
+/* 调整虚拟列表容器高度计算 */
+.virtual-list-container
+  width 100%
+  overflow-y auto
+  overflow-x hidden
+  flex 1
+  /* 当外部容器没有固定高度时，根据内容动态调整高度 */
+  height auto
+  max-height 100%
+  min-height 30px /* 至少显示一项的高度 */
 
-  .empty-state {
-    padding: 40px;
-    text-align: center;
-    color: var(--b3-theme-on-surface);
-    font-size: 16px;
-  }
+.document-item
+  display flex
+  align-items center
+  padding 4px 8px
+  border-bottom 1px solid var(--b3-border-color)
+  transition all 0.2s ease
+  min-height 30px
+
+  &:hover
+    background var(--b3-theme-surface-light)
+
+  &:last-child
+    border-bottom none
+
+.document-checkbox
+  display flex
+  align-items center
+  gap 6px
+  cursor pointer
+  flex 1
+
+  input[type="checkbox"]
+    margin-top 0
+
+.document-info
+  display flex
+  flex-direction row
+  align-items center
+  flex 1
+  min-width 0 /* 允许文本截断 */
+  gap 8px
+
+.document-title-wrapper
+  display flex
+  align-items center
+  gap 8px
+  margin-bottom 2px
+
+.document-title
+  font-size 13px
+  color var(--b3-theme-on-background)
+  white-space nowrap
+  overflow hidden
+  text-overflow ellipsis
+  flex 1
+  font-weight 500
+
+.document-meta
+  display flex
+  align-items center
+  gap 6px
+
+.document-type
+  font-size 9px
+  padding 1px 4px
+  border-radius 8px
+  font-weight 500
+  flex-shrink 0
+  text-transform uppercase
+  letter-spacing 0.5px
+  box-shadow 0 1px 1px rgba(0, 0, 0, 0.1)
+
+.document-type--new
+  background-color #e6ffec
+  color #00b324
+  border 1px solid #c8e6c9
+
+.document-type--updated
+  background-color #fff7e6
+  color #fa8c16
+  border 1px solid #ffe0b2
+
+.document-time
+  font-size 11px
+  color var(--b3-theme-on-surface)
+  white-space nowrap
+  font-style italic
+  margin-left auto
+
+.empty-message
+  padding 20px
+  text-align center
+  color var(--b3-theme-on-surface)
+  font-size 14px
+
+.empty-state
+  padding 40px
+  text-align center
+  color var(--b3-theme-on-surface)
+  font-size 16px
+
+.pagination-controls
+  display flex
+  justify-content center
+  align-items center
+  gap 16px
+  padding 24px
+  background var(--b3-theme-surface)
+  border-top 1px solid var(--b3-border-color)
+
+.pagination-btn
+  display flex
+  align-items center
+  gap 6px
+  padding 6px 12px
+  border 1px solid var(--b3-border-color)
+  background var(--b3-theme-background)
+  border-radius 4px
+  cursor pointer
+  font-size 14px
+  color var(--b3-theme-on-background)
+  transition all 0.3s ease
+  box-shadow 0 1px 2px rgba(0, 0, 0, 0.05)
+
+  &:hover:not(:disabled)
+    background var(--b3-theme-surface-light)
+    border-color var(--b3-theme-primary)
+
+  &:disabled
+    opacity 0.5
+    cursor not-allowed
+
+.pagination-info
+  font-size 14px
+  color var(--b3-theme-on-surface)
+  min-width 100px
+  text-align center
 </style>
