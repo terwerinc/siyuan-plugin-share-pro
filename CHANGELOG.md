@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.15.1](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.15.0...share-pro-v1.15.1) (2026-01-24)
+
+
+### Bug Fixes
+
+* **plugin:** add android, ios, and harmony platforms support ([81a685e](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/81a685e113954d7aca3a34b5e999a9b1ce155c53))
+
 ## [1.15.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.14.0...share-pro-v1.15.0) (2025-12-10)
 ### Features
 * add incremental sharing ([caea391](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/caea391bbdf6e5ccf45dc5831774b1cfe79f1b9e))
