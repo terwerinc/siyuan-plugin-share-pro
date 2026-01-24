@@ -11,6 +11,7 @@ import SlugPlugin from "./index"
 
 export const initStatusBar = (pluginInstance: SlugPlugin) => {
   const statusBarTemplate = document.createElement("template")
+
   statusBarTemplate.innerHTML = `<div class="toolbar__item b3-tooltips b3-tooltips__w" aria-label="upload picture status" style="font-size: 12px;"></div>`
   statusBarTemplate.content.firstElementChild.addEventListener("click", () => {})
 
@@ -22,5 +23,9 @@ export const initStatusBar = (pluginInstance: SlugPlugin) => {
 
 export const updateStatusBar = (pluginInstance: SlugPlugin, statusText) => {
   // console.log(pluginInstance.statusBarElement)
+  if (!pluginInstance?.statusBarElement?.innerHTML) {
+    console.warn("statusBarElement was not found, ignore, maybe in mobile device")
+    return
+  }
   pluginInstance.statusBarElement.innerHTML = `<div class="toolbar__item b3-tooltips b3-tooltips__w" aria-label="generate slug status" style="font-size: 12px;">${statusText}</div>`
 }
