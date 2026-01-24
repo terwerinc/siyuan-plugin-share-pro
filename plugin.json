@@ -5,20 +5,10 @@
   "version": "1.15.1",
   "minAppVersion": "3.0.0",
   "backends": [
-    "windows",
-    "linux",
-    "darwin",
-    "docker",
-    "android",
-    "ios",
-    "harmony"
+    "all"
   ],
   "frontends": [
-    "desktop",
-    "desktop-window",
-    "mobile",
-    "browser-desktop",
-    "browser-mobile"
+    "all"
   ],
   "displayName": {
     "default": "Share pro",

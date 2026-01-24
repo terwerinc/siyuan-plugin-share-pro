@@ -149,7 +149,8 @@
         await initSingleDocMode()
       } catch (e) {
         formData.shared = false
-        showMessage(pluginInstance.i18n["ui"]["shareSuccessError"], 3000, "info")
+        console.error(e)
+        showMessage(pluginInstance.i18n["ui"]["shareSuccessError"]+e.toString(), 3000, "info")
       }
     } else {
       // 状态检测
