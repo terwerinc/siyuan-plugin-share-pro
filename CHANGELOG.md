@@ -1,5 +1,8 @@
 # Changelog
 
+## [1.15.1](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.15.0...share-pro-v1.15.1) (2026-01-24)
+### Bug Fixes
+* **plugin:** add android, ios, and harmony platforms support ([81a685e](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/81a685e113954d7aca3a34b5e999a9b1ce155c53))
 ## [1.15.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.14.0...share-pro-v1.15.0) (2025-12-10)
 ### Features
 * add incremental sharing ([caea391](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/caea391bbdf6e5ccf45dc5831774b1cfe79f1b9e))
@@ -38,7 +41,6 @@
 * **types:** add initial type definitions for share and service api ([2a34a84](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/2a34a844e4d0b84a7b0588a8624b3f32fb4489c9))
 * **types:** add type definitions for svelte-virtual-list module ([f69f073](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/f69f073ba11d931aa3ac43496bd113e3441e792a))
 * **ui:** update incremental share and manage icons in ui ([41a5881](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/41a588173a3f0c176d29639842c298fcde970d00))
-### Bug Fixes
 * **constants:** dev env ([8db42a8](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/8db42a8b25c7f3f4dcc2835057c02c28add550f0))
 * **incremental-share-ui:** improve virtual list layout and increase visible item count ([51298d3](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/51298d3e99da231ec441f7379b4784c552a20ab3))
 * **service:** add type annotation to kernelapi.lsnotebooks response ([275b8a7](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/275b8a709562ee0d888cc3bdadff4e5896048a50))
