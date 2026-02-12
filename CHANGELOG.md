@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.15.3](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.15.2...share-pro-v1.15.3) (2026-02-12)
+
+
+### Bug Fixes
+
+* [#282](https://github.com/terwerinc/siyuan-plugin-share-pro/issues/282) disable plugin in publish mode ([3ebe38b](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/3ebe38b59015f747c6b2c4269c325890c1d22b56))
+
 ## [1.15.2](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.15.1...share-pro-v1.15.2) (2026-01-24)
 ### Bug Fixes
 * **share:** fix share error on mobile device ([6d6aa7d](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/6d6aa7dbcae97bc1a6e178c799a4160d77c32a7a))
