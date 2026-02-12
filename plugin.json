@@ -4,12 +4,9 @@
   "url": "https://github.com/terwerinc/siyuan-plugin-share-pro",
   "version": "1.15.2",
   "minAppVersion": "3.0.0",
-  "backends": [
-    "all"
-  ],
-  "frontends": [
-    "all"
-  ],
+  "backends": ["all"],
+  "frontends": ["all"],
+  "disabledInPublish": true,
   "displayName": {
     "default": "Share pro",
     "zh_CN": "在线分享专业版"
@@ -22,13 +19,8 @@
     "default": "README.md",
     "zh_CN": "README_zh_CN.md"
   },
-  "i18n": [
-    "en_US",
-    "zh_CN"
-  ],
+  "i18n": ["en_US", "zh_CN"],
   "funding": {
-    "custom": [
-      "https://afdian.com/a/terwer"
-    ]
+    "custom": ["https://afdian.com/a/terwer"]
   }
 }
