@@ -241,3 +241,103 @@ const generateTimeCondition = (lastShareTime?: number): string => {
   }
   return ""
 }
+
+// =====================================================================================================================
+// 子文档获取相关方法
+// =====================================================================================================================
+
+/**
+ * 获取指定文档的子文档总数
+ *
+ * @param kernelApi 思源内核 API
+ * @param docId 文档ID
+ */
+export const getSubdocCount = async (kernelApi: SiyuanKernelApi, docId: string): Promise<number> => {
+  const logger = simpleLogger("use-siyuan-api", "share-pro", isDev)
+  const escapedDocId = docId.replace(/'/g, "''")
+
+  const sql = `
+    SELECT COUNT(DISTINCT b1.root_id) AS count
+    FROM blocks b1
+    WHERE b1.root_id = '${escapedDocId}' OR b1.path LIKE '%/${escapedDocId}%'
+  `
+
+  logger.debug("getSubdocCount SQL:", sql)
+  const data = await kernelApi.sql(sql)
+  return data?.[0]?.count || 0
+}
+
+/**
+ * 分页获取子文档列表
+ *
+ * @param kernelApi 思源内核 API
+ * @param docId 文档ID
+ * @param page 页码（从0开始）
+ * @param pageSize 每页大小
+ */
+export const getSubdocsPaged = async (
+  kernelApi: SiyuanKernelApi,
+  docId: string,
+  page: number,
+  pageSize: number
+): Promise<
+  Array<{
+    docId: string
+    docTitle: string
+    path: string
+    modifiedTime: number
+    createdTime: number
+  }>
+> => {
+  const logger = simpleLogger("use-siyuan-api", "share-pro", isDev)
+  const offset = page * pageSize
+  const escapedDocId = docId.replace(/'/g, "''")
+
+  const sql = `
+    SELECT DISTINCT b2.root_id, b2.content, b2.path, b2.updated, b2.created
+    FROM blocks b2
+    WHERE b2.id IN (
+        SELECT DISTINCT b1.root_id
+        FROM blocks b1
+        WHERE b1.root_id = '${escapedDocId}' OR b1.path LIKE '%/${escapedDocId}%'
+        ORDER BY b1.updated DESC, b1.created DESC
+        LIMIT ${pageSize} OFFSET ${offset}
+    )
+    ORDER BY b2.updated DESC, b2.created DESC, b2.id
+  `
+
+  logger.debug("getSubdocsPaged SQL:", sql)
+  const resData = await kernelApi.sql(sql)
+  if (!resData || resData.length === 0) {
+    return []
+  }
+
+  return resData.map((row: any) => ({
+    docId: row.root_id,
+    docTitle: row.content || "Untitled Document",
+    path: row.path,
+    // 转换思源的时间格式为Unix时间戳
+    modifiedTime:
+      row.updated && typeof row.updated === "string"
+        ? new Date(
+            parseInt(row.updated.substring(0, 4)),
+            parseInt(row.updated.substring(4, 6)) - 1,
+            parseInt(row.updated.substring(6, 8)),
+            parseInt(row.updated.substring(8, 10)),
+            parseInt(row.updated.substring(10, 12)),
+            parseInt(row.updated.substring(12, 14))
+          ).getTime()
+        : parseInt(row.updated) || 0,
+    createdTime:
+      row.created && typeof row.created === "string"
+        ? new Date(
+            parseInt(row.created.substring(0, 4)),
+            parseInt(row.created.substring(4, 6)) - 1,
+            parseInt(row.created.substring(6, 8)),
+            parseInt(row.created.substring(8, 10)),
+            parseInt(row.created.substring(10, 12)),
+            parseInt(row.created.substring(12, 14))
+          ).getTime()
+        : parseInt(row.created) || 0,
+  }))
+}
