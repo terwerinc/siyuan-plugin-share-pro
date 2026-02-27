@@ -6,3 +6,6 @@ build
 cookie.txt
 token.txt
 scripts/__pycache__
+
+# ReCode local database
+.recode
