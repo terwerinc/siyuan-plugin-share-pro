@@ -453,86 +453,87 @@
     </div>
 
     {#if isSingleDocMode}
-      <!-- 单文档模式：始终显示子文档分享选项 -->
+      <!-- 单文档模式：紧凑分享配置 -->
       <div class="setting-row">
-        <span class="setting-label">{pluginInstance.i18n["cs"]["shareSubdocuments"]}</span>
-        <div class="input-group">
-          <input
-            type="checkbox"
-            bind:checked={formData.singleDocSetting.shareSubdocuments}
-            class="ui-checkbox"
-            title={formData.singleDocSetting.shareSubdocuments
-              ? pluginInstance.i18n["cs"]["shareSubdocumentsDisabled"]
-              : pluginInstance.i18n["cs"]["shareSubdocumentsEnabled"]}
-          />
+        <span class="setting-label">分享配置</span>
+        <div class="input-group compact-share-config">
+          <!-- 子文档分享 -->
+          <label class="compact-switch">
+            <input
+              type="checkbox"
+              bind:checked={formData.singleDocSetting.shareSubdocuments}
+              title={formData.singleDocSetting.shareSubdocuments
+                ? pluginInstance.i18n["cs"]["shareSubdocumentsDisabled"]
+                : pluginInstance.i18n["cs"]["shareSubdocumentsEnabled"]}
+            />
+            <span class="compact-label">{pluginInstance.i18n["cs"]["shareSubdocuments"]}</span>
+          </label>
+
+          <!-- 文档树 -->
+          <label class="compact-switch">
+            <input
+              type="checkbox"
+              bind:checked={formData.singleDocSetting.docTreeEnable}
+              title={formData.singleDocSetting.docTreeEnable
+                ? pluginInstance.i18n["cs"]["docTreeDisabled"]
+                : pluginInstance.i18n["cs"]["docTreeEnabled"]}
+            />
+            <span class="compact-label">{pluginInstance.i18n["cs"]["docTree"]}</span>
+          </label>
+
+          <!-- 文档大纲 -->
+          <label class="compact-switch">
+            <input
+              type="checkbox"
+              bind:checked={formData.singleDocSetting.outlineEnable}
+              title={formData.singleDocSetting.outlineEnable
+                ? pluginInstance.i18n["cs"]["outlineDisabled"]
+                : pluginInstance.i18n["cs"]["outlineEnabled"]}
+            />
+            <span class="compact-label">{pluginInstance.i18n["cs"]["outline"]}</span>
+          </label>
         </div>
       </div>
 
-      <!-- 单文档模式：始终显示文档树选项 -->
-      <div class="setting-row">
-        <span class="setting-label">{pluginInstance.i18n["cs"]["docTree"]}</span>
-        <div class="input-group">
-          <input
-            type="checkbox"
-            bind:checked={formData.singleDocSetting.docTreeEnable}
-            class="ui-checkbox"
-            title={formData.singleDocSetting.docTreeEnable
-              ? pluginInstance.i18n["cs"]["docTreeDisabled"]
-              : pluginInstance.i18n["cs"]["docTreeEnabled"]}
-          />
-        </div>
-      </div>
-
-      {#if formData.singleDocSetting.docTreeEnable}
+      <!-- 深度控制（按需显示） -->
+      {#if formData.singleDocSetting.docTreeEnable || formData.singleDocSetting.outlineEnable}
         <div class="setting-row">
-          <span class="setting-label">{pluginInstance.i18n["cs"]["docTreeDepth"]}</span>
-          <div class="input-group">
-            <select
-              bind:value={formData.singleDocSetting.docTreeLevel}
-              class="b3-select fn__flex-center fn__size200"
-            >
-              {#each [1, 2, 3, 4, 5, 6] as level}
-                <option value={level}>{level}</option>
-              {/each}
-            </select>
-          </div>
-        </div>
-      {/if}
+          <span class="setting-label"></span>
+          <div class="input-group compact-depth-config">
+            {#if formData.singleDocSetting.docTreeEnable}
+              <div class="depth-item">
+                <span class="depth-label">{pluginInstance.i18n["cs"]["docTreeDepth"]}</span>
+                <select
+                  bind:value={formData.singleDocSetting.docTreeLevel}
+                  class="b3-select compact-select"
+                >
+                  {#each [1, 2, 3, 4, 5, 6] as level}
+                    <option value={level}>{level}</option>
+                  {/each}
+                </select>
+              </div>
+            {/if}
 
-      <!-- 单文档模式：始终显示文档大纲选项 -->
-      <div class="setting-row">
-        <span class="setting-label">{pluginInstance.i18n["cs"]["outline"]}</span>
-        <div class="input-group">
-          <input
-            type="checkbox"
-            bind:checked={formData.singleDocSetting.outlineEnable}
-            class="ui-checkbox"
-            title={formData.singleDocSetting.outlineEnable
-              ? pluginInstance.i18n["cs"]["outlineDisabled"]
-              : pluginInstance.i18n["cs"]["outlineEnabled"]}
-          />
-        </div>
-      </div>
-
-      {#if formData.singleDocSetting.outlineEnable}
-        <div class="setting-row">
-          <span class="setting-label">{pluginInstance.i18n["cs"]["outlineDepth"]}</span>
-          <div class="input-group">
-            <select
-              bind:value={formData.singleDocSetting.outlineLevel}
-              class="b3-select fn__flex-center fn__size200"
-            >
-              {#each [
-                { label: "h1", value: 1 },
-                { label: "h2", value: 2 },
-                { label: "h3", value: 3 },
-                { label: "h4", value: 4 },
-                { label: "h5", value: 5 },
-                { label: "h6", value: 6 }
-              ] as item}
-                <option value={item.value}>{item.label}</option>
-              {/each}
-            </select>
+            {#if formData.singleDocSetting.outlineEnable}
+              <div class="depth-item">
+                <span class="depth-label">{pluginInstance.i18n["cs"]["outlineDepth"]}</span>
+                <select
+                  bind:value={formData.singleDocSetting.outlineLevel}
+                  class="b3-select compact-select"
+                >
+                  {#each [
+                    { label: "h1", value: 1 },
+                    { label: "h2", value: 2 },
+                    { label: "h3", value: 3 },
+                    { label: "h4", value: 4 },
+                    { label: "h5", value: 5 },
+                    { label: "h6", value: 6 }
+                  ] as item}
+                    <option value={item.value}>{item.label}</option>
+                  {/each}
+                </select>
+              </div>
+            {/if}
           </div>
         </div>
       {/if}
@@ -733,6 +734,58 @@
     .ui-checkbox
       flex-grow unset !important
       cursor pointer
+
+    /* 紧凑分享配置样式 */
+    .compact-share-config
+      display flex
+      gap 12px
+      align-items center
+      flex-wrap wrap
+
+    .compact-switch
+      display flex
+      align-items center
+      gap 4px
+      cursor pointer
+      padding 4px 8px
+      border-radius 4px
+      transition background-color 0.2s
+
+    .compact-switch:hover
+      background-color var(--b3-theme-surface-light)
+
+    .compact-switch input[type="checkbox"]
+      width 16px
+      height 16px
+      margin 0
+      cursor pointer
+
+    .compact-label
+      font-size 12px
+      color var(--b3-theme-on-background)
+      white-space nowrap
+
+    .compact-depth-config
+      display flex
+      gap 12px
+      align-items center
+      flex-wrap wrap
+
+    .depth-item
+      display flex
+      align-items center
+      gap 6px
+
+    .depth-label
+      font-size 12px
+      color var(--b3-theme-on-background)
+      white-space nowrap
+
+    .compact-select
+      width auto
+      min-width 60px
+      font-size 12px
+      padding 2px 8px
 
     html[data-theme-mode="dark"] #share
       .input-group input:focus,
