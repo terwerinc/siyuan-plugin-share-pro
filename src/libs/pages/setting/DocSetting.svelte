@@ -33,6 +33,7 @@
   let docTreeLevelOptions = [1, 2, 3, 4, 5, 6]
   let outlineEnabled = true
   let outlineLevel = 6
+  let shareSubdocuments = true
   let outlineLevelOptions = [
     {
       label: "h1",
@@ -61,6 +62,7 @@
   ]
   let passwordEnabled = false
   let showPassword = false
+  let maxSubdocuments = 100
 
   let settingConfig: ShareProConfig = pluginInstance.getDefaultCfg()
   const settingService = new SettingService(pluginInstance)
@@ -88,6 +90,9 @@
     // 文档大纲
     settingConfig.appConfig.outlineEnabled = outlineEnabled
     settingConfig.appConfig.outlineLevel = outlineLevel
+    // 子文档分享
+    settingConfig.appConfig.shareSubdocuments = shareSubdocuments
+    settingConfig.appConfig.maxSubdocuments = maxSubdocuments
     // 全局密码保护
     settingConfig.appConfig.passwordEnabled = passwordEnabled
     settingConfig.appConfig.showPassword = showPassword
@@ -109,6 +114,8 @@
     docTreeLevel = sAppConfig?.docTreeLevel ?? docTreeLevel
     outlineEnabled = sAppConfig?.outlineEnabled ?? outlineEnabled
     outlineLevel = sAppConfig?.outlineLevel ?? outlineLevel
+    shareSubdocuments = sAppConfig?.shareSubdocuments ?? shareSubdocuments
+    maxSubdocuments = sAppConfig?.maxSubdocuments ?? maxSubdocuments
     passwordEnabled = sAppConfig?.passwordEnabled ?? passwordEnabled
     showPassword = sAppConfig?.showPassword ?? showPassword
   })
@@ -145,6 +152,25 @@
         </select>
       {/if}
     </div>
+
+    <div class="fn__block form-item">
+      {pluginInstance.i18n.cs.shareSubdocuments}
+      <div class="b3-label__text form-item-tip">{pluginInstance.i18n.cs.shareSubdocumentsTip}</div>
+      <span class="fn__hr" />
+      <input class="b3-switch fn__flex-center" id="shareSubdocuments" type="checkbox" bind:checked={shareSubdocuments} />
+    </div>
+
+    {#if shareSubdocuments}
+    <div class="fn__block form-item">
+      {pluginInstance.i18n.cs.maxSubdocuments}
+      <div class="b3-label__text form-item-tip">{pluginInstance.i18n.cs.maxSubdocumentsTip}</div>
+      <span class="fn__hr" />
+      <input type="number" min="-1" max="999" class="b3-text-field fn__size200" bind:value={maxSubdocuments} />
+      <div class="b3-label__text form-item-tip" style="margin-top: 5px;">
+        -1 = 无限制, 100 = 默认, 999 = 最大
+      </div>
+    </div>
+    {/if}
 
     <div class="fn__block form-item">
       {pluginInstance.i18n.cs.passwordEnabled}

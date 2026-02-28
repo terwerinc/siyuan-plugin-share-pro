@@ -12,21 +12,22 @@ add-subdocument-sharing
 
 ### 待办
 
-- [ ] 在SettingKeys.ts中添加CUSTOM_SHARE_SUBDOCUMENTS配置键
-- [ ] 在ShareOptions.ts中增加shareSubdocuments属性
-- [ ] 在ShareProConfig.ts中添加全局shareSubdocuments配置
-- [ ] 在SingleDocSetting.ts中增加shareSubdocuments属性
-- [ ] 在SettingService.ts中实现配置的同步和管理方法
-- [ ] 在ShareService.ts中实现子文档的递归获取和分享逻辑：
-  - [ ] 实现BFS算法递归获取子文档（用户确认偏好）
-  - [ ] 实现数量限制（默认100个，最大999个，支持无限制选项带风险提示）
-  - [ ] 实现深度控制（默认3层，可配置1-10层，支持无限深度选项带风险提示）
-  - [ ] 实现子文档缓存（5分钟，适合大型文档树）
-  - [ ] 实现异步加载子文档列表
-  - [ ] 实现批量处理，每次最多10个并发
-  - [ ] 使用SQL查询方案获取子文档树结构，基于生产验证过的实现，支持分页避免内存溢出
-- [ ] 更新ShareResult接口，添加子文档分享结果字段
-- [ ] 在UI中添加子文档分享选项，确保新UI和旧UI都兼容：
+- [x] 在SettingKeys.ts中添加CUSTOM_SHARE_SUBDOCUMENTS配置键
+- [x] 在ShareOptions.ts中增加shareSubdocuments属性
+- [x] 在ShareProConfig.ts中添加全局shareSubdocuments配置
+- [x] 在SingleDocSetting.ts中增加shareSubdocuments属性
+- [x] 在SettingService.ts中实现配置的同步和管理方法
+- [x] 在ShareService.ts中实现子文档的递归获取和分享逻辑：
+  - [x] 实现BFS算法递归获取子文档（用户确认偏好）
+  - [x] 实现数量限制（默认100个，最大999个，支持无限制选项带风险提示）
+  - [x] 实现深度控制（默认3层，可配置1-10层，支持无限深度选项带风险提示）
+  - [x] 实现子文档缓存（5分钟，适合大型文档树）
+  - [x] 实现异步加载子文档列表
+  - [x] 实现批量处理，每次最多10个并发
+  - [x] 使用SQL查询方案获取子文档树结构，基于生产验证过的实现，支持分页避免内存溢出
+- [x] 更新ShareResult接口，添加子文档分享结果字段
+- [x] 在UI中添加子文档分享选项，确保新UI和旧UI都兼容：
+  - [x] 子文档分享选项始终可见（不在分享后才显示）
   - [ ] 实现子文档树可视化预览
   - [ ] 支持手动排除特定子文档
   - [ ] 显示子文档总数、层级、预估时间
@@ -82,8 +83,9 @@ add-subdocument-sharing
 
 ## 验收标准
 
-1. 用户可以在全局设置中配置是否默认分享子文档
-2. 用户可以在单次分享时单独控制是否分享子文档
+1. 子文档分享功能默认启用
+2. 用户可以在全局设置中配置是否默认分享子文档
+3. 用户可以在单次分享时单独控制是否分享子文档
 3. 启用子文档分享时，系统应自动分享该文档下的所有层级子文档
 4. 分享后的子文档应能够通过分享链接正常访问
 5. 功能应在新UI和旧UI中都能正常使用

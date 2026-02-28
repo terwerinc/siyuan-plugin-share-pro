@@ -8,9 +8,9 @@
  */
 
 import { ILogger, simpleLogger } from "zhi-lib-base"
-import ShareProPlugin from "../index"
 import { isDev } from "../Constants"
 import { ShareApi } from "../api/share-api"
+import ShareProPlugin from "../index"
 
 /**
  * 设置

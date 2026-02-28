@@ -55,6 +55,12 @@ interface AppConfig {
   passwordEnabled?: boolean
   showPassword?: boolean
 
+  // 子文档分享功能
+  // add by v1.16.0+
+  // 专业版专属配置
+  shareSubdocuments?: boolean
+  maxSubdocuments?: number
+
   // 增量分享配置
   // add by v1.15.0+
   // 专业版专属配置

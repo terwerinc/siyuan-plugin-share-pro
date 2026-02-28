@@ -83,6 +83,7 @@
     // 存储位置：本地配置/服务端配置（appConfig）
     userPreferences: {
       showPassword: false, // 密码显示偏好
+      shareSubdocuments: true, // 全局子文档分享设置
       incrementalShareConfig: {
         // 增量分享配置
         enabled: true, // 默认启用
@@ -98,6 +99,7 @@
       outlineEnable: false, // 是否显示大纲
       outlineLevel: 6, // 大纲层级
       expiresTime: "", // 分享有效期
+      shareSubdocuments: true, // 是否分享子文档
     } as SingleDocSetting,
 
     // 层级3: shareOptions - 分享选项
@@ -260,6 +262,7 @@
     const docTreeLevel = await AttrUtils.getInt(pluginInstance, docId, SettingKeys.CUSTOM_DOC_TREE_LEVEL)
     const outlineEnable = await AttrUtils.getBool(pluginInstance, docId, SettingKeys.CUSTOM_OUTLINE_ENABLE)
     const outlineLevel = await AttrUtils.getInt(pluginInstance, docId, SettingKeys.CUSTOM_OUTLINE_LEVEL)
+    const shareSubdocuments = await AttrUtils.getBool(pluginInstance, docId, SettingKeys.CUSTOM_SHARE_SUBDOCUMENTS)
     // 适配配置
     cfg.siyuanConfig.preferenceConfig = {
       ...cfg.siyuanConfig.preferenceConfig,
@@ -267,6 +270,7 @@
       docTreeLevel: docTreeLevel ?? cfg.siyuanConfig?.preferenceConfig?.docTreeLevel ?? 3,
       outlineEnable: outlineEnable ?? cfg.siyuanConfig?.preferenceConfig?.outlineEnable ?? false,
       outlineLevel: outlineLevel ?? cfg.siyuanConfig?.preferenceConfig?.outlineLevel ?? 6,
+      shareSubdocuments: shareSubdocuments ?? cfg.appConfig?.shareSubdocuments ?? true,
     }
     // 文档树、文档大纲
     formData.singleDocSetting.docTreeEnable = cfg.siyuanConfig.preferenceConfig.docTreeEnable
@@ -284,6 +288,7 @@
     formData.shareOptions.passwordEnabled =
       formData.shareData?.passwordEnabled ?? cfg.appConfig?.passwordEnabled ?? false
     formData.userPreferences.showPassword = cfg.appConfig?.showPassword ?? false
+    formData.userPreferences.shareSubdocuments = cfg.appConfig?.shareSubdocuments ?? true
     if (formData.shareOptions.passwordEnabled) {
       const rndPassword = PasswordUtils.getNewRndPassword()
       formData.shareOptions.password = formData.shareData?.password ?? rndPassword
@@ -295,6 +300,7 @@
       `Loaded password option => passwordEnabled=${formData.shareOptions.passwordEnabled}, showPassword=${formData.userPreferences.showPassword}`
     )
     logger.debug(`Loaded share options => ${JSON.stringify(formData.shareOptions)}`)
+    logger.debug(`Loaded user preferences => shareSubdocuments=${formData.userPreferences.shareSubdocuments}`)
   }
 
   // ========================================
@@ -311,6 +317,8 @@
     // 加载配置
     const cfg = await pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
 
+    // 加载全局配置
+    formData.userPreferences.shareSubdocuments = cfg?.appConfig?.shareSubdocuments ?? true
     // 加载增量分享配置
     formData.userPreferences.incrementalShareConfig.enabled = cfg?.appConfig?.incrementalShareConfig?.enabled ?? true
 
@@ -348,8 +356,10 @@
 
     logger.info("[Non-Single-Doc] Initializing non-single-doc mode")
 
-    // 加载增量分享配置
+    // 加载全局配置
     const cfg = await pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
+    formData.userPreferences.shareSubdocuments = cfg?.appConfig?.shareSubdocuments ?? true
+    // 加载增量分享配置
     formData.userPreferences.incrementalShareConfig.enabled = cfg?.appConfig?.incrementalShareConfig?.enabled ?? true
 
     // 非单文档模式不需要加载文档数据，UI会自动隐藏需要docId的功能
@@ -441,6 +451,92 @@
         {/if}
       </div>
     </div>
+
+    {#if isSingleDocMode}
+      <!-- 单文档模式：始终显示子文档分享选项 -->
+      <div class="setting-row">
+        <span class="setting-label">{pluginInstance.i18n["cs"]["shareSubdocuments"]}</span>
+        <div class="input-group">
+          <input
+            type="checkbox"
+            bind:checked={formData.singleDocSetting.shareSubdocuments}
+            class="ui-checkbox"
+            title={formData.singleDocSetting.shareSubdocuments
+              ? pluginInstance.i18n["cs"]["shareSubdocumentsDisabled"]
+              : pluginInstance.i18n["cs"]["shareSubdocumentsEnabled"]}
+          />
+        </div>
+      </div>
+
+      <!-- 单文档模式：始终显示文档树选项 -->
+      <div class="setting-row">
+        <span class="setting-label">{pluginInstance.i18n["cs"]["docTree"]}</span>
+        <div class="input-group">
+          <input
+            type="checkbox"
+            bind:checked={formData.singleDocSetting.docTreeEnable}
+            class="ui-checkbox"
+            title={formData.singleDocSetting.docTreeEnable
+              ? pluginInstance.i18n["cs"]["docTreeDisabled"]
+              : pluginInstance.i18n["cs"]["docTreeEnabled"]}
+          />
+        </div>
+      </div>
+
+      {#if formData.singleDocSetting.docTreeEnable}
+        <div class="setting-row">
+          <span class="setting-label">{pluginInstance.i18n["cs"]["docTreeDepth"]}</span>
+          <div class="input-group">
+            <select
+              bind:value={formData.singleDocSetting.docTreeLevel}
+              class="b3-select fn__flex-center fn__size200"
+            >
+              {#each [1, 2, 3, 4, 5, 6] as level}
+                <option value={level}>{level}</option>
+              {/each}
+            </select>
+          </div>
+        </div>
+      {/if}
+
+      <!-- 单文档模式：始终显示文档大纲选项 -->
+      <div class="setting-row">
+        <span class="setting-label">{pluginInstance.i18n["cs"]["outline"]}</span>
+        <div class="input-group">
+          <input
+            type="checkbox"
+            bind:checked={formData.singleDocSetting.outlineEnable}
+            class="ui-checkbox"
+            title={formData.singleDocSetting.outlineEnable
+              ? pluginInstance.i18n["cs"]["outlineDisabled"]
+              : pluginInstance.i18n["cs"]["outlineEnabled"]}
+          />
+        </div>
+      </div>
+
+      {#if formData.singleDocSetting.outlineEnable}
+        <div class="setting-row">
+          <span class="setting-label">{pluginInstance.i18n["cs"]["outlineDepth"]}</span>
+          <div class="input-group">
+            <select
+              bind:value={formData.singleDocSetting.outlineLevel}
+              class="b3-select fn__flex-center fn__size200"
+            >
+              {#each [
+                { label: "h1", value: 1 },
+                { label: "h2", value: 2 },
+                { label: "h3", value: 3 },
+                { label: "h4", value: 4 },
+                { label: "h5", value: 5 },
+                { label: "h6", value: 6 }
+              ] as item}
+                <option value={item.value}>{item.label}</option>
+              {/each}
+            </select>
+          </div>
+        </div>
+      {/if}
+    {/if}
 
     {#if isSingleDocMode && formData.shared && !formData.lock}
       <!-- 单文档模式且已分享：显示详细选项 -->
@@ -633,6 +729,10 @@
         box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2)  /* 标准Ant Design阴影 */
         outline: none
         transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1)  /* Ant Design标准过渡 */
+
+    .ui-checkbox
+      flex-grow unset !important
+      cursor pointer
 
     html[data-theme-mode="dark"] #share
       .input-group input:focus,

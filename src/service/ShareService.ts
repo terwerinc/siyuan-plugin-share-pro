@@ -15,7 +15,7 @@ import { ServiceResponse, ShareApi } from "../api/share-api"
 import { useDataTable } from "../composables/useDataTable"
 import { useEmbedBlock } from "../composables/useEmbedBlock"
 import { useFold } from "../composables/useFold"
-import { useSiyuanApi } from "../composables/useSiyuanApi"
+import { getSubdocCount, getSubdocsPaged, useSiyuanApi } from "../composables/useSiyuanApi"
 import ShareProPlugin from "../index"
 import { ShareOptions } from "../models/ShareOptions"
 import { ShareProConfig } from "../models/ShareProConfig"
@@ -52,16 +52,357 @@ class ShareService implements IShareHistoryService {
     return await this.shareApi.getVipInfo(token)
   }
 
+  public async getSharedDocInfo(docId: string, token?: string) {
+    return await this.shareApi.getDoc(docId, token)
+  }
+
   /**
-   * 创建分享
+   * 计算文档在树中的深度
+   *
+   * @param path 文档路径
+   * @param rootDocId 根文档ID
+   * @returns 深度层级（根文档为0，直接子文档为1，以此类推）
+   */
+  private calculateDocumentDepth(path: string, rootDocId: string): number {
+    if (!path || !rootDocId) {
+      return 0
+    }
+
+    // 路径格式示例: /20230815225853-a2ybito/20240101123456-abc123/20240102123456-def456
+    // 我们需要计算从根文档开始的层级数
+    const pathParts = path.split("/").filter((part) => part.trim() !== "")
+
+    // 找到根文档ID在路径中的位置
+    const rootIndex = pathParts.indexOf(rootDocId)
+    if (rootIndex === -1) {
+      return 0
+    }
+
+    // 返回从根文档开始的层级数
+    return pathParts.length - rootIndex - 1
+  }
+
+  /**
+   * 扁平化获取需要分享的文档列表（包括主文档和子文档）
+   *
+   * @param docId 主文档ID
+   * @param settings 文档设置
+   * @param options 分享选项
+   * @param config 插件配置
+   * @returns 需要分享的文档列表
+   */
+  public async flattenDocumentsForSharing(
+    docId: string,
+    settings?: Partial<SingleDocSetting>,
+    options?: Partial<ShareOptions>,
+    config?: ShareProConfig
+  ): Promise<
+    Array<{
+      docId: string
+      settings: Partial<SingleDocSetting>
+      options: Partial<ShareOptions>
+    }>
+  > {
+    const documentsToShare = []
+
+    // 添加主文档
+    documentsToShare.push({
+      docId: docId,
+      settings: settings || {},
+      options: options || {},
+    })
+
+    // 检查是否启用了子文档分享
+    if (!config) {
+      config = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
+    }
+
+    const globalShareSubdocuments = config.appConfig?.shareSubdocuments ?? true
+    const effectiveShareSubdocuments = settings?.shareSubdocuments ?? globalShareSubdocuments
+
+    if (effectiveShareSubdocuments) {
+      // 获取深度控制配置（默认3层，使用文档树深度配置）
+      const maxDepth = settings?.docTreeLevel ?? config.siyuanConfig?.preferenceConfig?.docTreeLevel ?? 3
+
+      // 获取子文档列表
+      const { kernelApi } = useSiyuanApi(config)
+      const subdocCount = await getSubdocCount(kernelApi, docId)
+
+      // 应用数量限制
+      // 默认限制100个，最大999个，支持无限制（-1表示无限制）
+      const maxSubdocuments = settings?.maxSubdocuments ?? config.appConfig?.maxSubdocuments ?? 100
+      let maxCount = maxSubdocuments
+
+      // 处理无限制情况（-1表示无限制）
+      if (maxSubdocuments === -1) {
+        maxCount = subdocCount
+        if (subdocCount > 999) {
+          this.logger.warn(`子文档数量超过999 (${subdocCount})，可能存在性能风险`)
+          // 可以在这里添加用户确认逻辑，但为了简化先记录警告
+        }
+      } else if (subdocCount > maxSubdocuments) {
+        // 限制在配置的最大值内
+        maxCount = Math.min(maxSubdocuments, 999)
+        if (maxSubdocuments > 999) {
+          this.logger.warn(`配置的子文档数量限制 (${maxSubdocuments}) 超过最大值999，使用999作为限制`)
+          maxCount = 999
+        }
+      } else {
+        maxCount = subdocCount
+      }
+
+      // 分页获取所有子文档
+      const pageSize = 50
+      const totalPages = Math.ceil(maxCount / pageSize)
+      const allSubdocs = []
+
+      for (let page = 0; page < totalPages; page++) {
+        const subdocs = await getSubdocsPaged(kernelApi, docId, page, pageSize)
+
+        // 应用深度控制（确保深度大于0，排除根文档本身）
+        const filteredSubdocs = subdocs.filter((subdoc) => {
+          const depth = this.calculateDocumentDepth(subdoc.path, docId)
+          return depth > 0 && depth <= maxDepth
+        })
+
+        allSubdocs.push(...filteredSubdocs)
+        if (allSubdocs.length >= maxCount) {
+          break
+        }
+      }
+
+      // 添加子文档到分享列表（去重处理）
+      const addedDocIds = new Set<string>()
+      addedDocIds.add(docId) // 添加主文档ID
+
+      for (const subdoc of allSubdocs) {
+        if (!addedDocIds.has(subdoc.docId)) {
+          documentsToShare.push({
+            docId: subdoc.docId,
+            settings: settings || {},
+            options: options || {},
+          })
+          addedDocIds.add(subdoc.docId)
+        }
+      }
+    }
+
+    return documentsToShare
+  }
+
+  /**
+   * 统一分享入口（对外公开的唯一入口）
+   *
+   * @param docId 主文档ID
+   * @param settings 文档设置
+   * @param options 分享选项
+   */
+  public async createShare(docId: string, settings?: Partial<SingleDocSetting>, options?: Partial<ShareOptions>) {
+    try {
+      // 获取配置
+      const config = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
+      const globalShareSubdocuments = config.appConfig?.shareSubdocuments ?? true
+      const effectiveShareSubdocuments = settings?.shareSubdocuments ?? globalShareSubdocuments
+
+      // 执行聚合逻辑
+      if (!effectiveShareSubdocuments) {
+        // 仅分享当前文档
+        return await this.handleOne(docId, settings, options)
+      } else {
+        // 分享当前文档 + 子文档
+        const documentsToShare = await this.flattenDocumentsForSharing(docId, settings, options, config)
+
+        // 使用批量处理队列
+        await this.batchProcessDocuments(documentsToShare)
+      }
+    } catch (error) {
+      this.logger.error("创建分享失败", error)
+      showMessage(this.pluginInstance.i18n["shareService"]["msgShareError"] + error, 7000, "error")
+    }
+  }
+
+  /**
+   * 取消单个文档的分享（内部方法）
+   *
+   * @param docId 文档ID
+   */
+  private async cancelOne(docId: string) {
+    const ret = await this.shareApi.deleteDoc(docId)
+    try {
+      // 重置文档选项
+      await this.updateSingleDocSettings(docId, false, {})
+      // 分享选项不用管，会直接删除
+      // share 里面的 docAttrs、options 字段 会自动删除，所以不用管
+
+      // 删除本地历史记录
+      try {
+        await this.localShareHistory.removeHistory(docId)
+        shareHistoryCache.invalidate(docId)
+      } catch (historyError) {
+        this.logger.error(`删除分享历史记录失败: ${docId}`, historyError)
+      }
+    } catch (e) {
+      return {
+        code: -1,
+        msg: e,
+      }
+    }
+    return ret
+  }
+
+  /**
+   * 统一取消分享入口（对外公开的唯一入口）
+   *
+   * @param docId 主文档ID
+   */
+  public async cancelShare(docId: string) {
+    try {
+      // 获取配置
+      const config = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
+      const globalShareSubdocuments = config.appConfig?.shareSubdocuments ?? true
+
+      // 获取当前文档的设置
+      const { kernelApi } = useSiyuanApi(config)
+      const docAttrs = await kernelApi.getBlockAttrs(docId)
+      const settings = AttrUtils.fromAttrs(docAttrs)
+
+      const effectiveShareSubdocuments = settings?.shareSubdocuments ?? globalShareSubdocuments
+
+      if (!effectiveShareSubdocuments) {
+        // 仅取消当前文档
+        return await this.cancelOne(docId)
+      } else {
+        // 取消当前文档 + 所有子文档
+        const documentsToCancel = await this.flattenDocumentsForSharing(docId, settings, undefined, config)
+
+        // 使用批量处理取消所有文档
+        const results = await this.processWithConcurrency(
+          documentsToCancel,
+          async (doc, index) => {
+            try {
+              await this.cancelOne(doc.docId)
+              return { success: true, docId: doc.docId }
+            } catch (error) {
+              this.logger.error(`取消分享文档 ${doc.docId} 失败:`, error)
+              return { success: false, docId: doc.docId, error }
+            }
+          },
+          10 // maxConcurrency
+        )
+
+        const failed = results.filter((r) => !r?.success).length
+        if (failed > 0) {
+          showMessage(
+            this.pluginInstance.i18n["shareService"]["msgCancelPartialSuccess"]
+              .replace("[param1]", (results.length - failed).toString())
+              .replace("[param2]", results.length.toString())
+              .replace("[param3]", failed.toString()),
+            7000,
+            "error"
+          )
+        }
+
+        return { code: 0, msg: "success" }
+      }
+    } catch (error) {
+      this.logger.error("取消分享失败", error)
+      showMessage(this.pluginInstance.i18n["shareService"]["msgCancelError"] + error, 7000, "error")
+      return { code: -1, msg: error }
+    }
+  }
+
+  public async updateSingleDocSettings(docId: string, isShare: boolean, settings: Partial<SingleDocSetting>) {
+    const { kernelApi } = await ApiUtils.getSiyuanKernelApi(this.pluginInstance)
+    let toAttrs: Record<string, string> = AttrUtils.toAttrs(settings)
+    if (!isShare) {
+      toAttrs = AttrUtils.toAttrs({})
+    }
+    const attrs = {
+      [SettingKeys.CUSTOM_PUBLISH_TIME]: isShare ? new Date().getTime().toString() : NULL_VALUE_FOR_SIYUAN_ATTR_REMOVE,
+      ...toAttrs,
+    }
+
+    this.logger.debug("updateSingleDocSettings", attrs)
+    await kernelApi.setBlockAttrs(docId, attrs)
+  }
+
+  /**
+   * 只更新分享选项（如密码等），不重新上传内容
+   *
+   * @param docId 文档ID
+   * @param options 分享选项
+   */
+  public async updateShareOptions(docId: string, options: Partial<ShareOptions>) {
+    try {
+      const updateBody = {
+        docId,
+        options,
+      }
+      const resp = await this.shareApi.updateShareOptions(updateBody)
+      if (resp.code !== 0) {
+        const errorMsg = this.pluginInstance.i18n["shareService"]["updateOptionsError"] + resp.msg
+        this.addLog(errorMsg, "error")
+        // showMessage(this.pluginInstance.i18n["ui"]["updateOptionsError"] + resp.msg, 7000, "error")
+        return resp
+      }
+      const successMsg = this.pluginInstance.i18n["shareService"]["updateOptionsSuccess"] + "：" + docId
+      this.addLog(successMsg, "info")
+      return resp
+    } catch (e) {
+      const exceptionMsg = this.pluginInstance.i18n["shareService"]["updateOptionsException"] + docId + " => " + e
+      this.addLog(exceptionMsg, "error")
+      // showMessage(this.pluginInstance.i18n["ui"]["updateOptionsError"] + e, 7000, "error")
+      throw e
+    }
+  }
+
+  public async listDoc(pageNum: number, pageSize: number, order: string, direction: string, search: string) {
+    const params = {
+      pageNum: pageNum,
+      pageSize: pageSize,
+      order: order,
+      direction: direction,
+      search: search,
+    }
+    return await this.shareApi.listDoc(params)
+  }
+
+  public async getHistoryByIds(docIds: string[]): Promise<Array<ShareHistoryItem> | undefined> {
+    const ret = await this.shareApi.getHistoryByIds(docIds)
+    if (ret.code == 0) {
+      const shareHistoryItems = ret.data.map((item: any) => {
+        // 数据转换
+        const shareHistoryItem: ShareHistoryItem = {
+          docId: item.docId,
+          docTitle: item.data.title,
+          shareTime: item.createAtTimestamp,
+          shareStatus: item.status,
+          shareUrl: item.shareUrl,
+          errorMessage: "",
+          docModifiedTime: item.createAtTimestamp,
+        }
+        return shareHistoryItem
+      })
+      this.logger.debug("converted shareHistoryItems", shareHistoryItems)
+      return shareHistoryItems
+    }
+    return []
+  }
+
+  // ================
+  // private function
+  // ================
+
+  /**
+   * 处理单个文档的纯净分享逻辑（内部方法）
    *
    * @param docId 必传
    * @param settings 文档设置，包括文档树和目录大纲
    * @param options 分享选项，包括密码设置
    */
-  public async createShare(docId: string, settings?: Partial<SingleDocSetting>, options?: Partial<ShareOptions>) {
+  private async handleOne(docId: string, settings?: Partial<SingleDocSetting>, options?: Partial<ShareOptions>) {
     try {
-      // 处理文档选项，保存到文档属性
+      // 处理文档选项，保存到文档 [属性
       await this.updateSingleDocSettings(docId, true, settings)
       // 获取最新文档详情
       const cfg = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
@@ -197,116 +538,6 @@ class ShareService implements IShareHistoryService {
       showMessage(this.pluginInstance.i18n["shareService"]["msgShareError"] + e, 7000, "error")
     }
   }
-
-  public async getSharedDocInfo(docId: string, token?: string) {
-    return await this.shareApi.getDoc(docId, token)
-  }
-
-  public async cancelShare(docId: string) {
-    const ret = await this.shareApi.deleteDoc(docId)
-    try {
-      // 重置文档选项
-      await this.updateSingleDocSettings(docId, false, {})
-      // 分享选项不用管，会直接删除
-      // share 里面的 docAttrs、options 字段 会自动删除，所以不用管
-
-      // 删除本地历史记录
-      try {
-        await this.localShareHistory.removeHistory(docId)
-        shareHistoryCache.invalidate(docId)
-      } catch (historyError) {
-        this.logger.error(`删除分享历史记录失败: ${docId}`, historyError)
-      }
-    } catch (e) {
-      return {
-        code: -1,
-        msg: e,
-      }
-    }
-    return ret
-  }
-
-  public async updateSingleDocSettings(docId: string, isShare: boolean, settings: Partial<SingleDocSetting>) {
-    const { kernelApi } = await ApiUtils.getSiyuanKernelApi(this.pluginInstance)
-    let toAttrs: Record<string, string> = AttrUtils.toAttrs(settings)
-    if (!isShare) {
-      toAttrs = AttrUtils.toAttrs({})
-    }
-    const attrs = {
-      [SettingKeys.CUSTOM_PUBLISH_TIME]: isShare ? new Date().getTime().toString() : NULL_VALUE_FOR_SIYUAN_ATTR_REMOVE,
-      ...toAttrs,
-    }
-
-    this.logger.debug("updateSingleDocSettings", attrs)
-    await kernelApi.setBlockAttrs(docId, attrs)
-  }
-
-  /**
-   * 只更新分享选项（如密码等），不重新上传内容
-   *
-   * @param docId 文档ID
-   * @param options 分享选项
-   */
-  public async updateShareOptions(docId: string, options: Partial<ShareOptions>) {
-    try {
-      const updateBody = {
-        docId,
-        options,
-      }
-      const resp = await this.shareApi.updateShareOptions(updateBody)
-      if (resp.code !== 0) {
-        const errorMsg = this.pluginInstance.i18n["shareService"]["updateOptionsError"] + resp.msg
-        this.addLog(errorMsg, "error")
-        // showMessage(this.pluginInstance.i18n["ui"]["updateOptionsError"] + resp.msg, 7000, "error")
-        return resp
-      }
-      const successMsg = this.pluginInstance.i18n["shareService"]["updateOptionsSuccess"] + "：" + docId
-      this.addLog(successMsg, "info")
-      return resp
-    } catch (e) {
-      const exceptionMsg = this.pluginInstance.i18n["shareService"]["updateOptionsException"] + docId + " => " + e
-      this.addLog(exceptionMsg, "error")
-      // showMessage(this.pluginInstance.i18n["ui"]["updateOptionsError"] + e, 7000, "error")
-      throw e
-    }
-  }
-
-  public async listDoc(pageNum: number, pageSize: number, order: string, direction: string, search: string) {
-    const params = {
-      pageNum: pageNum,
-      pageSize: pageSize,
-      order: order,
-      direction: direction,
-      search: search,
-    }
-    return await this.shareApi.listDoc(params)
-  }
-
-  public async getHistoryByIds(docIds: string[]): Promise<Array<ShareHistoryItem> | undefined> {
-    const ret = await this.shareApi.getHistoryByIds(docIds)
-    if (ret.code == 0) {
-      const shareHistoryItems = ret.data.map((item: any) => {
-        // 数据转换
-        const shareHistoryItem: ShareHistoryItem = {
-          docId: item.docId,
-          docTitle: item.data.title,
-          shareTime: item.createAtTimestamp,
-          shareStatus: item.status,
-          shareUrl: item.shareUrl,
-          errorMessage: "",
-          docModifiedTime: item.createAtTimestamp,
-        }
-        return shareHistoryItem
-      })
-      this.logger.debug("converted shareHistoryItems", shareHistoryItems)
-      return shareHistoryItems
-    }
-    return []
-  }
-
-  // ================
-  // private function
-  // ================
 
   private async processShareMedia(docId: string, mediaList: any[]) {
     const processingMsg = this.pluginInstance.i18n["shareService"]["processingMedia"] + "：" + docId
@@ -623,6 +854,166 @@ class ShareService implements IShareHistoryService {
     // 如果有媒体资源，成功消息会在各自的处理方法中显示
     if ((!media || media.length === 0) && (!dataViewMedia || dataViewMedia.length === 0)) {
       showMessage(this.pluginInstance.i18n["shareService"]["msgShareSuccess"], 3000, "info")
+    }
+  }
+
+  /**
+   * 使用并发控制处理数组（生产级实现）
+   *
+   * @param items 待处理的数组
+   * @param processor 异步处理函数，入参为数组项和索引，返回处理结果
+   * @param maxConcurrency 最大并发数（需≥1）
+   * @returns 按原数组顺序的处理结果数组
+   */
+  private async processWithConcurrency<T, R>(
+    items: T[],
+    processor: (item: T, index: number) => Promise<R>,
+    maxConcurrency: number
+  ): Promise<R[]> {
+    // 边界条件校验
+    if (!Array.isArray(items)) {
+      throw new TypeError("items必须是数组")
+    }
+    if (typeof processor !== "function") {
+      throw new TypeError("processor必须是函数")
+    }
+    const concurrency = Math.max(1, Math.floor(maxConcurrency)) // 保证并发数≥1
+    if (items.length === 0) {
+      return []
+    }
+
+    // 预分配结果数组，保证顺序和性能
+    const results: R[] = new Array(items.length)
+    const errors: Error[] = []
+
+    // 核心并发控制：使用滑动窗口机制
+    const promises: Promise<void>[] = []
+
+    for (let i = 0; i < items.length; i++) {
+      // 创建任务函数
+      const task = async (index: number): Promise<void> => {
+        try {
+          const result = await processor(items[index], index)
+          results[index] = result
+        } catch (err) {
+          // 捕获单个任务错误，避免影响整体流程
+          errors.push(new Error(`任务${index}失败: ${(err as Error).message}`))
+          // 即使出错也要设置结果，避免undefined
+          results[index] = undefined as unknown as R
+        }
+      }
+
+      // 控制并发：当达到上限时，等待最早启动的任务完成
+      if (i >= concurrency) {
+        // 等待第一个任务完成（先进先出）
+        await promises.shift()
+      }
+
+      // 启动新任务
+      promises.push(task(i))
+    }
+
+    // 等待所有剩余任务完成
+    await Promise.all(promises)
+
+    // 如果有错误，抛出聚合错误
+    if (errors.length > 0) {
+      this.logger.warn(`批量处理中出现 ${errors.length} 个错误`, errors)
+      // 注意：这里不抛出异常，因为批量处理应该容忍部分失败
+      // 调用方可以根据需要检查结果中的undefined值
+    }
+
+    return results
+  }
+
+  /**
+   * 批量处理文档分享队列
+   *
+   * @param documentsToShare 需要分享的文档列表
+   * @param maxConcurrency 最大并发数（默认10）
+   */
+  private async batchProcessDocuments(
+    documentsToShare: Array<{
+      docId: string
+      settings: Partial<SingleDocSetting>
+      options: Partial<ShareOptions>
+    }>,
+    maxConcurrency = 10
+  ): Promise<void> {
+    const total = documentsToShare.length
+
+    // 显示开始消息
+    showMessage(
+      this.pluginInstance.i18n["shareService"]["msgBatchStart"].replace("[param1]", total.toString()),
+      5000,
+      "info"
+    )
+
+    // 使用并发控制处理所有文档，并实时更新进度
+    let completedCount = 0
+    const results = await this.processWithConcurrency(
+      documentsToShare,
+      async (doc, index) => {
+        try {
+          await this.handleOne(doc.docId, doc.settings, doc.options)
+
+          // 原子性地更新完成计数并显示进度
+          completedCount++
+          const progress = Math.round((completedCount / total) * 100)
+          const remaining = total - completedCount
+
+          // 更新日志
+          this.addLog(
+            this.pluginInstance.i18n["shareService"]["msgBatchProgress"]
+              .replace("[param1]", completedCount.toString())
+              .replace("[param2]", total.toString())
+              .replace("[param3]", progress.toString())
+              .replace("[param4]", remaining.toString()),
+            "info"
+          )
+
+          // 显示进度更新（每10个或最后几个）
+          if (completedCount % 10 === 0 || completedCount === total) {
+            showMessage(
+              this.pluginInstance.i18n["shareService"]["msgBatchProgress"]
+                .replace("[param1]", completedCount.toString())
+                .replace("[param2]", total.toString())
+                .replace("[param3]", progress.toString())
+                .replace("[param4]", remaining.toString()),
+              3000,
+              "info"
+            )
+          }
+
+          return { success: true, docId: doc.docId, index }
+        } catch (error) {
+          this.logger.error(`分享文档 ${doc.docId} 失败:`, error)
+          return { success: false, docId: doc.docId, error, index }
+        }
+      },
+      maxConcurrency
+    )
+
+    // 统计结果并显示进度
+    const successful = results.filter((r) => r?.success).length
+    const failed = results.filter((r) => !r?.success).length
+
+    // 显示完成消息
+    if (failed === 0) {
+      showMessage(
+        this.pluginInstance.i18n["shareService"]["msgBatchSuccess"].replace("[param1]", total.toString()),
+        5000,
+        "info"
+      )
+    } else {
+      showMessage(
+        this.pluginInstance.i18n["shareService"]["msgBatchPartialSuccess"]
+          .replace("[param1]", successful.toString())
+          .replace("[param2]", total.toString())
+          .replace("[param3]", failed.toString()),
+        7000,
+        "error"
+      )
     }
   }
 

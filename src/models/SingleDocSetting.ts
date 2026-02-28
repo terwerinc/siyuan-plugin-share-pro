@@ -55,6 +55,22 @@ class SingleDocSetting {
    * @since 1.13.0
    */
   public expiresTime?: number | string
+
+  /**
+   * 是否分享子文档
+   *
+   * @author terwer
+   * @since 1.16.0
+   */
+  public shareSubdocuments?: boolean
+
+  /**
+   * 子文档分享数量限制，-1表示无限制，最大999
+   *
+   * @author terwer
+   * @since 1.16.0
+   */
+  public maxSubdocuments?: number
 }
 
 export { SingleDocSetting }
