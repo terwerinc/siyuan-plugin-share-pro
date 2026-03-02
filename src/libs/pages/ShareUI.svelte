@@ -731,10 +731,6 @@
         outline: none
         transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1)  /* Ant Design标准过渡 */
 
-    .ui-checkbox
-      flex-grow unset !important
-      cursor pointer
-
     /* 紧凑分享配置样式 */
     .compact-share-config
       display flex

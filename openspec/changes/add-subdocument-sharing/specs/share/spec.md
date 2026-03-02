@@ -102,8 +102,8 @@ ORDER BY b2.updated DESC, b2.created DESC, b2.id
 - **THEN** 系统 SHALL 在个性化设置区域显示子文档分享选项
 - **THEN** 设置会保存在新UI模式的配置中
 
-### Requirement: 子文档递归策略
-系统 SHALL 实现子文档递归的深度控制和性能优化。
+### Requirement: 子文档扁平化策略
+系统 SHALL 实现子文档扁平化的获取和性能优化，不再使用深度控制。
 
 #### Scenario: 数量限制
 - **WHEN** 用户分享子文档时
@@ -112,13 +112,12 @@ ORDER BY b2.updated DESC, b2.created DESC, b2.id
 - **THEN** 系统 SHALL 提供"无限制"选项，但必须明确提示性能风险
 - **THEN** 超过999个子文档时，系统 SHALL 显示明确警告，告知可能的性能影响
 
-#### Scenario: 深度控制
+#### Scenario: 扁平化处理
 - **WHEN** 用户分享子文档时
-- **THEN** 默认深度为3层（平衡完整性和性能）
-- **THEN** 可配置范围为1-10层深度
-- **THEN** 系统 SHALL 提供"无限深度"选项，但必须明确提示循环引用和性能风险
-- **THEN** 启用无限深度时，系统 SHALL 显示警告对话框
-- **THEN** 系统 SHALL 显示当前文档的子文档总数和最大深度
+- **THEN** 系统 SHALL 获取文档下的所有子文档，无论其在文档树中的深度层级
+- **THEN** 系统 SHALL 采用完全扁平化的处理方式，用户只需关心要分享多少个子文档
+- **THEN** 系统 SHALL 简化用户体验，避免深度和数量的双重控制复杂性
+- **THEN** 系统 SHALL 显示当前文档的子文档总数
 
 #### Scenario: 性能优化
 - **WHEN** 获取子文档列表时
@@ -127,6 +126,7 @@ ORDER BY b2.updated DESC, b2.created DESC, b2.id
 - **THEN** 系统 SHALL 支持异步加载子文档列表，不阻塞UI主线程
 - **THEN** 分享时 SHALL 批量处理，每次最多10个并发请求
 - **THEN** 系统 SHALL 使用SQL查询方案获取子文档树结构，支持分页避免内存溢出
+- **THEN** 系统 SHALL 采用扁平化处理，不再进行深度过滤，提高性能
 
 #### Scenario: 子文档树预览
 - **WHEN** 用户开启子文档分享功能时

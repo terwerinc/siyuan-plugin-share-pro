@@ -57,7 +57,7 @@ class ShareService implements IShareHistoryService {
   }
 
   /**
-   * 计算文档在树中的深度
+   * 计算文档在树中的深度（保留用于其他功能，但子文档分享不再使用深度控制）
    *
    * @param path 文档路径
    * @param rootDocId 根文档ID
@@ -121,10 +121,7 @@ class ShareService implements IShareHistoryService {
     const effectiveShareSubdocuments = settings?.shareSubdocuments ?? globalShareSubdocuments
 
     if (effectiveShareSubdocuments) {
-      // 获取深度控制配置（默认3层，使用文档树深度配置）
-      const maxDepth = settings?.docTreeLevel ?? config.siyuanConfig?.preferenceConfig?.docTreeLevel ?? 3
-
-      // 获取子文档列表
+      // 获取子文档列表（扁平化处理，不再使用深度控制）
       const { kernelApi } = useSiyuanApi(config)
       const subdocCount = await getSubdocCount(kernelApi, docId)
 
@@ -151,7 +148,7 @@ class ShareService implements IShareHistoryService {
         maxCount = subdocCount
       }
 
-      // 分页获取所有子文档
+      // 分页获取所有子文档（扁平化，不进行深度过滤）
       const pageSize = 50
       const totalPages = Math.ceil(maxCount / pageSize)
       const allSubdocs = []
@@ -159,10 +156,9 @@ class ShareService implements IShareHistoryService {
       for (let page = 0; page < totalPages; page++) {
         const subdocs = await getSubdocsPaged(kernelApi, docId, page, pageSize)
 
-        // 应用深度控制（确保深度大于0，排除根文档本身）
+        // 扁平化处理：只排除根文档本身，不进行深度过滤
         const filteredSubdocs = subdocs.filter((subdoc) => {
-          const depth = this.calculateDocumentDepth(subdoc.path, docId)
-          return depth > 0 && depth <= maxDepth
+          return subdoc.docId !== docId // 排除根文档本身
         })
 
         allSubdocs.push(...filteredSubdocs)
@@ -204,6 +200,7 @@ class ShareService implements IShareHistoryService {
       const globalShareSubdocuments = config.appConfig?.shareSubdocuments ?? true
       const effectiveShareSubdocuments = settings?.shareSubdocuments ?? globalShareSubdocuments
 
+      debugger
       // 执行聚合逻辑
       if (!effectiveShareSubdocuments) {
         // 仅分享当前文档
@@ -268,6 +265,7 @@ class ShareService implements IShareHistoryService {
 
       const effectiveShareSubdocuments = settings?.shareSubdocuments ?? globalShareSubdocuments
 
+      debugger
       if (!effectiveShareSubdocuments) {
         // 仅取消当前文档
         return await this.cancelOne(docId)
