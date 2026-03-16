@@ -27,7 +27,7 @@
   import { PasswordUtils } from "../../utils/PasswordUtils"
   import { SettingKeys } from "../../utils/SettingKeys"
   import { icons } from "../../utils/svg"
-  import SubdocumentTreePreview from "../components/SubdocumentTreePreview.svelte"
+  import SubdocumentTreePreview from "../components/subdocument/SubdocumentTreePreview.svelte"
 
   export let pluginInstance: ShareProPlugin
   export let shareService: ShareService
