@@ -227,7 +227,8 @@
     "expiresTip": "Set the expiration time for the share link (in seconds). 0 means permanent.",
     "expiresError": "Invalid expiration time. Please enter a number between 0 and 604800 (7 days).",
     "saveExpires": "Save",
-    "incrementalShareModeInfo": "Incremental share mode does not require a stable ID, please use the incremental share entry"
+    "incrementalShareModeInfo": "Incremental share mode does not require a stable ID, please use the incremental share entry",
+    "noSubdocuments": "Oops! No subdocuments found for this document~"
   },
   "incrementalShare": {
     "title": "Incremental Share",

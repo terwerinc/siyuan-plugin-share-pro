@@ -10,13 +10,12 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { simpleLogger } from "zhi-lib-base";
-  import {isDev, SHARE_PRO_STORE_NAME} from "../../Constants";
-  import { useSiyuanApi } from "../../composables/useSiyuanApi";
-  import ShareProPlugin from "../../index";
-  import { getSubdocCount, getSubdocTreeByPath, getDocNotebookInfo } from "../../composables/useSiyuanApi";
-  import { SettingKeys } from "../../utils/SettingKeys";
+  import {isDev, SHARE_PRO_STORE_NAME} from "../../../Constants";
+  import { useSiyuanApi } from "../../../composables/useSiyuanApi";
+  import ShareProPlugin from "../../../index";
+  import { getSubdocCount, getSubdocTreeByPath, getDocNotebookInfo} from "../../../composables/useSiyuanApi";
   import RecursiveTreeNode from "./RecursiveTreeNode.svelte";
-  import {ShareProConfig} from "../../models/ShareProConfig";
+  import {ShareProConfig} from "../../../models/ShareProConfig";
 
   export let pluginInstance: ShareProPlugin;
   export let docId: string;
@@ -362,9 +361,10 @@
     return false;
   };
 
-  // 获取总文档数量
+  // 获取总文档数量（排除主文档）
   const getTotalCount = () => {
-    return totalSubdocuments;
+    // getSubdocCount 返回包含主文档的总数，所以减1得到真正的子文档数量
+    return Math.max(0, totalSubdocuments - 1);
   };
 
   // 响应式计算属性 - 直接在模板中使用
@@ -381,7 +381,7 @@
     </div>
   {:else if subdocumentTree.length === 0}
     <div class="empty-state">
-      {pluginInstance.i18n["incrementalShare"]["noNewDocs"]}
+      {pluginInstance.i18n["ui"]["noSubdocuments"]}
     </div>
   {:else}
     <div class="preview-header">
