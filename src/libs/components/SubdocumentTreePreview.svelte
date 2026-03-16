@@ -362,28 +362,15 @@
     return false;
   };
 
-  // 获取选中文档数量
-  const getSelectedCount = () => {
-    return selectedDocIds.size;
-  };
-
   // 获取总文档数量
   const getTotalCount = () => {
     return totalSubdocuments;
   };
 
-  // 获取预估分享时间（每个文档约3秒）
-  const getEstimatedTime = () => {
-    const selectedCount = getSelectedCount();
-    return selectedCount * 3;
-  };
-
-  // 获取存储空间预估（简化估算）
-  const getEstimatedStorage = () => {
-    const selectedCount = getSelectedCount();
-    // 假设每个文档平均10KB
-    return selectedCount * 10;
-  };
+  // 响应式计算属性 - 直接在模板中使用
+  $: selectedCount = selectedDocIds.size;
+  $: estimatedTime = selectedCount * 3;
+  $: estimatedStorage = selectedCount * 10;
 </script>
 
 <div class="subdocument-tree-preview">
@@ -401,15 +388,15 @@
       <div class="stats">
         <span class="stat-item">
           {pluginInstance.i18n["cs"]["maxSubdocuments"]}:
-          <strong>{getSelectedCount()}/{getTotalCount()}</strong>
+          <strong>{selectedCount}/{getTotalCount()}</strong>
         </span>
         <span class="stat-item">
           {pluginInstance.i18n["incrementalShare"]["estimatedTime"]}:
-          <strong>{Math.floor(getEstimatedTime() / 60)}m {getEstimatedTime() % 60}s</strong>
+          <strong>{Math.floor(estimatedTime / 60)}m {estimatedTime % 60}s</strong>
         </span>
         <span class="stat-item">
           {pluginInstance.i18n["incrementalShare"]["estimatedSize"]}:
-          <strong>{getEstimatedStorage()}KB</strong>
+          <strong>{estimatedStorage}KB</strong>
         </span>
       </div>
       <div class="actions">
