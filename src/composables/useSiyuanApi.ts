@@ -270,6 +270,7 @@ export const getSubdocCount = async (kernelApi: SiyuanKernelApi, docId: string):
 /**
  * 分页获取子文档列表
  *
+ * @deprecated 已经废弃，必须使用思源笔记官方的 filetree/listDocsByPath API 获取子文档列表
  * @param kernelApi 思源内核 API
  * @param docId 文档ID
  * @param page 页码（从0开始）
@@ -340,4 +341,120 @@ export const getSubdocsPaged = async (
           ).getTime()
         : parseInt(row.created) || 0,
   }))
+}
+
+/**
+ * 使用思源官方 API 获取子文档树结构（支持懒加载）
+ *
+ * @param kernelApi 思源内核 API
+ * @param notebookId 笔记本ID
+ * @param docPath 文档路径（用于构建完整的路径）
+ * @returns 子文档列表
+ */
+export const getSubdocTreeByPath = async (
+  kernelApi: SiyuanKernelApi,
+  notebookId: string,
+  docPath: string
+): Promise<
+  Array<{
+    docId: string
+    docTitle: string
+    path: string
+    parentId: string | null
+    depth: number
+    modifiedTime: number
+    createdTime: number
+    hasChildren: boolean
+  }>
+> => {
+  const logger = simpleLogger("use-siyuan-api", "share-pro", isDev)
+
+  try {
+    // 构建API请求参数
+    const requestData = {
+      notebook: notebookId,
+      path: docPath,
+      app: "jwis",
+    }
+
+    logger.debug("Calling filetree/listDocsByPath with:", requestData)
+
+    // 调用思源官方API
+    const response = await kernelApi.siyuanRequest("/api/filetree/listDocsByPath", requestData)
+
+    // 思源API直接返回数据对象，没有code/data包装层
+    // response 结构: { box: "...", files: [...], path: "..." }
+    if (!response || !Array.isArray(response.files)) {
+      logger.error("Invalid response from filetree/listDocsByPath:", response)
+      return []
+    }
+
+    const files = response.files || []
+    const basePath = response.path || ""
+
+    // 转换数据格式
+    const subdocs = files.map((file: any) => {
+      // 安全处理路径和名称
+      const fullPath = file.path || ""
+      const fileName = file.name || "Untitled Document"
+
+      // 从路径中提取父文档ID
+      const pathParts = fullPath.split("/").filter((part: string) => part.trim() !== "" && !part.endsWith(".sy"))
+      const parentId = pathParts.length > 1 ? pathParts[pathParts.length - 2] : null
+
+      // 计算深度（基于basePath）
+      const safeBasePath = basePath || ""
+      const baseParts = safeBasePath.split("/").filter((part: string) => part.trim() !== "" && !part.endsWith(".sy"))
+      const depth = pathParts.length - baseParts.length
+
+      return {
+        docId: file.id || "",
+        docTitle: fileName,
+        path: fullPath,
+        parentId: parentId,
+        depth: depth,
+        modifiedTime: file.mtime || 0,
+        createdTime: file.ctime || 0,
+        hasChildren: (file.subFileCount || 0) > 0,
+      }
+    })
+
+    logger.debug("Got subdoc tree:", subdocs)
+    return subdocs
+  } catch (error) {
+    logger.error("Error getting subdoc tree by path:", error)
+    return []
+  }
+}
+
+/**
+ * 获取文档的笔记本信息
+ *
+ * @param kernelApi 思源内核 API
+ * @param docId 文档ID
+ * @returns 笔记本ID和文档路径，如果文档不存在则返回 null
+ */
+export const getDocNotebookInfo = async (
+  kernelApi: SiyuanKernelApi,
+  docId: string
+): Promise<{ notebookId: string; docPath: string } | null> => {
+  const logger = simpleLogger("use-siyuan-api", "share-pro", isDev)
+
+  try {
+    // 先获取文档的基本信息
+    const blockInfo = await kernelApi.getBlockByID(docId);
+    if (!blockInfo) {
+      logger.warn(`Document ${docId} not found`);
+      return null;
+    }
+
+    const notebookId = blockInfo.box || ""
+    const docPath = blockInfo.path || `/${docId}.sy`
+
+    logger.debug(`Document ${docId} belongs to notebook ${notebookId}, path: ${docPath}`)
+    return { notebookId, docPath }
+  } catch (error) {
+    logger.error("Error getting document notebook info:", error)
+    return null
+  }
 }

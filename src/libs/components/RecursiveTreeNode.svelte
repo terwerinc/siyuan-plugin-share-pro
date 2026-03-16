@@ -8,33 +8,37 @@
   -->
 
 <script lang="ts">
+  import { onMount } from "svelte";
+
   export let node: any;
   export let selectedDocIds: Set<string>;
   export let expandedNodes: Set<string>;
   export let depth: number = 0;
-  export let onToggleExpand: (nodeId: string) => void;
+  export let onToggleExpand: (nodeId: string) => Promise<void>;
   export let onToggleSelect: (docId: string, event: Event) => void;
-  export let isBlacklisted: (docId: string) => boolean;
+  export let isBlacklisted: () => boolean;
 
-  const hasChildren = () => {
-    return node.children && node.children.length > 0;
+
+  // 计算属性
+  $: hasChildren = () => {
+    return node.hasChildren || (node.children && node.children.length > 0);
   };
 
-  const isExpanded = () => {
+  $: isExpanded = () => {
     return expandedNodes.has(node.docId);
   };
 
-  const isSelected = () => {
+  $: isSelected = () => {
     return selectedDocIds.has(node.docId);
   };
 
-  const isNodeBlacklisted = () => {
-    return isBlacklisted(node.docId);
+  $: isNodeBlacklisted = () => {
+    return isBlacklisted();
   };
 
-  const toggleExpand = () => {
+  const toggleExpand = async () => {
     if (onToggleExpand) {
-      onToggleExpand(node.docId);
+      await onToggleExpand(node.docId);
     }
   };
 
@@ -49,7 +53,7 @@
   <div class="node-content">
     {#if hasChildren()}
       <span class="expand-icon" on:click={toggleExpand}>
-        {isExpanded() ? '▼' : '▶'}
+        {isExpanded ? '▼' : '▶'}
       </span>
     {:else}
       <span class="expand-icon" style="visibility: hidden;">▶</span>
@@ -73,6 +77,21 @@
       </span>
     {/if}
   </div>
+
+  <!-- 递归渲染子节点 -->
+  {#if isExpanded() && node.children && node.children.length > 0}
+    {#each node.children as child (child.docId)}
+      <svelte:self
+        node={child}
+        selectedDocIds={selectedDocIds}
+        expandedNodes={expandedNodes}
+        depth={depth + 1}
+        onToggleExpand={onToggleExpand}
+        onToggleSelect={onToggleSelect}
+        isBlacklisted={isBlacklisted}
+      />
+    {/each}
+  {/if}
 </div>
 
 <style lang="stylus">
