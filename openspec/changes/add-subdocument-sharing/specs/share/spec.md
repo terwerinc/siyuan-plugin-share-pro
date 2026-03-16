@@ -175,6 +175,46 @@ ORDER BY b2.updated DESC, b2.created DESC, b2.id
 - **THEN** 系统 SHALL 去重处理，避免同一文档多次分享
 - **THEN** 在预览中 SHALL 明确标记文档来源（子文档/引用）
 
+### Requirement: 引用文档分享功能
+系统 SHALL 支持分享文档时同时分享该文档引用的所有其他文档。
+
+#### Scenario: 分享包含引用文档的文档
+- **WHEN** 分享文档且 shareReferences 为 true 时
+- **THEN** 系统 SHALL 解析文档内容中的引用标记（[[docId]] 或 ((docId))）
+- **THEN** 系统 SHALL 自动获取所有被引用的文档
+- **THEN** 系统 SHALL 自动分享所有引用的文档
+
+### Requirement: ShareOptions 类扩展（引用文档）
+ShareOptions 类 SHALL 添加 shareReferences 属性，用于控制是否分享引用文档。
+
+#### Scenario: 设置分享引用文档选项
+- **WHEN** 创建 ShareOptions 实例时
+- **THEN** 系统 SHALL 接受 shareReferences 参数
+- **THEN** shareReferences 默认为 false，保持向后兼容
+
+### Requirement: SettingKeys 扩展（引用文档）
+SettingKeys 枚举 SHALL 添加 CUSTOM_SHARE_REFERENCES 配置键。
+
+#### Scenario: 存储引用文档分享配置
+- **WHEN** 需要存储全局引用文档分享设置时
+- **THEN** 系统 SHALL 使用 CUSTOM_SHARE_REFERENCES 配置键
+
+### Requirement: ShareProConfig 扩展（引用文档）
+ShareProConfig 类 SHALL 添加 shareReferences 字段，用于存储全局引用文档分享设置。
+
+#### Scenario: 全局控制引用文档分享行为
+- **WHEN** 读取全局配置时
+- **THEN** 系统 SHALL 包含 shareReferences 配置项
+- **THEN** shareReferences 默认为 false，保持向后兼容
+
+### Requirement: SingleDocSetting 类扩展（引用文档）
+SingleDocSetting 类 SHALL 添加 shareReferences 字段，用于存储单文档引用文档分享设置。
+
+#### Scenario: 单文档引用文档分享设置
+- **WHEN** 创建 SingleDocSetting 实例时
+- **THEN** 系统 SHALL 接受 shareReferences 参数
+- **THEN** shareReferences 默认为 undefined，表示使用全局设置
+
 ### Requirement: 智能重试机制
 系统 SHALL 实现子文档分享的智能重试机制。
 

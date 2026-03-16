@@ -61,6 +61,11 @@ interface AppConfig {
   shareSubdocuments?: boolean
   maxSubdocuments?: number
 
+  // 引用文档分享功能
+  // add by v1.16.0+
+  // 专业版专属配置
+  shareReferences?: boolean
+
   // 增量分享配置
   // add by v1.15.0+
   // 专业版专属配置

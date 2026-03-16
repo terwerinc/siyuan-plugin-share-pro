@@ -112,7 +112,7 @@ class ShareService implements IShareHistoryService {
       options: options || {},
     })
 
-    // 检查是否启用了子文档分享
+    // 检查是否启用了子文档分享或引用文档分享
     if (!config) {
       config = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
     }
@@ -120,7 +120,10 @@ class ShareService implements IShareHistoryService {
     const globalShareSubdocuments = config.appConfig?.shareSubdocuments ?? true
     const effectiveShareSubdocuments = settings?.shareSubdocuments ?? globalShareSubdocuments
 
-    if (effectiveShareSubdocuments) {
+    const globalShareReferences = config.appConfig?.shareReferences ?? false
+    const effectiveShareReferences = settings?.shareReferences ?? globalShareReferences
+
+    if (effectiveShareSubdocuments || effectiveShareReferences) {
       // 获取子文档列表（扁平化处理，不再使用深度控制）
       const { kernelApi } = useSiyuanApi(config)
       const subdocCount = await getSubdocCount(kernelApi, docId)
@@ -171,14 +174,31 @@ class ShareService implements IShareHistoryService {
       const addedDocIds = new Set<string>()
       addedDocIds.add(docId) // 添加主文档ID
 
-      for (const subdoc of allSubdocs) {
-        if (!addedDocIds.has(subdoc.docId)) {
-          documentsToShare.push({
-            docId: subdoc.docId,
-            settings: settings || {},
-            options: options || {},
-          })
-          addedDocIds.add(subdoc.docId)
+      if (effectiveShareSubdocuments) {
+        for (const subdoc of allSubdocs) {
+          if (!addedDocIds.has(subdoc.docId)) {
+            documentsToShare.push({
+              docId: subdoc.docId,
+              settings: settings || {},
+              options: options || {},
+            })
+            addedDocIds.add(subdoc.docId)
+          }
+        }
+      }
+
+      // 处理引用文档分享
+      if (effectiveShareReferences) {
+        const referencedDocs = await this.getReferencedDocuments(docId, config)
+        for (const refDoc of referencedDocs) {
+          if (!addedDocIds.has(refDoc.docId)) {
+            documentsToShare.push({
+              docId: refDoc.docId,
+              settings: settings || {},
+              options: options || {},
+            })
+            addedDocIds.add(refDoc.docId)
+          }
         }
       }
     }
@@ -216,6 +236,55 @@ class ShareService implements IShareHistoryService {
       this.logger.error("创建分享失败", error)
       showMessage(this.pluginInstance.i18n["shareService"]["msgShareError"] + error, 7000, "error")
     }
+  }
+
+  /**
+   * 获取引用的文档列表
+   */
+  private async getReferencedDocuments(docId: string, config: ShareProConfig): Promise<Array<{ docId: string; docTitle: string }>> {
+    const referencedDocs = []
+    try {
+      const { kernelApi } = useSiyuanApi(config)
+
+      // 获取文档内容
+      const docContent = await kernelApi.getBlockByID(docId)
+      if (!docContent || !docContent.data) {
+        return referencedDocs
+      }
+
+      // 提取所有引用的文档ID
+      // 在思源笔记中，引用通常以 [[docId]] 或 ((docId)) 的形式出现
+      const content = JSON.stringify(docContent.data)
+      const docIdRegex = /(?:\[\[|\(\()([a-f0-9-]+)(?:\]\]|\)\))/g
+      const matches = content.matchAll(docIdRegex)
+
+      const referencedDocIds = new Set<string>()
+      for (const match of matches) {
+        const referencedDocId = match[1]
+        if (referencedDocId && referencedDocId !== docId) {
+          referencedDocIds.add(referencedDocId)
+        }
+      }
+
+      // 获取引用文档的详细信息
+      for (const refDocId of referencedDocIds) {
+        try {
+          const refDocInfo = await kernelApi.getBlockByID(refDocId)
+          if (refDocInfo?.data?.box && refDocInfo.data.title) {
+            referencedDocs.push({
+              docId: refDocId,
+              docTitle: refDocInfo.data.title
+            })
+          }
+        } catch (error) {
+          this.logger.warn(`无法获取引用文档 ${refDocId} 的信息:`, error)
+        }
+      }
+    } catch (error) {
+      this.logger.error(`获取引用文档失败:`, error)
+    }
+
+    return referencedDocs
   }
 
   /**

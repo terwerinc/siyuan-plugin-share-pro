@@ -71,6 +71,14 @@ class SingleDocSetting {
    * @since 1.16.0
    */
   public maxSubdocuments?: number
+
+  /**
+   * 是否分享引用文档
+   *
+   * @author terwer
+   * @since 1.16.0
+   */
+  public shareReferences?: boolean
 }
 
 export { SingleDocSetting }

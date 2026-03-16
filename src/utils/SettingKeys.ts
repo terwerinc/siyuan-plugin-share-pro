@@ -68,6 +68,11 @@ enum SettingKeys {
    * 子文档分享数量限制
    */
   CUSTOM_MAX_SUBDOCUMENTS = "custom-max-subdocuments",
+
+  /**
+   * 引用文档分享标识
+   */
+  CUSTOM_SHARE_REFERENCES = "custom-share-references",
 }
 
 export { SettingKeys }

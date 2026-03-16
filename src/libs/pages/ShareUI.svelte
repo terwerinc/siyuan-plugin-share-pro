@@ -27,6 +27,7 @@
   import { PasswordUtils } from "../../utils/PasswordUtils"
   import { SettingKeys } from "../../utils/SettingKeys"
   import { icons } from "../../utils/svg"
+  import SubdocumentTreePreview from "../components/SubdocumentTreePreview.svelte"
 
   export let pluginInstance: ShareProPlugin
   export let shareService: ShareService
@@ -84,6 +85,7 @@
     userPreferences: {
       showPassword: false, // 密码显示偏好
       shareSubdocuments: true, // 全局子文档分享设置
+      maxSubdocuments: 100, // 全局子文档数量限制
       incrementalShareConfig: {
         // 增量分享配置
         enabled: true, // 默认启用
@@ -100,7 +102,18 @@
       outlineLevel: 6, // 大纲层级
       expiresTime: "", // 分享有效期
       shareSubdocuments: true, // 是否分享子文档
+      maxSubdocuments: 100, // 子文档数量限制
+      shareReferences: false, // 是否分享引用文档
     } as SingleDocSetting,
+
+    // 进度状态
+    progress: {
+      total: 0,
+      completed: 0,
+      percentage: 0,
+      isSharing: false,
+      canCancel: false
+    },
 
     // 层级3: shareOptions - 分享选项
     // 有敏感信息，服务端存储
@@ -136,6 +149,9 @@
     if (formData.shared) {
       // 分享
       try {
+        formData.progress.isSharing = true
+        formData.progress.canCancel = true
+
         const shareOptions: Partial<ShareOptions> = {}
         if (formData.shareOptions.passwordEnabled) {
           shareOptions.passwordEnabled = formData.shareOptions.passwordEnabled
@@ -146,11 +162,16 @@
         } else {
           formData.singleDocSetting.expiresTime = ""
         }
+
         await shareService.createShare(docId, formData.singleDocSetting, shareOptions)
         // 初始化
         await initSingleDocMode()
+        formData.progress.isSharing = false
+        formData.progress.canCancel = false
       } catch (e) {
         formData.shared = false
+        formData.progress.isSharing = false
+        formData.progress.canCancel = false
         console.error(e)
         showMessage(pluginInstance.i18n["ui"]["shareSuccessError"]+e.toString(), 3000, "info")
       }
@@ -173,6 +194,16 @@
         showMessage(pluginInstance.i18n["topbar"]["cancelError"] + ret.msg, 7000, "error")
       }
     }
+  }
+
+  // 取消分享操作
+  const cancelSharing = async () => {
+    if (!formData.progress.canCancel) return
+
+    // 这里需要实现取消逻辑
+    showMessage("取消分享功能正在开发中...", 3000, "info")
+    formData.progress.isSharing = false
+    formData.progress.canCancel = false
   }
 
   const handleReShare = async () => {
@@ -270,6 +301,9 @@
       docTreeLevel: docTreeLevel ?? cfg.siyuanConfig?.preferenceConfig?.docTreeLevel ?? 3,
       outlineEnable: outlineEnable ?? cfg.siyuanConfig?.preferenceConfig?.outlineEnable ?? false,
       outlineLevel: outlineLevel ?? cfg.siyuanConfig?.preferenceConfig?.outlineLevel ?? 6,
+    }
+    cfg.appConfig = {
+      ...cfg.appConfig,
       shareSubdocuments: shareSubdocuments ?? cfg.appConfig?.shareSubdocuments ?? true,
     }
     // 文档树、文档大纲
@@ -277,6 +311,14 @@
     formData.singleDocSetting.docTreeLevel = cfg.siyuanConfig.preferenceConfig.docTreeLevel
     formData.singleDocSetting.outlineEnable = cfg.siyuanConfig.preferenceConfig.outlineEnable
     formData.singleDocSetting.outlineLevel = cfg.siyuanConfig.preferenceConfig.outlineLevel
+    // 子文档分享
+    formData.singleDocSetting.shareSubdocuments = cfg.appConfig?.shareSubdocuments ?? true
+    // 子文档数量限制
+    const maxSubdocuments = await AttrUtils.getInt(pluginInstance, docId, SettingKeys.CUSTOM_MAX_SUBDOCUMENTS)
+    formData.singleDocSetting.maxSubdocuments = maxSubdocuments > 0 ? maxSubdocuments : (cfg.appConfig?.maxSubdocuments ?? 100)
+    // 引用文档分享
+    const shareReferences = await AttrUtils.getBool(pluginInstance, docId, SettingKeys.CUSTOM_SHARE_REFERENCES)
+    formData.singleDocSetting.shareReferences = shareReferences ?? cfg.appConfig?.shareReferences ?? false
     // 分享有效期 - 界面上留空，只有实际有值时才显示
     const expiresTime = await AttrUtils.getInt(pluginInstance, docId, SettingKeys.CUSTOM_EXPIRES)
     formData.singleDocSetting.expiresTime = expiresTime > 0 ? expiresTime.toString() : ""
@@ -289,6 +331,7 @@
       formData.shareData?.passwordEnabled ?? cfg.appConfig?.passwordEnabled ?? false
     formData.userPreferences.showPassword = cfg.appConfig?.showPassword ?? false
     formData.userPreferences.shareSubdocuments = cfg.appConfig?.shareSubdocuments ?? true
+    formData.userPreferences.maxSubdocuments = cfg.appConfig?.maxSubdocuments ?? 100
     if (formData.shareOptions.passwordEnabled) {
       const rndPassword = PasswordUtils.getNewRndPassword()
       formData.shareOptions.password = formData.shareData?.password ?? rndPassword
@@ -469,6 +512,18 @@
             <span class="compact-label">{pluginInstance.i18n["cs"]["shareSubdocuments"]}</span>
           </label>
 
+          <!-- 引用文档分享 -->
+          <label class="compact-switch">
+            <input
+              type="checkbox"
+              bind:checked={formData.singleDocSetting.shareReferences}
+              title={formData.singleDocSetting.shareReferences
+                ? pluginInstance.i18n["cs"]["shareReferencesDisabled"]
+                : pluginInstance.i18n["cs"]["shareReferencesEnabled"]}
+            />
+            <span class="compact-label">{pluginInstance.i18n["cs"]["shareReferences"]}</span>
+          </label>
+
           <!-- 文档树 -->
           <label class="compact-switch">
             <input
@@ -535,6 +590,53 @@
               </div>
             {/if}
           </div>
+        </div>
+      {/if}
+
+      <!-- 子文档数量限制 -->
+      {#if formData.singleDocSetting.shareSubdocuments}
+        <div class="setting-row">
+          <span class="setting-label">{pluginInstance.i18n["cs"]["maxSubdocuments"]}</span>
+          <div class="input-group">
+            <input
+              type="number"
+              bind:value={formData.singleDocSetting.maxSubdocuments}
+              min="-1"
+              max="999"
+              step="1"
+              class="share-expired-input"
+              placeholder={pluginInstance.i18n["cs"]["maxSubdocumentsTip"]}
+              title={pluginInstance.i18n["cs"]["maxSubdocumentsTip"]}
+            />
+          </div>
+        </div>
+
+        <!-- 子文档树预览 -->
+        <div class="subdocument-preview-section">
+          <SubdocumentTreePreview
+            pluginInstance={pluginInstance}
+            docId={docId}
+            maxSubdocuments={formData.singleDocSetting.maxSubdocuments ?? 100}
+            onSubdocumentSelect={(selectedDocIds) => {
+              // 处理选中的子文档
+              console.log("Selected subdocuments:", selectedDocIds)
+            }}
+          />
+        </div>
+      {/if}
+
+      <!-- 进度显示 -->
+      {#if formData.progress.isSharing}
+        <div class="progress-section">
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: {formData.progress.percentage}%"></div>
+          </div>
+          <div class="progress-text">
+            {formData.progress.completed}/{formData.progress.total} ({formData.progress.percentage}%)
+          </div>
+          <button class="cancel-btn" on:click={cancelSharing}>
+            {pluginInstance.i18n["cancelShare"]}
+          </button>
         </div>
       {/if}
     {/if}
@@ -955,6 +1057,49 @@
     .password-visibility-toggle + .password-visibility-toggle
       right 8px
       width 24px
+
+    .subdocument-preview-section
+      margin-top 12px
+      padding-top 12px
+      border-top 1px solid var(--b3-theme-surface-light)
+
+    .progress-section
+      margin-top 12px
+      padding 12px
+      background-color var(--b3-theme-surface-light)
+      border-radius 4px
+
+    .progress-bar
+      width 100%
+      height 8px
+      background-color var(--b3-theme-surface)
+      border-radius 4px
+      overflow hidden
+
+    .progress-fill
+      height 100%
+      background-color var(--b3-theme-primary)
+      transition width 0.3s ease
+
+    .progress-text
+      margin-top 4px
+      font-size 12px
+      color var(--b3-theme-on-surface)
+      text-align center
+
+    .cancel-btn
+      margin-top 8px
+      padding 4px 12px
+      font-size 12px
+      background-color var(--b3-theme-error)
+      color white
+      border none
+      border-radius 3px
+      cursor pointer
+      transition all 0.2s ease
+
+      //&:hover
+      //  background-color darken(var(--b3-theme-error), 10%)
 
     /* 暗色模式 */
     html[data-theme-mode="dark"] #share
