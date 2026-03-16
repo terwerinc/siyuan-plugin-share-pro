@@ -58,6 +58,10 @@
 
   onMount(async () => {
     settingConfig = await pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
+    // 默认开启新 UI
+    if(settingConfig.isNewUIEnabled !== false){
+        settingConfig.isNewUIEnabled = true
+    }
     autoSetApiUrl()
     // if (settingConfig.siyuanConfig?.apiUrl.length == 0) {
     //  settingConfig.siyuanConfig.apiUrl = window.location.origin
