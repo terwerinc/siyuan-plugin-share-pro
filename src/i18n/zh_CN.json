@@ -203,6 +203,7 @@
     "actionSetAlready": "已设置"
   },
   "ui": {
+    "dataLoading": "数据加载中...",
     "msgIngError": "图片未处理或处理失败，建议等待或重新分享",
     "shareSuccessError": "分享服务异常，请联系 youweics@163.com：",
     "copyTitle": "分享链接",
