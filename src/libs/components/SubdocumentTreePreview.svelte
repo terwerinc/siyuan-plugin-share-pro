@@ -39,7 +39,67 @@
     await loadSubdocumentTree();
   });
 
-  // 加载子文档树（根层级）
+  // 递归加载所有子节点
+  const loadAllChildrenRecursively = async (parentNode: any) => {
+    if (!parentNode || !parentNode.hasChildren || parentNode.loaded) {
+      return;
+    }
+
+    try {
+      const cfg = await pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME);
+      const { kernelApi } = useSiyuanApi(cfg);
+
+      // 获取子节点
+      const children = await getSubdocTreeByPath(kernelApi, notebookId, parentNode.path);
+
+      // 在树中找到指定节点并更新其children
+      const updateNodeChildren = (nodes: any[], targetId: string, newChildren: any[]): any[] => {
+        return nodes.map(node => {
+          if (node.docId === targetId) {
+            // 找到目标节点，更新其children
+            return {
+              ...node,
+              children: newChildren.map(child => ({
+                ...child,
+                children: [],
+                loaded: false,
+              })),
+              loaded: true,
+            };
+          }
+          // 如果当前节点有children，递归搜索
+          if (node.children && node.children.length > 0) {
+            return {
+              ...node,
+              children: updateNodeChildren(node.children, targetId, newChildren),
+            };
+          }
+          return node;
+        });
+      };
+
+      subdocumentTree = updateNodeChildren(subdocumentTree, parentNode.docId, children);
+
+      // 默认选中新加载的子节点，并将有子节点的添加到expandedNodes
+      children.forEach(child => {
+        selectedDocIds.add(child.docId);
+        if (child.hasChildren) {
+          expandedNodes.add(child.docId);
+        }
+      });
+
+      // 递归加载所有新加载的子节点的子节点
+      for (const child of children) {
+        if (child.hasChildren) {
+          await loadAllChildrenRecursively(child);
+        }
+      }
+    } catch (error) {
+      logger.error("Failed to load children for node", { nodeId: parentNode.docId, error });
+    }
+  };
+
+  // 加载子文档树（根层级）并递归加载所有子节点
   const loadSubdocumentTree = async () => {
     if (!docId) return;
 
@@ -53,7 +113,7 @@
 
       // 如果文档不存在或无法获取信息，显示空状态
       if (!docInfo) {
-        logger.warn(`Document ${docId} not found or inaccessible, showing empty subdocument tree`);
+        logger.warn("Document not found or inaccessible, showing empty subdocument tree", docId);
         subdocumentTree = [];
         totalSubdocuments = 0;
         return;
@@ -64,7 +124,7 @@
 
       // 如果没有有效的笔记本ID或路径，显示空状态
       if (!notebookId || !rootDocPath) {
-        logger.warn(`Invalid notebook info for document ${docId}, showing empty subdocument tree`);
+        logger.warn("Invalid notebook info for document, showing empty subdocument tree", docId);
         subdocumentTree = [];
         totalSubdocuments = 0;
         return;
@@ -92,9 +152,22 @@
 
       // 默认选中所有文档
       selectedDocIds = new Set();
+      expandedNodes = new Set();
+
+      // 先处理根节点
       subdocumentTree.forEach(node => {
         selectedDocIds.add(node.docId);
+        if (node.hasChildren) {
+          expandedNodes.add(node.docId);
+        }
       });
+
+      // 递归加载所有子节点
+      for (const node of subdocumentTree) {
+        if (node.hasChildren) {
+          await loadAllChildrenRecursively(node);
+        }
+      }
 
       // 触发选择回调
       if (onSubdocumentSelect) {
@@ -157,7 +230,7 @@
         onSubdocumentSelect(Array.from(selectedDocIds));
       }
     } catch (error) {
-      logger.error("Failed to load children for node", parentNode.docId, error);
+      logger.error("Failed to load children for node", { nodeId: parentNode.docId, error });
     }
   };
 
@@ -325,17 +398,17 @@
           <strong>{getSelectedCount()}/{getTotalCount()}</strong>
         </span>
         <span class="stat-item">
-          {pluginInstance.i18n["ui"]["expiresTitle"]}:
+          {pluginInstance.i18n["incrementalShare"]["estimatedTime"]}:
           <strong>{Math.floor(getEstimatedTime() / 60)}m {getEstimatedTime() % 60}s</strong>
         </span>
         <span class="stat-item">
-          {pluginInstance.i18n["seo"]["siteDescription"]}:
+          {pluginInstance.i18n["incrementalShare"]["estimatedSize"]}:
           <strong>{getEstimatedStorage()}KB</strong>
         </span>
       </div>
       <div class="actions">
         <button class="action-btn" on:click={selectFirstLevelOnly}>
-          {pluginInstance.i18n["incrementalShare"]["new"]}
+          {pluginInstance.i18n["incrementalShare"]["firstLevelOnly"]}
         </button>
         <button class="action-btn" on:click={toggleSelectAll}>
           {getSelectedCount() > 0 ? pluginInstance.i18n["incrementalShare"]["deselectAll"] : pluginInstance.i18n["incrementalShare"]["selectAll"]}
