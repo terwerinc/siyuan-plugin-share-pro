@@ -81,12 +81,16 @@
       subdocumentTree = updateNodeChildren(subdocumentTree, parentNode.docId, children);
 
       // 默认选中新加载的子节点，并将有子节点的添加到expandedNodes
+      const newSelectedIds = new Set([...selectedDocIds]);
+      const newExpandedIds = new Set([...expandedNodes]);
       children.forEach(child => {
-        selectedDocIds.add(child.docId);
+        newSelectedIds.add(child.docId);
         if (child.hasChildren) {
-          expandedNodes.add(child.docId);
+          newExpandedIds.add(child.docId);
         }
       });
+      selectedDocIds = newSelectedIds;
+      expandedNodes = newExpandedIds;
 
       // 递归加载所有新加载的子节点的子节点
       for (const child of children) {
@@ -151,16 +155,18 @@
       }));
 
       // 默认选中所有文档
-      selectedDocIds = new Set();
-      expandedNodes = new Set();
+      const initialSelectedIds = new Set<string>();
+      const initialExpandedIds = new Set<string>();
 
       // 先处理根节点
       subdocumentTree.forEach(node => {
-        selectedDocIds.add(node.docId);
+        initialSelectedIds.add(node.docId);
         if (node.hasChildren) {
-          expandedNodes.add(node.docId);
+          initialExpandedIds.add(node.docId);
         }
       });
+      selectedDocIds = initialSelectedIds;
+      expandedNodes = initialExpandedIds;
 
       // 递归加载所有子节点
       for (const node of subdocumentTree) {
@@ -411,7 +417,7 @@
           {pluginInstance.i18n["incrementalShare"]["firstLevelOnly"]}
         </button>
         <button class="action-btn" on:click={toggleSelectAll}>
-          {getSelectedCount() > 0 ? pluginInstance.i18n["incrementalShare"]["deselectAll"] : pluginInstance.i18n["incrementalShare"]["selectAll"]}
+          {pluginInstance.i18n["incrementalShare"]["selectAllToggle"]}
         </button>
       </div>
     </div>
