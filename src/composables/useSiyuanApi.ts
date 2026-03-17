@@ -23,7 +23,7 @@ export const useSiyuanApi = (cfg: ShareProConfig) => {
   const logger = simpleLogger("use-siyuan-api", "share-pro", isDev)
 
   if (cfg.siyuanConfig.apiUrl !== window.location.origin) {
-    logger.warn("siyuan api url not match, use default")
+    // logger.warn("siyuan api url not match, use default")
     cfg.siyuanConfig.apiUrl = window.location.origin
   }
   cfg.siyuanConfig.token = ""

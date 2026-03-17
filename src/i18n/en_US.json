@@ -342,6 +342,23 @@
       "descriptionPlaceholder": "Enter description"
     }
   },
+  "progressManager": {
+    "documents": "documents",
+    "sharingDocuments": "Sharing [param1] documents...",
+    "cancelingDocuments": "Canceling [param1] documents...",
+    "progressCompleted": "Completed",
+    "progressSuccess": "Success",
+    "progressError": "Error",
+    "progressPartialSuccess": "Partial Success",
+    "progressRunning": "In Progress",
+    "progressCanceled": "Canceled",
+    "documentShared": "[param1]/[param2] shared",
+    "documentCanceled": "[param1]/[param2] canceled",
+    "successAll": "Successfully processed all [param1] documents",
+    "successPartial": "Partially successful: [param1]/[param2] documents processed, [param3] failed",
+    "errorAll": "Failed to process all [param1] documents",
+    "cancelConfirm": "Are you sure you want to cancel the current operation?"
+  },
   "seo": {
     "saveSuccess": "SEO settings saved and synced successfully",
     "saveFail": "Failed to save SEO settings",

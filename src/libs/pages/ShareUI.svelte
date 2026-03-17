@@ -28,6 +28,7 @@
   import { SettingKeys } from "../../utils/SettingKeys"
   import { icons } from "../../utils/svg"
   import SubdocumentTreePreview from "../components/subdocument/SubdocumentTreePreview.svelte"
+  import ProgressManager from "../components/ProgressManager.svelte"
 
   export let pluginInstance: ShareProPlugin
   export let shareService: ShareService
@@ -426,6 +427,7 @@
 </script>
 
 <div id="share">
+  <ProgressManager pluginInstance={pluginInstance} />
   {#if isSingleDocMode && typeof formData.post.title === "undefined"}
     <!-- 单文档模式但加载中 -->
     <div class="loading-spinner">
@@ -622,21 +624,6 @@
               console.log("Selected subdocuments:", selectedDocIds)
             }}
           />
-        </div>
-      {/if}
-
-      <!-- 进度显示 -->
-      {#if formData.progress.isSharing}
-        <div class="progress-section">
-          <div class="progress-bar">
-            <div class="progress-fill" style="width: {formData.progress.percentage}%"></div>
-          </div>
-          <div class="progress-text">
-            {formData.progress.completed}/{formData.progress.total} ({formData.progress.percentage}%)
-          </div>
-          <button class="cancel-btn" on:click={cancelSharing}>
-            {pluginInstance.i18n["cancelShare"]}
-          </button>
         </div>
       {/if}
     {/if}

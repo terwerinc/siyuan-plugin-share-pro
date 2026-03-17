@@ -107,7 +107,7 @@
     "msgProcessPic": "检测到文档图片，开始处理图片...",
     "msgDataViewProcessPic": "检测到数据库图片，开始处理数据库图片...",
     "msgStartPicBack": "后台处理图片开始...",
-    "msgEndPicBack": "后台处理图片完毕.",
+    "msgEndPicBack": "后台处理图片完毕.分享结束",
     "msgStartGroup": "开始处理第[param1]组图片.共[param2]组，每组[param3]个图片",
     "msgStartCurrentPic": "开始处理第[param1]张图片：[param2] ，请稍候...",
     "msgGroupProcessSuccess": "第[param1]组图片处理完毕.共[param2]组，每组[param3]个图片",
@@ -345,6 +345,23 @@
       "patternPlaceholder": "输入匹配模式（支持通配符）",
       "descriptionPlaceholder": "输入描述信息"
     }
+  },
+  "progressManager": {
+    "documents": "个文档",
+    "sharingDocuments": "正在分享[param1]个文档...",
+    "cancelingDocuments": "正在取消[param1]个文档...",
+    "progressCompleted": "已完成",
+    "progressSuccess": "成功",
+    "progressError": "错误",
+    "progressPartialSuccess": "部分成功",
+    "progressRunning": "进行中",
+    "progressCanceled": "已取消",
+    "documentShared": "已分享[param1]/[param2]",
+    "documentCanceled": "已取消[param1]/[param2]",
+    "successAll": "成功处理全部[param1]个文档",
+    "successPartial": "部分成功：[param1]/[param2]个文档已处理，[param3]个失败",
+    "errorAll": "处理全部[param1]个文档失败",
+    "cancelConfirm": "确定要取消当前操作吗？"
   },
   "seo": {
     "saveSuccess": "SEO设置保存并同步成功",

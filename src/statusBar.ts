@@ -23,7 +23,7 @@ export const initStatusBar = (pluginInstance: SlugPlugin) => {
 
 export const updateStatusBar = (pluginInstance: SlugPlugin, statusText) => {
   // console.log(pluginInstance.statusBarElement)
-  if (!pluginInstance?.statusBarElement?.innerHTML) {
+  if (!pluginInstance?.statusBarElement) {
     console.warn("statusBarElement was not found, ignore, maybe in mobile device")
     return
   }
