@@ -113,16 +113,16 @@
       <!-- Status indicator -->
       <div class="progress-status">
         {#if currentBatch.status === 'processing'}
-          <span class="status-icon processing">🔄</span>
+          <span class="status-icon processing">⚡</span>
           <span class="status-text">{pluginInstance.i18n["progressManager"]["progressRunning"] || "In Progress"}</span>
         {:else if currentBatch.status === 'success'}
-          <span class="status-icon success">✅</span>
+          <span class="status-icon success">✓</span>
           <span class="status-text">{pluginInstance.i18n["progressManager"]["progressSuccess"] || "Success"}</span>
         {:else if currentBatch.status === 'error'}
-          <span class="status-icon error">❌</span>
+          <span class="status-icon error">✗</span>
           <span class="status-text">{pluginInstance.i18n["progressManager"]["progressError"] || "Error"}</span>
         {:else if currentBatch.status === 'canceled'}
-          <span class="status-icon canceled">⏹️</span>
+          <span class="status-icon canceled">■</span>
           <span class="status-text">{pluginInstance.i18n["progressManager"]["progressCanceled"] || "Canceled"}</span>
         {/if}
       </div>
@@ -153,13 +153,6 @@
       <div class="auto-close-info">
         {pluginInstance.i18n["progressManager"]["autoCloseIn"].replace("[param1]", countdown.toString())}
       </div>
-
-      <!-- Action tips -->
-      <div class="tips">
-        {#if currentBatch.status === 'processing'}
-            {pluginInstance.i18n["progressManager"]["sharingIng"]}
-        {/if}
-      </div>
     </div>
   </div>
 {/if}
@@ -170,16 +163,16 @@
   bottom 20px
   right 20px
   z-index 9999
-  background-color rgba(0, 0, 0, 0.85)
+  background-color rgba(24, 24, 28, 0.92)
   color white
   padding 16px
-  border-radius 8px
-  box-shadow 0 4px 12px rgba(0, 0, 0, 0.3)
+  border-radius 12px
+  box-shadow 0 6px 20px rgba(0, 0, 0, 0.4)
   font-family "Open Sans", "LXGW WenKai", "JetBrains Mono", "-apple-system", "Microsoft YaHei", "Times New Roman", "方正北魏楷书_GBK", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif
   max-width 640px
   width 100%
-  backdrop-filter blur(8px)
-  border 1px solid rgba(255, 255, 255, 0.1)
+  backdrop-filter blur(12px)
+  border 1px solid rgba(255, 255, 255, 0.15)
 
   .share-pro-progress-manager-content
     display flex
@@ -269,24 +262,25 @@
     background linear-gradient(90deg, #1890ff, #52c41a)
     border-radius 3px
     transition width 0.3s ease
+    box-shadow 0 0 8px rgba(24, 144, 255, 0.3)
 
   .current-document
     display flex
     align-items center
     gap 8px
-    font-size 14px
-    color rgba(255, 255, 255, 0.7)
+    font-size 13px
+    color rgba(255, 255, 255, 0.85)
 
   .doc-label
     font-weight 600
-    color rgba(255, 255, 255, 0.8)
+    color rgba(255, 255, 255, 0.9)
 
   .doc-title
     font-weight 500
     overflow hidden
     text-overflow ellipsis
     white-space nowrap
-    max-width 280px
+    max-width 220px
 
   .auto-close-info
     font-size 12px
@@ -294,34 +288,16 @@
     text-align right
     font-style italic
 
-  .close-button-small
-    padding 6px 12px
-    border none
-    border-radius 4px
-    font-size 13px
-    font-weight 500
-    cursor pointer
-    transition all 0.2s ease
-
-  .close-button-small
-    background-color rgba(255, 255, 255, 0.15)
-    color white
-    transition all 0.2s ease
-
-    &:hover
-      background-color rgba(255, 255, 255, 0.25)
-      transform translateY(-1px)
-
   /* Dark mode support */
   html[data-theme-mode="dark"] &
-    background-color rgba(30, 30, 30, 0.95)
-    border-color rgba(255, 255, 255, 0.15)
-    backdrop-filter blur(14px)
+    background-color rgba(24, 24, 28, 0.95)
+    border-color rgba(255, 255, 255, 0.2)
+    backdrop-filter blur(16px)
 
     .progress-title
       color rgba(255, 255, 255, 0.95)
 
     .progress-info,
     .current-document
-      color rgba(255, 255, 255, 0.85)
+      color rgba(255, 255, 255, 0.9)
 </style>
