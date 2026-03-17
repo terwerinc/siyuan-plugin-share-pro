@@ -229,7 +229,7 @@
     "expiresError": "Invalid expiration time. Please enter a number between 0 and 604800 (7 days).",
     "saveExpires": "Save",
     "incrementalShareModeInfo": "Incremental share mode does not require a stable ID, please use the incremental share entry",
-    "noSubdocuments": "Oops! No subdocuments found for this document~",
+    "noSubdocuments": "Current document has no subdocuments",
     "showSubdocuments": "Expand subdocuments",
     "hideSubdocuments": "Collapse subdocuments"
   },

@@ -33,7 +33,7 @@
   let docTreeLevelOptions = [1, 2, 3, 4, 5, 6]
   let outlineEnabled = true
   let outlineLevel = 6
-  let shareSubdocuments = true
+  let shareSubdocuments = false
   let outlineLevelOptions = [
     {
       label: "h1",
@@ -62,7 +62,7 @@
   ]
   let passwordEnabled = false
   let showPassword = false
-  let maxSubdocuments = 100
+  let maxSubdocuments = -1
 
   let settingConfig: ShareProConfig = pluginInstance.getDefaultCfg()
   const settingService = new SettingService(pluginInstance)
@@ -167,7 +167,7 @@
       <span class="fn__hr" />
       <input type="number" min="-1" max="999" class="b3-text-field fn__size200" bind:value={maxSubdocuments} />
       <div class="b3-label__text form-item-tip" style="margin-top: 5px;">
-        -1 = 无限制, 100 = 默认, 999 = 最大
+        -1 = 无限制
       </div>
     </div>
     {/if}

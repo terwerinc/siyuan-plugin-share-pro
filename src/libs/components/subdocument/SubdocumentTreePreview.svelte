@@ -374,17 +374,19 @@
   $: estimatedStorage = selectedCount * 100;
 </script>
 
-<div class="subdocument-tree-preview">
-  {#if isLoading}
-    <div class="loading-container">
-      <div class="spinner" />
-      <div class="loading-text">{pluginInstance.i18n["ui"]["dataLoading"]}</div>
-    </div>
-  {:else if subdocumentTree.length === 0}
-    <div class="empty-state">
-      {pluginInstance.i18n["ui"]["noSubdocuments"]}
-    </div>
-  {:else}
+{#if isLoading}
+  <div class="subdocument-loading">
+    <div class="spinner" />
+    <div class="loading-text">{pluginInstance.i18n["ui"]["dataLoading"]}</div>
+  </div>
+{:else if subdocumentTree.length === 0}
+  <!-- 无子文档时只显示一行极简提示，不占用额外空间 -->
+  <div class="subdocument-empty-hint">
+    {pluginInstance.i18n["ui"]["noSubdocuments"]}
+  </div>
+{:else}
+  <!-- 有子文档时才显示完整的UI结构 -->
+  <div class="subdocument-preview-container">
     <div class="preview-header">
       <div class="stats">
         <span class="stat-item">
@@ -434,39 +436,38 @@
         {/each}
       </div>
     {/if}
-  {/if}
-</div>
+  </div>
+{/if}
 
 <style lang="stylus">
-  .subdocument-tree-preview
-    padding 12px
-    border 1px solid var(--b3-theme-surface-light)
-    border-radius 4px
-    background-color var(--b3-theme-background)
-
-  .loading-container
+  .subdocument-loading
     display flex
-    flex-direction column
     align-items center
-    justify-content center
-    padding 20px
+    gap 8px
+    padding 4px 0
+    font-size 13px
+    color var(--b3-theme-on-surface)
 
   .spinner
-    width 20px
-    height 20px
+    width 16px
+    height 16px
     border 2px solid var(--b3-theme-surface-light)
     border-top 2px solid var(--b3-theme-primary)
     border-radius 50%
     animation spin 1s linear infinite
 
-  .loading-text
-    margin-top 8px
-    color var(--b3-theme-on-surface)
+  .subdocument-empty-hint
+    padding 4px 0
+    font-size 13px
+    color var(--b3-theme-on-surface-light)
+    line-height 1.4
 
-  .empty-state
-    text-align center
-    color var(--b3-theme-on-surface)
-    padding 20px
+  .subdocument-preview-container
+    padding 12px
+    border 1px solid var(--b3-theme-surface-light)
+    border-radius 4px
+    background-color var(--b3-theme-background)
+    margin-top 8px
 
   .preview-header
     display flex
@@ -528,6 +529,7 @@
   .tree-container
     max-height 400px
     overflow-y auto
+    margin-top 8px
 
   @keyframes spin
     from
