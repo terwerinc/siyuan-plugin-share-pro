@@ -534,6 +534,26 @@
       </div>
     </div>
 
+    {#if isSingleDocMode && formData.shared && !formData.lock}
+      <!-- 单文档模式且已分享：显示详细选项 -->
+        <div class="setting-row">
+          <span class="setting-label">{pluginInstance.i18n["ui"]["copyTitle"]}</span>
+          <div class="input-group">
+            <input
+                    type="text"
+                    bind:value={formData.shareLink}
+                    readonly
+                    class="share-link-input"
+                    on:click={viewDoc}
+                    title={pluginInstance.i18n["ui"]["clickView"]}
+            />
+            <button on:click={copyWebLink}>{pluginInstance.i18n["ui"]["copyWebLink"]}</button>
+          </div>
+        </div>
+
+        <div class="divider" />
+     {/if}
+
     {#if isSingleDocMode}
       <!-- 单文档模式：紧凑分享配置 -->
       <div class="setting-row">
@@ -668,21 +688,6 @@
     {#if isSingleDocMode && formData.shared && !formData.lock}
       <!-- 单文档模式且已分享：显示详细选项 -->
       <div class="share-content">
-        <div class="setting-row">
-          <span class="setting-label">{pluginInstance.i18n["ui"]["copyTitle"]}</span>
-          <div class="input-group">
-            <input
-              type="text"
-              bind:value={formData.shareLink}
-              readonly
-              class="share-link-input"
-              on:click={viewDoc}
-              title={pluginInstance.i18n["ui"]["clickView"]}
-            />
-            <button on:click={copyWebLink}>{pluginInstance.i18n["ui"]["copyWebLink"]}</button>
-          </div>
-        </div>
-
         <div class="divider" />
 
         <div class="setting-row">
