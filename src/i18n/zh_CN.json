@@ -364,7 +364,8 @@
     "cancelConfirm": "确定要取消当前操作吗？",
     "currentDocument": "当前:",
     "autoCloseIn": "[param1]秒后自动关闭",
-    "sharingIng": "正在分享中..."
+    "sharingIng": "正在分享中...",
+    "cancelingIng": "正在取消分享中..."
   },
   "seo": {
     "saveSuccess": "SEO设置保存并同步成功",

@@ -360,7 +360,8 @@
     "cancelConfirm": "Are you sure you want to cancel the current operation?",
     "currentDocument": "Current:",
     "autoCloseIn": "Auto-close in [param1]s",
-    "sharingIng": "Sharing in progress..."
+    "sharingIng": "Sharing in progress...",
+    "cancelingIng": "Canceling share in progress..."
   },
   "seo": {
     "saveSuccess": "SEO settings saved and synced successfully",

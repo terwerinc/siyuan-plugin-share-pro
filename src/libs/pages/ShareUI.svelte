@@ -154,7 +154,6 @@
       // 开始分享
       try {
         formData.operationState.status = 'sharing'
-        formData.operationState.message = pluginInstance.i18n["startShare"]
 
         const shareOptions: Partial<ShareOptions> = {}
         if (formData.shareOptions.passwordEnabled) {
@@ -194,7 +193,6 @@
       // 取消分享
       try {
         formData.operationState.status = 'canceling'
-        formData.operationState.message = pluginInstance.i18n["cancelShare"]
 
         const ret = await shareService.cancelShare(docId)
         if (ret.code === 0) {
@@ -445,7 +443,13 @@
     <div class="operation-overlay">
       <div class="overlay-content">
         <div class="loading-spinner-large"></div>
-        <div class="overlay-message">{formData.operationState.message}</div>
+        <div class="overlay-message">
+        {#if formData.operationState.status === 'sharing'}
+          {pluginInstance.i18n["ui"]["sharingIng"] || "分享中..."}
+        {:else if formData.operationState.status === 'canceling'}
+          {pluginInstance.i18n["ui"]["cancelingIng"] || "取消分享中..."}
+        {/if}
+      </div>
       </div>
     </div>
   {/if}
