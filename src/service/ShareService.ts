@@ -296,8 +296,8 @@ class ShareService implements IShareHistoryService {
    * @param docId 文档ID
    */
   private async cancelOne(docId: string) {
-    const ret = await this.shareApi.deleteDoc(docId)
     try {
+      const ret = await this.shareApi.deleteDoc(docId)
       // 重置文档选项
       await this.updateSingleDocSettings(docId, false, {})
       // 分享选项不用管，会直接删除
@@ -310,13 +310,15 @@ class ShareService implements IShareHistoryService {
       } catch (historyError) {
         this.logger.error(`删除分享历史记录失败: ${docId}`, historyError)
       }
+
+      return ret
     } catch (e) {
+      this.logger.error(`取消分享文档 ${docId} 失败:`, e)
       return {
         code: -1,
-        msg: e,
+        msg: e instanceof Error ? e.message : String(e),
       }
     }
-    return ret
   }
 
   /**
