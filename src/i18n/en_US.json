@@ -357,7 +357,9 @@
     "successAll": "Successfully processed all [param1] documents",
     "successPartial": "Partially successful: [param1]/[param2] documents processed, [param3] failed",
     "errorAll": "Failed to process all [param1] documents",
-    "cancelConfirm": "Are you sure you want to cancel the current operation?"
+    "cancelConfirm": "Are you sure you want to cancel the current operation?",
+    "currentDocument": "Current:",
+    "autoCloseIn": "Auto-close in [param1]s"
   },
   "seo": {
     "saveSuccess": "SEO settings saved and synced successfully",

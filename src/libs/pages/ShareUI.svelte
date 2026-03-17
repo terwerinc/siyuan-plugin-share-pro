@@ -919,6 +919,7 @@
       margin-bottom 8px
       gap 6px
 
+
     .setting-label
       font-size 14px
       white-space nowrap
@@ -1193,7 +1194,8 @@
       display flex
       align-items center
       gap 6px
-      min-width 88px
+      width auto
+      max-width 100%
 
       &:hover:not(:disabled)
         background-color #005bb5

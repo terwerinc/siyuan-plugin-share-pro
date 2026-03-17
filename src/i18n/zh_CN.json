@@ -361,7 +361,9 @@
     "successAll": "成功处理全部[param1]个文档",
     "successPartial": "部分成功：[param1]/[param2]个文档已处理，[param3]个失败",
     "errorAll": "处理全部[param1]个文档失败",
-    "cancelConfirm": "确定要取消当前操作吗？"
+    "cancelConfirm": "确定要取消当前操作吗？",
+    "currentDocument": "当前:",
+    "autoCloseIn": "[param1]秒后自动关闭"
   },
   "seo": {
     "saveSuccess": "SEO设置保存并同步成功",

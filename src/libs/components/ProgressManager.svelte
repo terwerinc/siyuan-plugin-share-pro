@@ -11,6 +11,8 @@
   // Local state
   let currentBatch = null
   let isVisible = false
+  let autoCloseTimer = null
+  let countdown = 5
 
   // Subscribe to progress store
   let unsubscribe: () => void
@@ -19,6 +21,11 @@
     unsubscribe = progressStore.subscribe(value => {
       currentBatch = value
       isVisible = !!value
+
+      // 当有新的进度状态时，重置自动关闭计时器
+      if (value) {
+        resetAutoCloseTimer()
+      }
     })
   })
 
@@ -27,17 +34,48 @@
     if (unsubscribe) {
       unsubscribe()
     }
+    clearAutoCloseTimer()
     currentBatch = null
     isVisible = false
   })
 
-  // Close handler - manual close only
+  // 重置自动关闭计时器
+  function resetAutoCloseTimer() {
+    clearAutoCloseTimer()
+    countdown = 5
+
+    autoCloseTimer = setInterval(() => {
+      countdown--
+      if (countdown <= 0) {
+        handleCloseAuto()
+      }
+    }, 1000)
+  }
+
+  // 清除自动关闭计时器
+  function clearAutoCloseTimer() {
+    if (autoCloseTimer) {
+      clearInterval(autoCloseTimer)
+      autoCloseTimer = null
+    }
+  }
+
+  // 自动关闭处理
+  function handleCloseAuto() {
+    isVisible = false
+    currentBatch = null
+    ProgressManager.clearBatch()
+    clearAutoCloseTimer()
+  }
+
+  // 手动关闭处理
   function handleClose(e) {
     // 阻止事件冒泡，避免影响 ShareUI
     e.stopPropagation()
     isVisible = false
     currentBatch = null
     ProgressManager.clearBatch()
+    clearAutoCloseTimer()
   }
 
   // Cancel batch handler
@@ -106,10 +144,15 @@
       <!-- Current document -->
       {#if currentBatch.currentDocTitle}
         <div class="current-document">
-          <span class="doc-label">Current:</span>
+          <span class="doc-label">{pluginInstance.i18n["progressManager"]["currentDocument"]}</span>
           <span class="doc-title">{currentBatch.currentDocTitle}</span>
         </div>
       {/if}
+
+      <!-- Auto-close countdown -->
+      <div class="auto-close-info">
+        {pluginInstance.i18n["progressManager"]["autoCloseIn"].replace("[param1]", countdown.toString())}
+      </div>
 
       <!-- Action buttons -->
       <div class="action-buttons">
@@ -250,6 +293,12 @@
     text-overflow ellipsis
     white-space nowrap
     max-width 280px
+
+  .auto-close-info
+    font-size 12px
+    color rgba(255, 255, 255, 0.6)
+    text-align right
+    font-style italic
 
   .action-buttons
     display flex
