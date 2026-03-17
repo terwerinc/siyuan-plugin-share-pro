@@ -93,6 +93,7 @@
     "outlineEnabled": "已启用文档大纲",
     "outlineDisabled": "已禁用文档大纲",
     "maxSubdocuments": "子文档数量限制",
+    "maxSubdocumentsShow": "子文档数量",
     "maxSubdocumentsTip": "设置子文档分享的最大数量，-1表示无限制，100为默认值，999为最大值。注意：无限制可能导致性能问题。",
     "passwordEnabled": "密码保护",
     "passwordEnabledTip": "是否开启密码保护，开启之后默认为每篇文档随机生成分享密码，可更改",

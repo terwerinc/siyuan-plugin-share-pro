@@ -32,6 +32,7 @@
   let expandedNodes = new Set<string>();
   let notebookId = "";
   let rootDocPath = "";
+  let treeExpanded = false; // 控制整个树的展开/折叠状态
 
   // 初始化
   onMount(async () => {
@@ -387,7 +388,7 @@
     <div class="preview-header">
       <div class="stats">
         <span class="stat-item">
-          {pluginInstance.i18n["cs"]["maxSubdocuments"]}:
+          {pluginInstance.i18n["cs"]["maxSubdocumentsShow"]}:
           <strong>{selectedCount}/{getTotalCount()}</strong>
         </span>
         <span class="stat-item">
@@ -409,19 +410,28 @@
       </div>
     </div>
 
-    <div class="tree-container">
-      {#each subdocumentTree as node}
-        <RecursiveTreeNode
-          node={node}
-          selectedDocIds={selectedDocIds}
-          expandedNodes={expandedNodes}
-          onToggleExpand={toggleExpand}
-          onToggleSelect={(docId, event) => toggleSelect(docId, event)}
-          isBlacklisted={() => isBlacklistedSync()}
-          depth={0}
-        />
-      {/each}
+    <div class="tree-toggle" on:click={() => treeExpanded = !treeExpanded}>
+      <span class="toggle-icon">{treeExpanded ? '▼' : '▶'}</span>
+      <span class="toggle-label">
+        {treeExpanded ? "收起子文档" : "展开子文档"}
+      </span>
     </div>
+
+    {#if treeExpanded}
+      <div class="tree-container">
+        {#each subdocumentTree as node}
+          <RecursiveTreeNode
+            node={node}
+            selectedDocIds={selectedDocIds}
+            expandedNodes={expandedNodes}
+            onToggleExpand={toggleExpand}
+            onToggleSelect={(docId, event) => toggleSelect(docId, event)}
+            isBlacklisted={() => isBlacklistedSync()}
+            depth={0}
+          />
+        {/each}
+      </div>
+    {/if}
   {/if}
 </div>
 
@@ -489,6 +499,28 @@
     &:hover
       background-color var(--b3-theme-primary)
       color var(--b3-theme-background)
+
+  .tree-toggle
+    display flex
+    align-items center
+    gap 8px
+    cursor pointer
+    padding 6px 0
+    color var(--b3-theme-primary)
+    font-size 13px
+    font-weight 500
+    transition all 0.2s ease
+
+  .tree-toggle:hover
+    color var(--b3-theme-on-surface)
+
+  .toggle-icon
+    font-size 14px
+    line-height 1
+    transition transform 0.2s ease
+
+  .toggle-label
+    white-space nowrap
 
   .tree-container
     max-height 400px
