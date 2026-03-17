@@ -1179,21 +1179,21 @@
 
     /* 核心操作按钮 - 付费软件专业设计 */
     .primary-action-btn
-      padding 8px 16px
-      font-size 14px
+      padding 6px 12px
+      font-size 13px
       color white
       border none
-      border-radius 6px
+      border-radius 4px
       cursor pointer
       background-color #0073e6
       transition all 0.2s ease
-      height 32px
-      line-height 20px
+      height 28px
+      line-height 18px
       font-weight 500
       display flex
       align-items center
-      gap 8px
-      min-width 100px
+      gap 6px
+      min-width 88px
 
       &:hover:not(:disabled)
         background-color #005bb5

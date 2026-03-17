@@ -122,13 +122,6 @@
             {pluginInstance.i18n["cancel"] || "Cancel"}
           </button>
         {/if}
-        <button
-          class="close-button-small"
-          on:click={handleClose}
-          title={pluginInstance.i18n["cancel"] || "Close notification"}
-        >
-          {pluginInstance.i18n["cancel"] || "Close"}
-        </button>
       </div>
     </div>
   </div>
@@ -142,13 +135,13 @@
   z-index 9999
   background-color rgba(0, 0, 0, 0.85)
   color white
-  padding 20px
-  border-radius 12px
-  box-shadow 0 6px 20px rgba(0, 0, 0, 0.4)
-  font-family -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif
-  max-width 420px
+  padding 16px
+  border-radius 8px
+  box-shadow 0 4px 12px rgba(0, 0, 0, 0.3)
+  font-family "Open Sans", "LXGW WenKai", "JetBrains Mono", "-apple-system", "Microsoft YaHei", "Times New Roman", "方正北魏楷书_GBK", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif
+  max-width 640px
   width 100%
-  backdrop-filter blur(12px)
+  backdrop-filter blur(8px)
   border 1px solid rgba(255, 255, 255, 0.1)
 
   .share-pro-progress-manager-content
@@ -229,15 +222,15 @@
     color #1890ff
 
   .progress-bar
-    height 10px
+    height 6px
     background-color rgba(255, 255, 255, 0.2)
-    border-radius 5px
+    border-radius 3px
     overflow hidden
 
   .progress-fill
     height 100%
     background linear-gradient(90deg, #1890ff, #52c41a)
-    border-radius 5px
+    border-radius 3px
     transition width 0.3s ease
 
   .current-document
@@ -260,15 +253,14 @@
 
   .action-buttons
     display flex
-    gap 12px
     justify-content flex-end
 
   .cancel-button,
   .close-button-small
-    padding 8px 16px
+    padding 6px 12px
     border none
-    border-radius 6px
-    font-size 14px
+    border-radius 4px
+    font-size 13px
     font-weight 500
     cursor pointer
     transition all 0.2s ease
@@ -284,6 +276,7 @@
   .close-button-small
     background-color rgba(255, 255, 255, 0.15)
     color white
+    transition all 0.2s ease
 
     &:hover
       background-color rgba(255, 255, 255, 0.25)
