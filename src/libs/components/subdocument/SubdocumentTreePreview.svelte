@@ -369,8 +369,8 @@
 
   // 响应式计算属性 - 直接在模板中使用
   $: selectedCount = selectedDocIds.size;
-  $: estimatedTime = selectedCount * 3;
-  $: estimatedStorage = selectedCount * 10;
+  $: estimatedTime = selectedCount * 0.25;
+  $: estimatedStorage = selectedCount * 100;
 </script>
 
 <div class="subdocument-tree-preview">
