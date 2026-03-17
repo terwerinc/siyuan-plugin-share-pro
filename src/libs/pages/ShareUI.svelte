@@ -508,7 +508,7 @@
             {/if}
             <!-- 核心操作按钮 - 付费软件专业设计 -->
             <button
-              class="primary-action-btn"
+              class="primary-action-btn {formData.shared ? 'cancel-share' : ''}"
               on:click={handleShare}
               disabled={formData.operationState.status === 'sharing' || formData.operationState.status === 'canceling'}
               title={formData.shared ? pluginInstance.i18n["cancelShare"] : pluginInstance.i18n["startShare"]}
@@ -1196,6 +1196,17 @@
       gap 6px
       width auto
       max-width 100%
+
+    /* 取消分享状态 - 红色背景 */
+    .primary-action-btn.cancel-share
+      background-color #f5222d
+
+    .primary-action-btn.cancel-share:hover:not(:disabled)
+      background-color #d91a21
+      box-shadow 0 2px 8px rgba(245, 34, 45, 0.3)
+
+    .primary-action-btn.cancel-share:active:not(:disabled)
+      background-color #b3161d
 
       &:hover:not(:disabled)
         background-color #005bb5

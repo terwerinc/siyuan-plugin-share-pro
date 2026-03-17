@@ -154,16 +154,10 @@
         {pluginInstance.i18n["progressManager"]["autoCloseIn"].replace("[param1]", countdown.toString())}
       </div>
 
-      <!-- Action buttons -->
-      <div class="action-buttons">
+      <!-- Action tips -->
+      <div class="tips">
         {#if currentBatch.status === 'processing'}
-          <button
-            class="cancel-button"
-            on:click={handleCancel}
-            title={pluginInstance.i18n["progressManager"]["cancelConfirm"] || "Cancel operation"}
-          >
-            {pluginInstance.i18n["cancel"] || "Cancel"}
-          </button>
+            {pluginInstance.i18n["progressManager"]["sharingIng"]}
         {/if}
       </div>
     </div>
@@ -300,11 +294,6 @@
     text-align right
     font-style italic
 
-  .action-buttons
-    display flex
-    justify-content flex-end
-
-  .cancel-button,
   .close-button-small
     padding 6px 12px
     border none
@@ -313,14 +302,6 @@
     font-weight 500
     cursor pointer
     transition all 0.2s ease
-
-  .cancel-button
-    background-color #fa8c16
-    color white
-
-    &:hover
-      background-color #d87a00
-      transform translateY(-1px)
 
   .close-button-small
     background-color rgba(255, 255, 255, 0.15)
