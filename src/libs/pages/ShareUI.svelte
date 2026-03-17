@@ -107,13 +107,11 @@
       shareReferences: false, // 是否分享引用文档
     } as SingleDocSetting,
 
-    // 进度状态
-    progress: {
-      total: 0,
-      completed: 0,
-      percentage: 0,
-      isSharing: false,
-      canCancel: false
+    // 操作状态机
+    operationState: {
+      status: 'idle', // 'idle' | 'sharing' | 'canceling' | 'shared' | 'error'
+      message: '',
+      error: null
     },
 
     // 层级3: shareOptions - 分享选项
@@ -147,11 +145,16 @@
       return
     }
 
-    if (formData.shared) {
-      // 分享
+    // 防止重复点击
+    if (formData.operationState.status === 'sharing' || formData.operationState.status === 'canceling') {
+      return
+    }
+
+    if (!formData.shared) {
+      // 开始分享
       try {
-        formData.progress.isSharing = true
-        formData.progress.canCancel = true
+        formData.operationState.status = 'sharing'
+        formData.operationState.message = pluginInstance.i18n["startShare"]
 
         const shareOptions: Partial<ShareOptions> = {}
         if (formData.shareOptions.passwordEnabled) {
@@ -167,12 +170,13 @@
         await shareService.createShare(docId, formData.singleDocSetting, shareOptions)
         // 初始化
         await initSingleDocMode()
-        formData.progress.isSharing = false
-        formData.progress.canCancel = false
+        formData.operationState.status = 'shared'
+        formData.operationState.message = pluginInstance.i18n["msgShareSuccess"]
       } catch (e) {
         formData.shared = false
-        formData.progress.isSharing = false
-        formData.progress.canCancel = false
+        formData.operationState.status = 'error'
+        formData.operationState.error = e
+        formData.operationState.message = pluginInstance.i18n["msgShareError"]
         console.error(e)
         showMessage(pluginInstance.i18n["ui"]["shareSuccessError"]+e.toString(), 3000, "info")
       }
@@ -183,29 +187,37 @@
       if (formData?.shareData?.shareStatus && formData.shareData.shareStatus !== "COMPLETED") {
         formData.lock = true
         showMessage(pluginInstance.i18n["ui"]["msgIngError"], 3000, "info")
+        formData.operationState.status = 'idle'
         return
       }
+
       // 取消分享
-      const ret = await shareService.cancelShare(docId)
-      if (ret.code === 0) {
-        // 初始化
-        await initSingleDocMode()
-        showMessage(pluginInstance.i18n["topbar"]["cancelSuccess"], 3000, "info")
-      } else {
-        showMessage(pluginInstance.i18n["topbar"]["cancelError"] + ret.msg, 7000, "error")
+      try {
+        formData.operationState.status = 'canceling'
+        formData.operationState.message = pluginInstance.i18n["cancelShare"]
+
+        const ret = await shareService.cancelShare(docId)
+        if (ret.code === 0) {
+          // 初始化
+          await initSingleDocMode()
+          formData.operationState.status = 'idle'
+          showMessage(pluginInstance.i18n["topbar"]["cancelSuccess"], 3000, "info")
+        } else {
+          formData.operationState.status = 'error'
+          formData.operationState.error = ret.msg
+          formData.operationState.message = pluginInstance.i18n["msgCancelError"]
+          showMessage(pluginInstance.i18n["topbar"]["cancelError"] + ret.msg, 7000, "error")
+        }
+      } catch (e) {
+        formData.operationState.status = 'error'
+        formData.operationState.error = e
+        formData.operationState.message = pluginInstance.i18n["msgCancelError"]
+        console.error(e)
+        showMessage(pluginInstance.i18n["topbar"]["cancelError"] + e.toString(), 7000, "error")
       }
     }
   }
 
-  // 取消分享操作
-  const cancelSharing = async () => {
-    if (!formData.progress.canCancel) return
-
-    // 这里需要实现取消逻辑
-    showMessage("取消分享功能正在开发中...", 3000, "info")
-    formData.progress.isSharing = false
-    formData.progress.canCancel = false
-  }
 
   const handleReShare = async () => {
     if (!isSingleDocMode) {
@@ -428,6 +440,15 @@
 
 <div id="share">
   <ProgressManager pluginInstance={pluginInstance} />
+  <!-- 操作遮罩层 -->
+  {#if formData.operationState.status === 'sharing' || formData.operationState.status === 'canceling'}
+    <div class="operation-overlay">
+      <div class="overlay-content">
+        <div class="loading-spinner-large"></div>
+        <div class="overlay-message">{formData.operationState.message}</div>
+      </div>
+    </div>
+  {/if}
   {#if isSingleDocMode && typeof formData.post.title === "undefined"}
     <!-- 单文档模式但加载中 -->
     <div class="loading-spinner">
@@ -485,13 +506,25 @@
                 {@html icons.iconReShare}
               </span>
             {/if}
-            <input
+            <!-- 核心操作按钮 - 付费软件专业设计 -->
+            <button
+              class="primary-action-btn"
+              on:click={handleShare}
+              disabled={formData.operationState.status === 'sharing' || formData.operationState.status === 'canceling'}
               title={formData.shared ? pluginInstance.i18n["cancelShare"] : pluginInstance.i18n["startShare"]}
-              class="b3-switch fn__flex-center share-btn"
-              type="checkbox"
-              bind:checked={formData.shared}
-              on:change={handleShare}
-            />
+            >
+              {#if formData.operationState.status === 'sharing'}
+                <span class="loading-spinner"></span>
+                {pluginInstance.i18n["startShare"]}
+              {:else if formData.operationState.status === 'canceling'}
+                <span class="loading-spinner"></span>
+                {pluginInstance.i18n["cancelShare"]}
+              {:else if formData.shared}
+                {pluginInstance.i18n["cancelShare"]}
+              {:else}
+                {pluginInstance.i18n["startShare"]}
+              {/if}
+            </button>
           </div>
         {/if}
       </div>
@@ -1143,4 +1176,78 @@
 
         &:checked
           background-color: #0073e6
+
+    /* 核心操作按钮 - 付费软件专业设计 */
+    .primary-action-btn
+      padding 8px 16px
+      font-size 14px
+      color white
+      border none
+      border-radius 6px
+      cursor pointer
+      background-color #0073e6
+      transition all 0.2s ease
+      height 32px
+      line-height 20px
+      font-weight 500
+      display flex
+      align-items center
+      gap 8px
+      min-width 100px
+
+      &:hover:not(:disabled)
+        background-color #005bb5
+        box-shadow 0 2px 8px rgba(0, 115, 230, 0.3)
+
+      &:active:not(:disabled)
+        background-color #004999
+        transform translateY(1px)
+
+      &:disabled
+        background-color #cccccc
+        cursor not-allowed
+        opacity 0.7
+
+    .loading-spinner,
+    .loading-spinner-large
+      width 16px
+      height 16px
+      border 2px solid transparent
+      border-top 2px solid currentColor
+      border-radius 50%
+      animation spin 1s linear infinite
+
+    .loading-spinner-large
+      width 24px
+      height 24px
+      border-width 3px
+
+    @keyframes spin
+      from
+        transform rotate(0deg)
+      to
+        transform rotate(360deg)
+
+    /* 操作遮罩层 */
+    .operation-overlay
+      position absolute
+      top 0
+      left 0
+      right 0
+      bottom 0
+      background-color rgba(0, 0, 0, 0.6)
+      z-index 1000
+      display flex
+      align-items center
+      justify-content center
+      border-radius 8px
+
+    .overlay-content
+      text-align center
+      color white
+
+    .overlay-message
+      margin-top 12px
+      font-size 16px
+      font-weight 500
 </style>
