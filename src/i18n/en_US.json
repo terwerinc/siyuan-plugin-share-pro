@@ -229,7 +229,9 @@
     "expiresError": "Invalid expiration time. Please enter a number between 0 and 604800 (7 days).",
     "saveExpires": "Save",
     "incrementalShareModeInfo": "Incremental share mode does not require a stable ID, please use the incremental share entry",
-    "noSubdocuments": "Oops! No subdocuments found for this document~"
+    "noSubdocuments": "Oops! No subdocuments found for this document~",
+    "showSubdocuments": "Expand subdocuments",
+    "hideSubdocuments": "Collapse subdocuments"
   },
   "incrementalShare": {
     "title": "Incremental Share",
@@ -254,7 +256,7 @@
     "newCount": "New Count",
     "blacklistedCount": "Blacklisted Count",
     "estimatedTime": "Estimated Time",
-    "estimatedSize": "Estimated Size",
+    "estimatedSize": "Estimated Total Size",
     "firstLevelOnly": "First Level Only",
     "selectAllToggle": "Select/Cancel",
     "shareSelected": "Share Selected",

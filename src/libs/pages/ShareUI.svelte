@@ -107,13 +107,6 @@
       shareReferences: false, // 是否分享引用文档
     } as SingleDocSetting,
 
-    // 操作状态机
-    operationState: {
-      status: 'idle', // 'idle' | 'sharing' | 'canceling' | 'shared' | 'error'
-      message: '',
-      error: null
-    },
-
     // 层级3: shareOptions - 分享选项
     // 有敏感信息，服务端存储
     // 2、shareOptions，有敏感信息，服务端存储，例如分享密码
@@ -121,6 +114,13 @@
       passwordEnabled: false, // 密码保护开关
       password: "", // 分享密码（敏感信息）
     } as ShareOptions,
+
+    // 操作状态机
+    operationState: {
+        status: 'idle', // 'idle' | 'sharing' | 'canceling' | 'shared' | 'error'
+        message: '',
+        error: null
+    }
   }
 
   // ========================================

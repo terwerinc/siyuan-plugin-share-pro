@@ -413,7 +413,9 @@
     <div class="tree-toggle" on:click={() => treeExpanded = !treeExpanded}>
       <span class="toggle-icon">{treeExpanded ? '▼' : '▶'}</span>
       <span class="toggle-label">
-        {treeExpanded ? "收起子文档" : "展开子文档"}
+        {treeExpanded
+          ? pluginInstance.i18n["ui"]["hideSubdocuments"]
+          : pluginInstance.i18n["ui"]["showSubdocuments"]}
       </span>
     </div>
 
