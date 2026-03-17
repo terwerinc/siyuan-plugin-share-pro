@@ -470,7 +470,7 @@
     display flex
     justify-content space-between
     align-items center
-    margin-bottom 12px
+    margin-bottom 6px
     padding-bottom 8px
     border-bottom 1px solid var(--b3-theme-surface-light)
 
@@ -485,6 +485,7 @@
   .actions
     display flex
     gap 8px
+    margin-left 8px
 
   .action-btn
     padding 4px 8px
@@ -505,7 +506,7 @@
     align-items center
     gap 8px
     cursor pointer
-    padding 6px 0
+    padding 4px 0
     color var(--b3-theme-primary)
     font-size 13px
     font-weight 500

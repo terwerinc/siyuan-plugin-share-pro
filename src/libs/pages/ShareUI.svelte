@@ -1085,7 +1085,6 @@
 
     .subdocument-preview-section
       margin-top 12px
-      padding-top 12px
       border-top 1px solid var(--b3-theme-surface-light)
 
     .progress-section
