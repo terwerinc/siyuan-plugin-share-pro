@@ -81,7 +81,7 @@
     "outlineTip": "是否开启文档大纲，若开启，可设置最大深度，设置为 6，表示最多可获取到 h6，开启关闭实时生效，但是修改深度需要重新分享。",
     "outlineDepth": "文档大纲深度",
     "shareSubdocuments": "子文档分享",
-    "shareSubdocumentsTip": "是否启用子文档分享功能，启用后分享文档时会自动包含该文档下的所有子文档，形成完整的文档树结构。支持数量限制（默认-1无限制，最大999个）。",
+    "shareSubdocumentsTip": "是否启用子文档分享功能，启用后分享文档时会自动包含该文档下的所有子文档，形成完整的文档树结构。",
     "shareSubdocumentsEnabled": "已启用子文档分享",
     "shareSubdocumentsDisabled": "已禁用子文档分享",
     "shareReferences": "引用文档分享",

@@ -105,12 +105,12 @@ ORDER BY b2.updated DESC, b2.created DESC, b2.id
 ### Requirement: 子文档扁平化策略
 系统 SHALL 实现子文档扁平化的获取和性能优化，不再使用深度控制。
 
-#### Scenario: 数量限制
+#### Scenario: 智能数量处理
 - **WHEN** 用户分享子文档时
-- **THEN** 默认限制为100个子文档
-- **THEN** 最大限制为999个子文档
-- **THEN** 系统 SHALL 提供"无限制"选项，但必须明确提示性能风险
-- **THEN** 超过999个子文档时，系统 SHALL 显示明确警告，告知可能的性能影响
+- **THEN** 系统 SHALL 移除用户可配置的数量限制
+- **THEN** 系统 SHALL 自动处理所有子文档，无硬性数量限制
+- **THEN** 当子文档数量超过50个时，系统 SHALL 显示温和性能警告
+- **THEN** 性能警告 SHALL 作为信息提示，非强制用户确认
 
 #### Scenario: 扁平化处理
 - **WHEN** 用户分享子文档时
@@ -153,9 +153,10 @@ ORDER BY b2.updated DESC, b2.created DESC, b2.id
 - **THEN** 系统 SHALL 支持取消分享操作
 
 #### Scenario: 性能限制
-- **WHEN** 子文档数量超过阈值（如100个）时
-- **THEN** 系统 SHALL 提示用户确认后开始分享
+- **WHEN** 子文档数量超过50个时
+- **THEN** 系统 SHALL 显示温和性能提示（非强制确认）
 - **THEN** 系统 SHALL 提供“仅分享首层子文档”快捷选项
+- **THEN** 用户可以选择是否继续分享操作
 
 ### Requirement: 功能交互设计
 系统 SHALL 实现与其他分享功能的协同。
