@@ -29,6 +29,7 @@
   import { icons } from "../../utils/svg"
   import SubdocumentTreePreview from "../components/subdocument/SubdocumentTreePreview.svelte"
   import ProgressManager from "../components/ProgressManager.svelte"
+  import Confirm from "../components/Confirm.svelte"
 
   export let pluginInstance: ShareProPlugin
   export let shareService: ShareService
@@ -262,6 +263,142 @@
     }
   }
 
+  // Confirm modal state
+  let showSubdocumentConfirm = false
+  let subdocumentConfirmConfig = {
+    title: "",
+    message: "",
+    onConfirm: () => {},
+    onCancel: () => {}
+  }
+
+  /**
+   * 处理子文档分享选项变化
+   */
+  const handleSubdocumentShareChange = async (event) => {
+    if (!isSingleDocMode) {
+      logger.warn("handleSubdocumentShareChange called in non-single-doc mode, ignored")
+      return
+    }
+
+    const newChecked = event.target.checked
+    const oldChecked = formData.singleDocSetting.shareSubdocuments
+
+    // 如果值没有变化，直接返回
+    if (newChecked === oldChecked) {
+      return
+    }
+
+    // 如果文档未分享，直接更新配置
+    if (!formData.shared) {
+      formData.singleDocSetting.shareSubdocuments = newChecked
+      return
+    }
+
+    // 文档已分享的情况
+    if (oldChecked && !newChecked) {
+      // 从启用变为禁用 - 需要确认是否取消已分享的子文档
+      subdocumentConfirmConfig = {
+        title: pluginInstance.i18n["tipTitle"] || "确认操作",
+        message: pluginInstance.i18n["cs"]["confirmCancelSubdocuments"] || "您已分享了子文档，现在禁用子文档分享将取消已分享的子文档。是否继续？",
+        onConfirm: async () => {
+          // 用户确认 - 更新配置并重新分享
+          formData.singleDocSetting.shareSubdocuments = newChecked
+          await handleReShare()
+        },
+        onCancel: () => {
+          // 用户取消 - 恢复原状态
+          event.target.checked = oldChecked
+        }
+      }
+      showSubdocumentConfirm = true
+    } else if (!oldChecked && newChecked) {
+      // 从禁用变为启用 - 需要确认是否更新分享以包含子文档
+      subdocumentConfirmConfig = {
+        title: pluginInstance.i18n["tipTitle"] || "确认操作",
+        message: pluginInstance.i18n["cs"]["confirmAddSubdocuments"] || "您已分享了文档，现在启用子文档分享将重新分享以包含所有子文档。是否继续？",
+        onConfirm: async () => {
+          // 用户确认 - 更新配置并重新分享
+          formData.singleDocSetting.shareSubdocuments = newChecked
+          await handleReShare()
+        },
+        onCancel: () => {
+          // 用户取消 - 恢复原状态
+          event.target.checked = oldChecked
+        }
+      }
+      showSubdocumentConfirm = true
+    }
+  }
+
+  // Confirm modal state for references
+  let showReferenceConfirm = false
+  let referenceConfirmConfig = {
+    title: "",
+    message: "",
+    onConfirm: () => {},
+    onCancel: () => {}
+  }
+
+  /**
+   * 处理引用文档分享选项变化
+   */
+  const handleReferenceShareChange = async (event) => {
+    if (!isSingleDocMode) {
+      logger.warn("handleReferenceShareChange called in non-single-doc mode, ignored")
+      return
+    }
+
+    const newChecked = event.target.checked
+    const oldChecked = formData.singleDocSetting.shareReferences
+
+    // 如果值没有变化，直接返回
+    if (newChecked === oldChecked) {
+      return
+    }
+
+    // 如果文档未分享，直接更新配置
+    if (!formData.shared) {
+      formData.singleDocSetting.shareReferences = newChecked
+      return
+    }
+
+    // 文档已分享的情况
+    if (oldChecked && !newChecked) {
+      // 从启用变为禁用 - 需要确认是否取消已分享的引用文档
+      referenceConfirmConfig = {
+        title: pluginInstance.i18n["tipTitle"] || "确认操作",
+        message: pluginInstance.i18n["cs"]["confirmCancelReferences"] || "您已分享了引用文档，现在禁用引用文档分享将取消已分享的引用文档。是否继续？",
+        onConfirm: async () => {
+          // 用户确认 - 更新配置并重新分享
+          formData.singleDocSetting.shareReferences = newChecked
+          await handleReShare()
+        },
+        onCancel: () => {
+          // 用户取消 - 恢复原状态
+          event.target.checked = oldChecked
+        }
+      }
+      showReferenceConfirm = true
+    } else if (!oldChecked && newChecked) {
+      // 从禁用变为启用 - 需要确认是否更新分享以包含引用文档
+      referenceConfirmConfig = {
+        title: pluginInstance.i18n["tipTitle"] || "确认操作",
+        message: pluginInstance.i18n["cs"]["confirmAddReferences"] || "您已分享了文档，现在启用引用文档分享将重新分享以包含所有引用文档。是否继续？",
+        onConfirm: async () => {
+          // 用户确认 - 更新配置并重新分享
+          formData.singleDocSetting.shareReferences = newChecked
+          await handleReShare()
+        },
+        onCancel: () => {
+          // 用户取消 - 恢复原状态
+          event.target.checked = oldChecked
+        }
+      }
+      showReferenceConfirm = true
+    }
+  }
+
   const handleExpiresTime = async () => {
     if (!isSingleDocMode) {
       logger.warn("handleExpiresTime called in non-single-doc mode, ignored")
@@ -432,6 +569,32 @@
 
 <div id="share">
   <ProgressManager pluginInstance={pluginInstance} />
+  <Confirm
+    show={showSubdocumentConfirm}
+    title={subdocumentConfirmConfig.title}
+    message={subdocumentConfirmConfig.message}
+    onConfirm={() => {
+      subdocumentConfirmConfig.onConfirm()
+      showSubdocumentConfirm = false
+    }}
+    onCancel={() => {
+      subdocumentConfirmConfig.onCancel()
+      showSubdocumentConfirm = false
+    }}
+  />
+  <Confirm
+    show={showReferenceConfirm}
+    title={referenceConfirmConfig.title}
+    message={referenceConfirmConfig.message}
+    onConfirm={() => {
+      referenceConfirmConfig.onConfirm()
+      showReferenceConfirm = false
+    }}
+    onCancel={() => {
+      referenceConfirmConfig.onCancel()
+      showReferenceConfirm = false
+    }}
+  />
   <!-- 操作遮罩层 -->
   {#if formData.operationState.status === 'sharing' || formData.operationState.status === 'canceling'}
     <div class="operation-overlay">
@@ -558,7 +721,8 @@
           <label class="compact-switch">
             <input
               type="checkbox"
-              bind:checked={formData.singleDocSetting.shareSubdocuments}
+              checked={formData.singleDocSetting.shareSubdocuments}
+              on:change={(e) => handleSubdocumentShareChange(e)}
               title={formData.singleDocSetting.shareSubdocuments
                 ? pluginInstance.i18n["cs"]["shareSubdocumentsDisabled"]
                 : pluginInstance.i18n["cs"]["shareSubdocumentsEnabled"]}
@@ -570,7 +734,8 @@
           <label class="compact-switch">
             <input
               type="checkbox"
-              bind:checked={formData.singleDocSetting.shareReferences}
+              checked={formData.singleDocSetting.shareReferences}
+              on:change={(e) => handleReferenceShareChange(e)}
               title={formData.singleDocSetting.shareReferences
                 ? pluginInstance.i18n["cs"]["shareReferencesDisabled"]
                 : pluginInstance.i18n["cs"]["shareReferencesEnabled"]}
