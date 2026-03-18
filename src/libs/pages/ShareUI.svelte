@@ -85,7 +85,7 @@
     // 存储位置：本地配置/服务端配置（appConfig）
     userPreferences: {
       showPassword: false, // 密码显示偏好
-      shareSubdocuments: true, // 全局子文档分享设置
+      shareSubdocuments: false, // 全局子文档分享设置
       incrementalShareConfig: {
         // 增量分享配置
         enabled: true, // 默认启用
@@ -101,7 +101,7 @@
       outlineEnable: false, // 是否显示大纲
       outlineLevel: 6, // 大纲层级
       expiresTime: "", // 分享有效期
-      shareSubdocuments: true, // 是否分享子文档
+      shareSubdocuments: false, // 是否分享子文档
       shareReferences: false, // 是否分享引用文档
     } as SingleDocSetting,
 
@@ -313,7 +313,7 @@
     }
     cfg.appConfig = {
       ...cfg.appConfig,
-      shareSubdocuments: shareSubdocuments ?? cfg.appConfig?.shareSubdocuments ?? true,
+      shareSubdocuments: shareSubdocuments ?? cfg.appConfig?.shareSubdocuments ?? false,
     }
     // 文档树、文档大纲
     formData.singleDocSetting.docTreeEnable = cfg.siyuanConfig.preferenceConfig.docTreeEnable
@@ -321,7 +321,7 @@
     formData.singleDocSetting.outlineEnable = cfg.siyuanConfig.preferenceConfig.outlineEnable
     formData.singleDocSetting.outlineLevel = cfg.siyuanConfig.preferenceConfig.outlineLevel
     // 子文档分享
-    formData.singleDocSetting.shareSubdocuments = cfg.appConfig?.shareSubdocuments ?? true
+    formData.singleDocSetting.shareSubdocuments = cfg.appConfig?.shareSubdocuments ?? false
     // 引用文档分享
     const shareReferences = await AttrUtils.getBool(pluginInstance, docId, SettingKeys.CUSTOM_SHARE_REFERENCES)
     formData.singleDocSetting.shareReferences = shareReferences ?? cfg.appConfig?.shareReferences ?? false
@@ -336,7 +336,7 @@
     formData.shareOptions.passwordEnabled =
       formData.shareData?.passwordEnabled ?? cfg.appConfig?.passwordEnabled ?? false
     formData.userPreferences.showPassword = cfg.appConfig?.showPassword ?? false
-    formData.userPreferences.shareSubdocuments = cfg.appConfig?.shareSubdocuments ?? true
+    formData.userPreferences.shareSubdocuments = cfg.appConfig?.shareSubdocuments ?? false
     if (formData.shareOptions.passwordEnabled) {
       const rndPassword = PasswordUtils.getNewRndPassword()
       formData.shareOptions.password = formData.shareData?.password ?? rndPassword
@@ -366,7 +366,7 @@
     const cfg = await pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
 
     // 加载全局配置
-    formData.userPreferences.shareSubdocuments = cfg?.appConfig?.shareSubdocuments ?? true
+    formData.userPreferences.shareSubdocuments = cfg?.appConfig?.shareSubdocuments ?? false
     // 加载增量分享配置
     formData.userPreferences.incrementalShareConfig.enabled = cfg?.appConfig?.incrementalShareConfig?.enabled ?? true
 
@@ -406,7 +406,7 @@
 
     // 加载全局配置
     const cfg = await pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
-    formData.userPreferences.shareSubdocuments = cfg?.appConfig?.shareSubdocuments ?? true
+    formData.userPreferences.shareSubdocuments = cfg?.appConfig?.shareSubdocuments ?? false
     // 加载增量分享配置
     formData.userPreferences.incrementalShareConfig.enabled = cfg?.appConfig?.incrementalShareConfig?.enabled ?? true
 

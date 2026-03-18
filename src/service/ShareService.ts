@@ -118,7 +118,7 @@ class ShareService implements IShareHistoryService {
       config = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
     }
 
-    const globalShareSubdocuments = config.appConfig?.shareSubdocuments ?? true
+    const globalShareSubdocuments = config.appConfig?.shareSubdocuments ?? false
     const effectiveShareSubdocuments = settings?.shareSubdocuments ?? globalShareSubdocuments
 
     const globalShareReferences = config.appConfig?.shareReferences ?? false
@@ -218,7 +218,7 @@ class ShareService implements IShareHistoryService {
     try {
       // 获取配置
       const config = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
-      const globalShareSubdocuments = config.appConfig?.shareSubdocuments ?? true
+      const globalShareSubdocuments = config.appConfig?.shareSubdocuments ?? false
       const effectiveShareSubdocuments = settings?.shareSubdocuments ?? globalShareSubdocuments
 
       // 执行聚合逻辑
@@ -330,7 +330,7 @@ class ShareService implements IShareHistoryService {
     try {
       // 获取配置
       const config = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
-      const globalShareSubdocuments = config.appConfig?.shareSubdocuments ?? true
+      const globalShareSubdocuments = config.appConfig?.shareSubdocuments ?? false
 
       // 获取当前文档的设置
       const { kernelApi } = useSiyuanApi(config)

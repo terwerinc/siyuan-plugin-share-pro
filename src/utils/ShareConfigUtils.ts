@@ -37,8 +37,8 @@ const DefaultAppConfig: AppConfig = {
     enabled: true,
   },
 
-  // 子文档分享默认启用
-  shareSubdocuments: true,
+  // 子文档分享默认禁用
+  shareSubdocuments: false,
 } as AppConfig
 
 const getSupportedThemes = (pluginInstance: ShareProPlugin) => {
