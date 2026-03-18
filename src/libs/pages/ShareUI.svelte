@@ -449,8 +449,9 @@
   {/if}
   {#if isSingleDocMode && typeof formData.post.title === "undefined"}
     <!-- 单文档模式但加载中 -->
-    <div class="loading-spinner">
-      <div class="spinner" />
+    <div class="professional-loading">
+      <div class="professional-spinner"></div>
+      <span class="professional-loading-text">加载中...</span>
     </div>
   {:else}
     <!-- 基本布局：始终显示 -->
@@ -807,19 +808,29 @@
       margin 8px 0
       background-color #e0e0e0
 
-    .loading-spinner
+    .professional-loading
       display flex
+      flex-direction column
       justify-content center
       align-items center
-      height 80px
+      min-height 120px
+      padding 24px
+      gap 16px
 
-    .spinner
-      width 24px
-      height 24px
-      border 3px solid #ccc
-      border-top 3px solid #0073e6
+    .professional-spinner
+      width 32px
+      height 32px
+      border 3px solid transparent
+      border-top 3px solid var(--b3-theme-primary)
       border-radius 50%
-      animation spin 1s linear infinite
+      animation spin 1s ease-in-out infinite
+      box-shadow 0 4px 12px rgba(24, 144, 255, 0.2)
+
+    .professional-loading-text
+      font-size 14px
+      font-weight 500
+      color var(--b3-theme-on-surface)
+      opacity 0.9
 
     @keyframes spin
       from

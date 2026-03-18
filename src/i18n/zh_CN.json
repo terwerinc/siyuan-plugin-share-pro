@@ -236,7 +236,9 @@
     "noSubdocuments": "当前文档无子文档",
     "showSubdocuments": "展开子文档",
     "hideSubdocuments": "收起子文档",
-    "performanceWarning": "子文档数量较多，可能影响性能"
+    "performanceWarning": "子文档数量较多，可能影响性能",
+    "sharingIng": "正在分享中...",
+    "cancelingIng": "正在取消分享中..."
   },
   "incrementalShare": {
     "title": "增量分享",
@@ -367,9 +369,7 @@
     "errorAll": "处理全部[param1]个文档失败",
     "cancelConfirm": "确定要取消当前操作吗？",
     "currentDocument": "当前:",
-    "autoCloseIn": "[param1]秒后自动关闭",
-    "sharingIng": "正在分享中...",
-    "cancelingIng": "正在取消分享中..."
+    "autoCloseIn": "[param1]秒后自动关闭"
   },
   "seo": {
     "saveSuccess": "SEO设置保存并同步成功",
