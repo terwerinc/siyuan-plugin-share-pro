@@ -62,7 +62,6 @@
   ]
   let passwordEnabled = false
   let showPassword = false
-  let maxSubdocuments = -1
 
   let settingConfig: ShareProConfig = pluginInstance.getDefaultCfg()
   const settingService = new SettingService(pluginInstance)
@@ -92,7 +91,6 @@
     settingConfig.appConfig.outlineLevel = outlineLevel
     // 子文档分享
     settingConfig.appConfig.shareSubdocuments = shareSubdocuments
-    settingConfig.appConfig.maxSubdocuments = maxSubdocuments
     // 全局密码保护
     settingConfig.appConfig.passwordEnabled = passwordEnabled
     settingConfig.appConfig.showPassword = showPassword
@@ -115,7 +113,6 @@
     outlineEnabled = sAppConfig?.outlineEnabled ?? outlineEnabled
     outlineLevel = sAppConfig?.outlineLevel ?? outlineLevel
     shareSubdocuments = sAppConfig?.shareSubdocuments ?? shareSubdocuments
-    maxSubdocuments = sAppConfig?.maxSubdocuments ?? maxSubdocuments
     passwordEnabled = sAppConfig?.passwordEnabled ?? passwordEnabled
     showPassword = sAppConfig?.showPassword ?? showPassword
   })
@@ -160,17 +157,6 @@
       <input class="b3-switch fn__flex-center" id="shareSubdocuments" type="checkbox" bind:checked={shareSubdocuments} />
     </div>
 
-    {#if shareSubdocuments}
-    <div class="fn__block form-item">
-      {pluginInstance.i18n.cs.maxSubdocuments}
-      <div class="b3-label__text form-item-tip">{pluginInstance.i18n.cs.maxSubdocumentsTip}</div>
-      <span class="fn__hr" />
-      <input type="number" min="-1" max="999" class="b3-text-field fn__size200" bind:value={maxSubdocuments} />
-      <div class="b3-label__text form-item-tip" style="margin-top: 5px;">
-        -1 = 无限制
-      </div>
-    </div>
-    {/if}
 
     <div class="fn__block form-item">
       {pluginInstance.i18n.cs.passwordEnabled}

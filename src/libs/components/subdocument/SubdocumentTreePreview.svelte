@@ -19,7 +19,6 @@
 
   export let pluginInstance: ShareProPlugin;
   export let docId: string;
-  export let maxSubdocuments: number = 100;
   export let onSubdocumentSelect: (selectedDocIds: string[]) => void;
 
   const logger = simpleLogger("subdocument-tree-preview", "share-pro", isDev);
@@ -412,6 +411,13 @@
       </div>
     </div>
 
+    <!-- 性能警告提示 -->
+    {#if getTotalCount() > 50}
+      <div class="performance-warning">
+        {pluginInstance.i18n["ui"]["performanceWarning"]}
+      </div>
+    {/if}
+
     <div class="tree-toggle" on:click={() => treeExpanded = !treeExpanded}>
       <span class="toggle-icon">{treeExpanded ? '▼' : '▶'}</span>
       <span class="toggle-label">
@@ -514,6 +520,14 @@
     font-size 13px
     font-weight 500
     transition all 0.2s ease
+
+  .performance-warning
+    padding 6px 0
+    font-size 12px
+    color var(--b3-theme-error)
+    background-color rgba(245, 34, 45, 0.1)
+    border-radius 3px
+    margin-top 4px
 
   .tree-toggle:hover
     color var(--b3-theme-on-surface)

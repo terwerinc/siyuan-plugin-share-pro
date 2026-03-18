@@ -235,7 +235,8 @@
     "incrementalShareModeInfo": "增量分享模式不需要稳定ID，请通过增量分享入口进行操作",
     "noSubdocuments": "当前文档无子文档",
     "showSubdocuments": "展开子文档",
-    "hideSubdocuments": "收起子文档"
+    "hideSubdocuments": "收起子文档",
+    "performanceWarning": "子文档数量较多，可能影响性能"
   },
   "incrementalShare": {
     "title": "增量分享",

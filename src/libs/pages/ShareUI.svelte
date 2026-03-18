@@ -86,7 +86,6 @@
     userPreferences: {
       showPassword: false, // 密码显示偏好
       shareSubdocuments: true, // 全局子文档分享设置
-      maxSubdocuments: 100, // 全局子文档数量限制
       incrementalShareConfig: {
         // 增量分享配置
         enabled: true, // 默认启用
@@ -103,7 +102,6 @@
       outlineLevel: 6, // 大纲层级
       expiresTime: "", // 分享有效期
       shareSubdocuments: true, // 是否分享子文档
-      maxSubdocuments: 100, // 子文档数量限制
       shareReferences: false, // 是否分享引用文档
     } as SingleDocSetting,
 
@@ -324,9 +322,6 @@
     formData.singleDocSetting.outlineLevel = cfg.siyuanConfig.preferenceConfig.outlineLevel
     // 子文档分享
     formData.singleDocSetting.shareSubdocuments = cfg.appConfig?.shareSubdocuments ?? true
-    // 子文档数量限制
-    const maxSubdocuments = await AttrUtils.getInt(pluginInstance, docId, SettingKeys.CUSTOM_MAX_SUBDOCUMENTS)
-    formData.singleDocSetting.maxSubdocuments = maxSubdocuments > 0 ? maxSubdocuments : (cfg.appConfig?.maxSubdocuments ?? 100)
     // 引用文档分享
     const shareReferences = await AttrUtils.getBool(pluginInstance, docId, SettingKeys.CUSTOM_SHARE_REFERENCES)
     formData.singleDocSetting.shareReferences = shareReferences ?? cfg.appConfig?.shareReferences ?? false
@@ -342,7 +337,6 @@
       formData.shareData?.passwordEnabled ?? cfg.appConfig?.passwordEnabled ?? false
     formData.userPreferences.showPassword = cfg.appConfig?.showPassword ?? false
     formData.userPreferences.shareSubdocuments = cfg.appConfig?.shareSubdocuments ?? true
-    formData.userPreferences.maxSubdocuments = cfg.appConfig?.maxSubdocuments ?? 100
     if (formData.shareOptions.passwordEnabled) {
       const rndPassword = PasswordUtils.getNewRndPassword()
       formData.shareOptions.password = formData.shareData?.password ?? rndPassword
@@ -445,9 +439,9 @@
         <div class="loading-spinner-large"></div>
         <div class="overlay-message">
         {#if formData.operationState.status === 'sharing'}
-          {pluginInstance.i18n["ui"]["sharingIng"] || "分享中..."}
+          {pluginInstance.i18n["ui"]["sharingIng"]}
         {:else if formData.operationState.status === 'canceling'}
-          {pluginInstance.i18n["ui"]["cancelingIng"] || "取消分享中..."}
+          {pluginInstance.i18n["ui"]["cancelingIng"]}
         {/if}
       </div>
       </div>
@@ -654,31 +648,14 @@
 
       <!-- 子文档数量限制 -->
       {#if formData.singleDocSetting.shareSubdocuments}
-        <div class="setting-row">
-          <span class="setting-label">{pluginInstance.i18n["cs"]["maxSubdocuments"]}</span>
-          <div class="input-group">
-            <input
-              type="number"
-              bind:value={formData.singleDocSetting.maxSubdocuments}
-              min="-1"
-              max="999"
-              step="1"
-              class="share-expired-input"
-              placeholder={pluginInstance.i18n["cs"]["maxSubdocumentsTip"]}
-              title={pluginInstance.i18n["cs"]["maxSubdocumentsTip"]}
-            />
-          </div>
-        </div>
-
         <!-- 子文档树预览 -->
         <div class="subdocument-preview-section">
           <SubdocumentTreePreview
             pluginInstance={pluginInstance}
             docId={docId}
-            maxSubdocuments={formData.singleDocSetting.maxSubdocuments ?? 100}
             onSubdocumentSelect={(selectedDocIds) => {
               // 处理选中的子文档
-              console.log("Selected subdocuments:", selectedDocIds)
+              logger.debug("Selected subdocuments:", selectedDocIds)
             }}
           />
         </div>

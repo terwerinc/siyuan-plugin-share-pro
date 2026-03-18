@@ -231,7 +231,8 @@
     "incrementalShareModeInfo": "Incremental share mode does not require a stable ID, please use the incremental share entry",
     "noSubdocuments": "Current document has no subdocuments",
     "showSubdocuments": "Expand subdocuments",
-    "hideSubdocuments": "Collapse subdocuments"
+    "hideSubdocuments": "Collapse subdocuments",
+    "performanceWarning": "Large number of subdocuments may impact performance"
   },
   "incrementalShare": {
     "title": "Incremental Share",

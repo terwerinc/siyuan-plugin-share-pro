@@ -64,10 +64,6 @@ enum SettingKeys {
    */
   CUSTOM_SHARE_SUBDOCUMENTS = "custom-share-subdocuments",
 
-  /**
-   * 子文档分享数量限制
-   */
-  CUSTOM_MAX_SUBDOCUMENTS = "custom-max-subdocuments",
 
   /**
    * 引用文档分享标识
