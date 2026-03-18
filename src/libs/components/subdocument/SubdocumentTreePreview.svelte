@@ -528,6 +528,7 @@
     background-color rgba(245, 34, 45, 0.1)
     border-radius 3px
     margin-top 4px
+    padding-left 4px
 
   .tree-toggle:hover
     color var(--b3-theme-on-surface)
