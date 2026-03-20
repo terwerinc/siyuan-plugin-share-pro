@@ -496,7 +496,8 @@
 <style lang="stylus">
 .incremental-share-ui
   padding 16px
-  font-family var(--b3-font-family)
+  // 尽量继承宿主的字体，不要单独搞一套
+  //font-family var(--b3-font-family)
   background var(--b3-theme-background)
   border-radius 8px
   max-width 1200px

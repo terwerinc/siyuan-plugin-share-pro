@@ -2,11 +2,11 @@
   import { onMount, onDestroy } from "svelte"
 
   // Props
-  export let title: string = "确认操作"
-  export let message: string = ""
-  export let confirmText: string = "确认"
-  export let cancelText: string = "取消"
-  export let show: boolean = false
+  export let title = "确认操作"
+  export let message = ""
+  export let confirmText = "确认"
+  export let cancelText = "取消"
+  export let show = false
   export let onConfirm: () => void = () => {}
   export let onCancel: () => void = () => {}
 
@@ -71,16 +71,15 @@
 
 {#if isVisible}
   <div class="share-pro-confirm-overlay" style="opacity: {isAnimating ? 1 : 0}; transition: opacity 0.3s ease;">
-    <div class="share-pro-confirm-modal" style="transform: translateY({isAnimating ? '0' : '-20px'}); opacity: {isAnimating ? 1 : 0}; transition: transform 0.3s ease, opacity 0.3s ease;">
+    <div
+      class="share-pro-confirm-modal"
+      style="transform: translateY({isAnimating ? '0' : '-20px'}); opacity: {isAnimating
+        ? 1
+        : 0}; transition: transform 0.3s ease, opacity 0.3s ease;"
+    >
       <div class="share-pro-confirm-header">
         <h3 class="share-pro-confirm-title">{title}</h3>
-        <button
-          class="share-pro-confirm-close"
-          on:click={handleClose}
-          aria-label="关闭"
-        >
-          ×
-        </button>
+        <button class="share-pro-confirm-close" on:click={handleClose} aria-label="关闭"> × </button>
       </div>
 
       <div class="share-pro-confirm-body">
@@ -88,16 +87,10 @@
       </div>
 
       <div class="share-pro-confirm-footer">
-        <button
-          class="share-pro-confirm-cancel"
-          on:click={handleClose}
-        >
+        <button class="share-pro-confirm-cancel" on:click={handleClose}>
           {cancelText}
         </button>
-        <button
-          class="share-pro-confirm-confirm"
-          on:click={handleConfirm}
-        >
+        <button class="share-pro-confirm-confirm" on:click={handleConfirm}>
           {confirmText}
         </button>
       </div>
@@ -127,7 +120,8 @@
   min-width 400px
   max-width 90vw
   padding 24px
-  font-family "Open Sans", "LXGW WenKai", "JetBrains Mono", "-apple-system", "Microsoft YaHei", "Times New Roman", "方正北魏楷书_GBK", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif
+  // 尽量继承宿主的字体，不要单独搞一套
+  //font-family "Open Sans", "LXGW WenKai", "JetBrains Mono", "-apple-system", "Microsoft YaHei", "Times New Roman", "方正北魏楷书_GBK", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif
 
 .share-pro-confirm-header
   display flex
@@ -186,6 +180,7 @@
   transition all 0.2s ease
   &:hover
     background-color var(--b3-theme-surface-light)
+    color var(--b3-theme-on-surface)
   &:active
     transform translateY(1px)
 
@@ -193,17 +188,19 @@
   padding 8px 16px
   font-size 14px
   color white
-  background-color var(--b3-theme-primary)
+  background-color #0073e6
   border none
   border-radius 6px
   cursor pointer
   transition all 0.2s ease
   &:hover
-    background-color var(--b3-theme-primary-hover)
-    box-shadow 0 2px 8px rgba(24, 144, 255, 0.3)
+    background-color #005bb5
+    box-shadow 0 2px 8px rgba(0, 115, 230, 0.3)
+    color white
   &:active
     transform translateY(1px)
-
+    opacity 0.8
+    
 // Mobile responsive
 @media (max-width: 768px)
   .share-pro-confirm-modal

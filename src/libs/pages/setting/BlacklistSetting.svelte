@@ -711,7 +711,8 @@
   .item-id {
     font-size: 11px;
     color: var(--b3-theme-on-surface);
-    font-family: monospace;
+    /* 尽量继承宿主的字体，不要单独搞一套 */
+    /*font-family: monospace;*/
   }
 
   .type-badge {
