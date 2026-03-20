@@ -12,6 +12,7 @@ import { SiYuanApiAdaptor, SiyuanConfig, SiyuanKernelApi } from "zhi-siyuan-api"
 import { isDev } from "../Constants"
 import { ShareProConfig } from "../models/ShareProConfig"
 import { SettingKeys } from "../utils/SettingKeys"
+import { cleanDocTitle } from "../utils/utils"
 
 /**
  * 通用 Siyuan API 封装
@@ -409,7 +410,7 @@ export const getSubdocTreeByPath = async (
 
       return {
         docId: file.id || "",
-        docTitle: fileName,
+        docTitle: cleanDocTitle(fileName),
         path: fullPath,
         parentId: parentId,
         depth: depth,
@@ -442,10 +443,10 @@ export const getDocNotebookInfo = async (
 
   try {
     // 先获取文档的基本信息
-    const blockInfo = await kernelApi.getBlockByID(docId);
+    const blockInfo = await kernelApi.getBlockByID(docId)
     if (!blockInfo) {
-      logger.warn(`Document ${docId} not found`);
-      return null;
+      logger.warn(`Document ${docId} not found`)
+      return null
     }
 
     const notebookId = blockInfo.box || ""
