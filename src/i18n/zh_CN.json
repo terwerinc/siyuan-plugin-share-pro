@@ -379,7 +379,10 @@
     "processingResources": "正在处理资源...",
     "resourcesProcessed": "资源: [param1]/[param2]",
     "resourceError": "资源处理失败",
-    "waitingForResourceCompletion": "等待资源处理完成..."
+    "waitingForResourceCompletion": "等待资源处理完成...",
+    "errorsDetected": "检测到错误：",
+    "documentErrors": "文档错误",
+    "resourceErrors": "资源错误"
   },
   "seo": {
     "saveSuccess": "SEO设置保存并同步成功",

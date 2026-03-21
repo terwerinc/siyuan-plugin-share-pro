@@ -375,7 +375,10 @@
     "processingResources": "Processing resources...",
     "resourcesProcessed": "Resources: [param1]/[param2]",
     "resourceError": "Resource processing failed",
-    "waitingForResourceCompletion": "Waiting for resource processing to complete..."
+    "waitingForResourceCompletion": "Waiting for resource processing to complete...",
+    "errorsDetected": "Errors detected:",
+    "documentErrors": "Document errors",
+    "resourceErrors": "Resource errors"
   },
   "seo": {
     "saveSuccess": "SEO settings saved and synced successfully",

@@ -1172,8 +1172,9 @@ class ShareService implements IShareHistoryService {
   private handleResourceErrorForSingleDoc(docId: string, error: any) {
     // 查找对应的文档历史记录
     // 更新历史记录状态为失败
-    // 显示资源处理错误消息
-    showMessage(this.pluginInstance.i18n["shareService"]["msgResourceError"] + error, 7000, "error")
+    // 显示资源处理错误消息 - 使用较长的显示时间确保用户能看到
+    const errorMessage = this.pluginInstance.i18n["shareService"]["msgResourceError"] + (error?.message || String(error));
+    showMessage(errorMessage, 15000, "error") // 15秒显示时间，给用户足够时间查看
   }
 }
 

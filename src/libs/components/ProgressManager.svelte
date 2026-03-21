@@ -42,14 +42,26 @@
   // 重置自动关闭计时器
   function resetAutoCloseTimer() {
     clearAutoCloseTimer()
-    countdown = 5
 
-    autoCloseTimer = setInterval(() => {
-      countdown--
-      if (countdown <= 0) {
-        handleCloseAuto()
-      }
-    }, 1000)
+    // 只有在成功且无错误的情况下才启用自动关闭
+    const shouldAutoClose = currentBatch &&
+      currentBatch.status === 'success' &&
+      currentBatch.errors.length === 0 &&
+      currentBatch.resourceErrors.length === 0 &&
+      !currentBatch.isResourceProcessing;
+
+    if (shouldAutoClose) {
+      countdown = 5
+      autoCloseTimer = setInterval(() => {
+        countdown--
+        if (countdown <= 0) {
+          handleCloseAuto()
+        }
+      }, 1000)
+    } else {
+      // 有错误时不自动关闭，显示永久提示
+      countdown = 0
+    }
   }
 
   // 清除自动关闭计时器
@@ -169,10 +181,45 @@
         </div>
       {/if}
 
-      <!-- Auto-close countdown -->
-      <div class="auto-close-info">
-        {pluginInstance.i18n["progressManager"]["autoCloseIn"].replace("[param1]", countdown.toString())}
-      </div>
+      <!-- Auto-close countdown or persistent display for errors -->
+      {#if countdown > 0}
+        <div class="auto-close-info">
+          {pluginInstance.i18n["progressManager"]["autoCloseIn"].replace("[param1]", countdown.toString())}
+        </div>
+      {/if}
+
+      <!-- Error details display -->
+      {#if currentBatch && (currentBatch.errors.length > 0 || currentBatch.resourceErrors.length > 0)}
+        <div class="error-details">
+          <div class="error-header">
+            {pluginInstance.i18n["progressManager"]["errorsDetected"] || "Errors detected:"}
+          </div>
+          {#if currentBatch.errors.length > 0}
+            <div class="document-errors">
+              <span class="error-type">📄 {pluginInstance.i18n["progressManager"]["documentErrors"] || "Document errors"}:</span>
+              <ul class="error-list">
+                {#each currentBatch.errors as error, index}
+                  <li class="error-item" title={error.error}>
+                    {error.docId.substring(0, 8)}...: {String(error.error).substring(0, 50)}...
+                  </li>
+                {/each}
+              </ul>
+            </div>
+          {/if}
+          {#if currentBatch.resourceErrors.length > 0}
+            <div class="resource-errors">
+              <span class="error-type">🖼️ {pluginInstance.i18n["progressManager"]["resourceErrors"] || "Resource errors"}:</span>
+              <ul class="error-list">
+                {#each currentBatch.resourceErrors as error, index}
+                  <li class="error-item" title={error.error}>
+                    {error.docId.substring(0, 8)}...: {String(error.error).substring(0, 50)}...
+                  </li>
+                {/each}
+              </ul>
+            </div>
+          {/if}
+        </div>
+      {/if}
     </div>
   </div>
 {/if}
@@ -355,6 +402,51 @@
 
   .waiting-text
     font-style italic
+
+  .error-details
+    display flex
+    flex-direction column
+    gap 8px
+    margin-top 12px
+    padding 8px
+    background-color rgba(245, 34, 45, 0.1)
+    border-radius 6px
+    border 1px solid rgba(245, 34, 45, 0.3)
+
+  .error-header
+    font-weight 600
+    color #f5222d
+    font-size 14px
+
+  .error-type
+    font-weight 600
+    color rgba(255, 255, 255, 0.9)
+    font-size 13px
+    margin-bottom 4px
+
+  .error-list
+    list-style none
+    padding 0
+    margin 0
+    display flex
+    flex-direction column
+    gap 4px
+
+  .error-item
+    font-size 12px
+    color rgba(255, 255, 255, 0.85)
+    white-space nowrap
+    overflow hidden
+    text-overflow ellipsis
+    padding 2px 4px
+    background-color rgba(255, 255, 255, 0.1)
+    border-radius 3px
+    cursor pointer
+    transition background-color 0.2s ease
+
+    &:hover
+      background-color rgba(255, 255, 255, 0.2)
+      color white
 
   /* Dark mode support */
   html[data-theme-mode="dark"] &
