@@ -11,6 +11,7 @@ import { simpleLogger } from "zhi-lib-base"
 import { SiYuanApiAdaptor, SiyuanConfig, SiyuanKernelApi } from "zhi-siyuan-api"
 import { isDev } from "../Constants"
 import { ShareProConfig } from "../models/ShareProConfig"
+import { SingleDocSetting } from "../models/SingleDocSetting"
 import { SettingKeys } from "../utils/SettingKeys"
 import { cleanDocTitle } from "../utils/utils"
 
@@ -20,7 +21,7 @@ import { cleanDocTitle } from "../utils/utils"
  * @author terwer
  * @since 1.15.0
  */
-export const useSiyuanApi = (cfg: ShareProConfig) => {
+export const useSiyuanApi = (cfg: ShareProConfig, docSettings?: Partial<SingleDocSetting>) => {
   const logger = simpleLogger("use-siyuan-api", "share-pro", isDev)
 
   if (cfg.siyuanConfig.apiUrl !== window.location.origin) {
@@ -34,10 +35,12 @@ export const useSiyuanApi = (cfg: ShareProConfig) => {
   // siyuanConfig.cookie = cfg.siyuanConfig.cookie
   // 一些常用设置
   siyuanConfig.preferenceConfig.fixTitle = cfg.siyuanConfig?.preferenceConfig?.fixTitle ?? false
-  siyuanConfig.preferenceConfig.docTreeEnable = cfg.appConfig?.docTreeEnabled ?? true
-  siyuanConfig.preferenceConfig.docTreeLevel = cfg.appConfig?.docTreeLevel ?? 3
-  siyuanConfig.preferenceConfig.outlineEnable = cfg.appConfig?.outlineEnabled ?? true
-  siyuanConfig.preferenceConfig.outlineLevel = cfg.appConfig?.outlineLevel ?? 6
+  // 文档树设置 - 文档级 > 全局，默认开启
+  siyuanConfig.preferenceConfig.docTreeEnable = docSettings?.docTreeEnable ?? cfg.appConfig?.docTreeEnabled ?? true
+  siyuanConfig.preferenceConfig.docTreeLevel = docSettings?.docTreeLevel ?? cfg.appConfig?.docTreeLevel ?? 3
+  // 文档大纲设置 - 文档级 > 全局，默认开启
+  siyuanConfig.preferenceConfig.outlineEnable = docSettings?.outlineEnable ?? cfg.appConfig?.outlineEnabled ?? true
+  siyuanConfig.preferenceConfig.outlineLevel = docSettings?.outlineLevel ?? cfg.appConfig?.outlineLevel ?? 6
   siyuanConfig.preferenceConfig.removeFirstH1 = true
   siyuanConfig.preferenceConfig.removeMdWidgetTag = true
   const blogApi = new SiYuanApiAdaptor(siyuanConfig)

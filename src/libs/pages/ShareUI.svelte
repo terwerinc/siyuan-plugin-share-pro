@@ -434,31 +434,19 @@
   // ========================================
 
   const loadSingleDocSetting = async (cfg: ShareProConfig) => {
-    // 文档级别优先级最高
+    // 文档级别优先级最高 - 仅用于UI显示，不影响实际分享逻辑
     const docTreeEnable = await AttrUtils.getBool(pluginInstance, docId, SettingKeys.CUSTOM_DOC_TREE_ENABLE)
     const docTreeLevel = await AttrUtils.getInt(pluginInstance, docId, SettingKeys.CUSTOM_DOC_TREE_LEVEL)
     const outlineEnable = await AttrUtils.getBool(pluginInstance, docId, SettingKeys.CUSTOM_OUTLINE_ENABLE)
     const outlineLevel = await AttrUtils.getInt(pluginInstance, docId, SettingKeys.CUSTOM_OUTLINE_LEVEL)
     const shareSubdocuments = await AttrUtils.getBool(pluginInstance, docId, SettingKeys.CUSTOM_SHARE_SUBDOCUMENTS)
-    // 适配配置
-    cfg.siyuanConfig.preferenceConfig = {
-      ...cfg.siyuanConfig.preferenceConfig,
-      docTreeEnable: docTreeEnable ?? cfg.siyuanConfig?.preferenceConfig?.docTreeEnable ?? false,
-      docTreeLevel: docTreeLevel ?? cfg.siyuanConfig?.preferenceConfig?.docTreeLevel ?? 3,
-      outlineEnable: outlineEnable ?? cfg.siyuanConfig?.preferenceConfig?.outlineEnable ?? false,
-      outlineLevel: outlineLevel ?? cfg.siyuanConfig?.preferenceConfig?.outlineLevel ?? 6,
-    }
-    cfg.appConfig = {
-      ...cfg.appConfig,
-      shareSubdocuments: shareSubdocuments ?? cfg.appConfig?.shareSubdocuments ?? false,
-    }
-    // 文档树、文档大纲
-    formData.singleDocSetting.docTreeEnable = cfg.siyuanConfig.preferenceConfig.docTreeEnable
-    formData.singleDocSetting.docTreeLevel = cfg.siyuanConfig.preferenceConfig.docTreeLevel
-    formData.singleDocSetting.outlineEnable = cfg.siyuanConfig.preferenceConfig.outlineEnable
-    formData.singleDocSetting.outlineLevel = cfg.siyuanConfig.preferenceConfig.outlineLevel
-    // 子文档分享
-    formData.singleDocSetting.shareSubdocuments = cfg.appConfig?.shareSubdocuments ?? false
+
+    // UI显示使用文档级设置，如果未设置则使用全局默认值
+    formData.singleDocSetting.docTreeEnable = docTreeEnable ?? cfg.appConfig?.docTreeEnabled ?? false
+    formData.singleDocSetting.docTreeLevel = docTreeLevel ?? cfg.appConfig?.docTreeLevel ?? 3
+    formData.singleDocSetting.outlineEnable = outlineEnable ?? cfg.appConfig?.outlineEnabled ?? false
+    formData.singleDocSetting.outlineLevel = outlineLevel ?? cfg.appConfig?.outlineLevel ?? 6
+    formData.singleDocSetting.shareSubdocuments = shareSubdocuments ?? cfg.appConfig?.shareSubdocuments ?? false
     // 引用文档分享
     const shareReferences = await AttrUtils.getBool(pluginInstance, docId, SettingKeys.CUSTOM_SHARE_REFERENCES)
     formData.singleDocSetting.shareReferences = shareReferences ?? cfg.appConfig?.shareReferences ?? false

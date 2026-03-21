@@ -124,6 +124,18 @@ class ShareService implements IShareHistoryService {
       config = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
     }
 
+    // 文档树设置 - 文档级 > 全局
+    const globalDocTreeEnabled = config.appConfig?.docTreeEnabled ?? false
+    const effectiveDocTreeEnabled = settings?.docTreeEnable ?? globalDocTreeEnabled
+    const globalDocTreeLevel = config.appConfig?.docTreeLevel ?? 3
+    const effectiveDocTreeLevel = settings?.docTreeLevel ?? globalDocTreeLevel
+
+    // 文档大纲设置 - 文档级 > 全局
+    const globalOutlineEnabled = config.appConfig?.outlineEnabled ?? false
+    const effectiveOutlineEnabled = settings?.outlineEnable ?? globalOutlineEnabled
+    const globalOutlineLevel = config.appConfig?.outlineLevel ?? 6
+    const effectiveOutlineLevel = settings?.outlineLevel ?? globalOutlineLevel
+
     const globalShareSubdocuments = config.appConfig?.shareSubdocuments ?? false
     const effectiveShareSubdocuments = settings?.shareSubdocuments ?? globalShareSubdocuments
 
@@ -522,7 +534,7 @@ class ShareService implements IShareHistoryService {
       await this.updateSingleDocSettings(docId, true, settings)
       // 获取最新文档详情
       const cfg = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
-      const { blogApi } = useSiyuanApi(cfg)
+      const { blogApi } = useSiyuanApi(cfg, settings)
       const post = await blogApi.getPost(docId)
       this.addLog(this.pluginInstance.i18n["shareService"]["getPost"], "info")
       // 处理嵌入块、数据视图、折叠块（标题）
@@ -537,12 +549,13 @@ class ShareService implements IShareHistoryService {
       sPost.mt_keywords = post.mt_keywords
       sPost.categories = post.categories
       sPost.shortDesc = post.shortDesc
-      // 文档树
+      sPost.mt_excerpt = post.mt_excerpt
+      // 文档树和目录大纲 - 直接使用 post 数据（getPost 已根据配置生成正确数据）
       sPost.docTree = post.docTree
       sPost.docTreeLevel = post.docTreeLevel
-      // 目录大纲
       sPost.outline = post.outline
       sPost.outlineLevel = post.outlineLevel
+      debugger
       // 嵌入块
       sPost.embedBlocks = await getEmbedBlocks(post.editorDom, docId)
       // 数据库
@@ -1173,7 +1186,8 @@ class ShareService implements IShareHistoryService {
     // 查找对应的文档历史记录
     // 更新历史记录状态为失败
     // 显示资源处理错误消息 - 使用较长的显示时间确保用户能看到
-    const errorMessage = this.pluginInstance.i18n["shareService"]["msgResourceError"] + (error?.message || String(error));
+    const errorMessage =
+      this.pluginInstance.i18n["shareService"]["msgResourceError"] + (error?.message || String(error))
     showMessage(errorMessage, 15000, "error") // 15秒显示时间，给用户足够时间查看
   }
 }
