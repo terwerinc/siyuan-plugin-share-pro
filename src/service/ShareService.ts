@@ -555,7 +555,6 @@ class ShareService implements IShareHistoryService {
       sPost.docTreeLevel = post.docTreeLevel
       sPost.outline = post.outline
       sPost.outlineLevel = post.outlineLevel
-      debugger
       // 嵌入块
       sPost.embedBlocks = await getEmbedBlocks(post.editorDom, docId)
       // 数据库
