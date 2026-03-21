@@ -34,6 +34,7 @@
   let outlineEnabled = true
   let outlineLevel = 6
   let shareSubdocuments = false
+  let shareReferences = false
   let outlineLevelOptions = [
     {
       label: "h1",
@@ -91,6 +92,8 @@
     settingConfig.appConfig.outlineLevel = outlineLevel
     // 子文档分享
     settingConfig.appConfig.shareSubdocuments = shareSubdocuments
+    // 引用文档分享
+    settingConfig.appConfig.shareReferences = shareReferences
     // 全局密码保护
     settingConfig.appConfig.passwordEnabled = passwordEnabled
     settingConfig.appConfig.showPassword = showPassword
@@ -113,6 +116,7 @@
     outlineEnabled = sAppConfig?.outlineEnabled ?? outlineEnabled
     outlineLevel = sAppConfig?.outlineLevel ?? outlineLevel
     shareSubdocuments = sAppConfig?.shareSubdocuments ?? shareSubdocuments
+    shareReferences = sAppConfig?.shareReferences ?? shareReferences
     passwordEnabled = sAppConfig?.passwordEnabled ?? passwordEnabled
     showPassword = sAppConfig?.showPassword ?? showPassword
   })
@@ -120,6 +124,20 @@
 
 <div>
   <div class="config__tab-container">
+    <div class="fn__block form-item">
+      {pluginInstance.i18n.cs.shareSubdocuments}
+      <div class="b3-label__text form-item-tip">{pluginInstance.i18n.cs.shareSubdocumentsTip}</div>
+      <span class="fn__hr" />
+      <input class="b3-switch fn__flex-center" id="shareSubdocuments" type="checkbox" bind:checked={shareSubdocuments} />
+    </div>
+
+    <div class="fn__block form-item">
+      {pluginInstance.i18n.cs.shareReferences}
+      <div class="b3-label__text form-item-tip">{pluginInstance.i18n.cs.shareReferencesTip}</div>
+      <span class="fn__hr" />
+      <input class="b3-switch fn__flex-center" id="shareReferences" type="checkbox" bind:checked={shareReferences} />
+    </div>
+
     <div class="fn__block form-item">
       {pluginInstance.i18n.cs.docTree}
       <div class="b3-label__text form-item-tip">{pluginInstance.i18n.cs.docTreeTip}</div>
@@ -148,13 +166,6 @@
           {/each}
         </select>
       {/if}
-    </div>
-
-    <div class="fn__block form-item">
-      {pluginInstance.i18n.cs.shareSubdocuments}
-      <div class="b3-label__text form-item-tip">{pluginInstance.i18n.cs.shareSubdocumentsTip}</div>
-      <span class="fn__hr" />
-      <input class="b3-switch fn__flex-center" id="shareSubdocuments" type="checkbox" bind:checked={shareSubdocuments} />
     </div>
 
 
