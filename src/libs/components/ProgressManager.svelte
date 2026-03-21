@@ -146,10 +146,11 @@
       {#if currentBatch.totalResources > 0}
         <div class="resource-progress">
           <div class="resource-info">
-            <span class="resource-label"
-              >{pluginInstance.i18n["progressManager"]["resourcesProcessed"] || "Resources:"}</span
-            >
-            <span class="resource-count">{currentBatch.completedResources}/{currentBatch.totalResources}</span>
+            <span class="resource-info-text">
+              {pluginInstance.i18n["progressManager"]["resourcesProcessed"]
+                .replace("[param1]", currentBatch.completedResources.toString())
+                .replace("[param2]", currentBatch.totalResources.toString())}
+            </span>
           </div>
           <div class="resource-bar">
             <div
@@ -368,6 +369,12 @@
     align-items center
     font-size 13px
     color rgba(255, 255, 255, 0.8)
+
+  .resource-info-text
+    font-weight 600
+    color rgba(255, 255, 255, 0.9)
+    width 100%
+    text-align left
 
   .resource-label
     font-weight 600
