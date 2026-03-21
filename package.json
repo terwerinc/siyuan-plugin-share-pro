@@ -47,7 +47,7 @@
     "eventemitter3": "^5.0.4",
     "zhi-blog-api": "^1.74.2",
     "zhi-lib-base": "^0.8.0",
-    "zhi-siyuan-api": "^2.30.0"
+    "zhi-siyuan-api": "^2.31.0"
   },
   "packageManager": "pnpm@9.9.0"
 }

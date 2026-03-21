@@ -27,8 +27,8 @@ importers:
         specifier: ^0.8.0
         version: 0.8.0
       zhi-siyuan-api:
-        specifier: ^2.30.0
-        version: 2.30.0(typescript@5.9.3)
+        specifier: ^2.31.0
+        version: 2.31.0(typescript@5.9.3)
     devDependencies:
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.1.2
@@ -2752,8 +2752,8 @@ packages:
   zhi-lib-base@0.8.0:
     resolution: {integrity: sha512-3Ky5p6KvLWpXy2tlb/JIfSEKLSe5w43PBLM6g+hNcWwpL9S62emgcpUAHzGWBbC0vlLBLungt2LOsmwAfhrZ0w==}
 
-  zhi-siyuan-api@2.30.0:
-    resolution: {integrity: sha512-gv/zS37+o1pBezjkXFHhzX5AkqsJo/9juZNVj99+demHrkJFv0X17o+GNBVlRIiSwZOVyzryDSAjILNG0Q47JQ==}
+  zhi-siyuan-api@2.31.0:
+    resolution: {integrity: sha512-qtJ0pNtOTjcvotTvUvvS+D1TkDMUGFVz5DRiYU71CjPeOM/2lvxW16DsK1m+aqAitd8hBymfNTha0BJ4D8bhYw==}
 
 snapshots:
 
@@ -5570,7 +5570,7 @@ snapshots:
 
   zhi-lib-base@0.8.0: {}
 
-  zhi-siyuan-api@2.30.0(typescript@5.9.3):
+  zhi-siyuan-api@2.31.0(typescript@5.9.3):
     dependencies:
       zhi-blog-api: 1.74.2(typescript@5.9.3)
       zhi-common: 1.35.0(typescript@5.9.3)
