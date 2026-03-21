@@ -1,5 +1,5 @@
-import { writable } from 'svelte/store'
-import type { ProgressState } from './ProgressState'
+import { writable } from "svelte/store"
+import type { ProgressState } from "./ProgressState"
 
 /**
  * 全局进度状态存储

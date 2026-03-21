@@ -4,7 +4,9 @@
       "Bash(npx openspec validate add-subdocument-sharing --strict)",
       "Bash(pnpm run build)",
       "Bash(pnpm build:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(mkdir:*)",
+      "Bash(pnpm install:*)"
     ]
   }
 }

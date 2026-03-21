@@ -44,6 +44,7 @@
     "@sveltejs/svelte-virtual-list": "^3.0.1",
     "cheerio": "^1.1.2",
     "copy-to-clipboard": "^3.3.3",
+    "eventemitter3": "^5.0.4",
     "zhi-blog-api": "^1.74.2",
     "zhi-lib-base": "^0.8.0",
     "zhi-siyuan-api": "^2.30.0"

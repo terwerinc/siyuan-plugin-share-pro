@@ -7,7 +7,6 @@
  *  of this license document, but changing it is not allowed.
  */
 
-import { showMessage } from "siyuan"
 import { Post } from "zhi-blog-api"
 import { ILogger, simpleLogger } from "zhi-lib-base"
 import { isDev, NULL_VALUE_FOR_SIYUAN_ATTR_REMOVE, SHARE_PRO_STORE_NAME } from "../Constants"
@@ -28,7 +27,9 @@ import { ImageUtils } from "../utils/ImageUtils"
 import { SettingKeys } from "../utils/SettingKeys"
 import { shareHistoryCache } from "../utils/ShareHistoryCache"
 import { LocalShareHistory } from "./LocalShareHistory"
-import { ProgressManager } from "../libs/utils/ProgressManager"
+import { showMessage } from "siyuan"
+import { ProgressManager } from "../utils/progress/ProgressManager"
+import { resourceEventEmitter, RESOURCE_EVENTS } from "../utils/progress/ResourceEventEmitter"
 
 /**
  * 分享服务
@@ -47,6 +48,11 @@ class ShareService implements IShareHistoryService {
     this.logger = simpleLogger("share-service", "share-pro", isDev)
     this.shareApi = new ShareApi(pluginInstance)
     this.localShareHistory = new LocalShareHistory(pluginInstance)
+
+    // 监听资源错误事件，用于单文档场景
+    resourceEventEmitter.on(RESOURCE_EVENTS.ERROR, (event: { docId: string; error: any }) => {
+      this.handleResourceErrorForSingleDoc(event.docId, event.error)
+    })
   }
 
   public async getVipInfo(token: string): Promise<ServiceResponse> {
@@ -224,7 +230,7 @@ class ShareService implements IShareHistoryService {
       // 执行聚合逻辑
       if (!effectiveShareSubdocuments) {
         // 仅分享当前文档
-        return await this.handleOne(docId, settings, options)
+        await this.handleOne(docId, settings, options)
       } else {
         // 分享当前文档 + 子文档
         const documentsToShare = await this.flattenDocumentsForSharing(docId, settings, options, config)
@@ -234,7 +240,8 @@ class ShareService implements IShareHistoryService {
       }
     } catch (error) {
       this.logger.error("创建分享失败", error)
-      showMessage(this.pluginInstance.i18n["shareService"]["msgShareError"] + error, 7000, "error")
+      // 单文档错误已经在 handleOne 中处理
+      // 多文档错误会在 batchProcessDocuments 中通过 ProgressManager 处理
     }
   }
 
@@ -339,45 +346,83 @@ class ShareService implements IShareHistoryService {
 
       const effectiveShareSubdocuments = settings?.shareSubdocuments ?? globalShareSubdocuments
 
+      // 单文档取消
       if (!effectiveShareSubdocuments) {
-        // 仅取消当前文档
-        return await this.cancelOne(docId)
-      } else {
-        // 取消当前文档 + 所有子文档
-        const documentsToCancel = await this.flattenDocumentsForSharing(docId, settings, undefined, config)
-
-        // 使用批量处理取消所有文档
-        const results = await this.processWithConcurrency(
-          documentsToCancel,
-          async (doc, index) => {
-            try {
-              await this.cancelOne(doc.docId)
-              return { success: true, docId: doc.docId }
-            } catch (error) {
-              this.logger.error(`取消分享文档 ${doc.docId} 失败:`, error)
-              return { success: false, docId: doc.docId, error }
-            }
-          },
-          10 // maxConcurrency
-        )
-
-        const failed = results.filter((r) => !r?.success).length
-        if (failed > 0) {
-          showMessage(
-            this.pluginInstance.i18n["shareService"]["msgCancelPartialSuccess"]
-              .replace("[param1]", (results.length - failed).toString())
-              .replace("[param2]", results.length.toString())
-              .replace("[param3]", failed.toString()),
-            7000,
-            "error"
-          )
+        const result = await this.cancelOne(docId)
+        if (result.code === 0) {
+          showMessage(this.pluginInstance.i18n["shareService"]["msgCancelSuccess"], 3000, "info")
+        } else {
+          showMessage(this.pluginInstance.i18n["shareService"]["msgCancelError"] + result.msg, 7000, "error")
         }
-
-        return { code: 0, msg: "success" }
+        return result
       }
+
+      // 多文档取消
+      const documentsToCancel = await this.flattenDocumentsForSharing(docId, settings, undefined, config)
+
+      // 创建 ProgressManager 进度跟踪
+      const progressId = ProgressManager.startBatch(
+        this.pluginInstance.i18n["progressManager"]["cancelingDocuments"].replace(
+          "[param1]",
+          documentsToCancel.length.toString()
+        ),
+        documentsToCancel.length
+      )
+
+      // 使用批量处理取消所有文档
+      let completedCount = 0
+      const results = await this.processWithConcurrency(
+        documentsToCancel,
+        async (doc, index) => {
+          try {
+            const result = await this.cancelOne(doc.docId)
+            completedCount++
+
+            // 获取文档标题用于进度显示
+            const cfg = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
+            const { blogApi } = useSiyuanApi(cfg)
+            const post = await blogApi.getPost(doc.docId)
+            const docTitle = post?.title || doc.docId
+
+            // 更新进度
+            ProgressManager.updateProgress(progressId, {
+              completed: completedCount,
+              currentDocId: doc.docId,
+              currentDocTitle: docTitle,
+            })
+
+            if (result.code === 0) {
+              return { success: true, docId: doc.docId }
+            } else {
+              ProgressManager.addError(progressId, doc.docId, result.msg)
+              return { success: false, docId: doc.docId, error: result.msg }
+            }
+          } catch (error) {
+            this.logger.error(`取消分享文档 ${doc.docId} 失败:`, error)
+            ProgressManager.addError(progressId, doc.docId, error)
+            return { success: false, docId: doc.docId, error }
+          }
+        },
+        10 // maxConcurrency
+      )
+
+      const failed = results.filter((r) => !r?.success).length
+      const successful = results.filter((r) => r?.success).length
+
+      // 完成进度跟踪
+      if (failed === 0) {
+        ProgressManager.completeBatch(progressId, true)
+      } else if (successful > 0) {
+        ProgressManager.completeBatch(progressId, false, new Error("部分失败"))
+      } else {
+        ProgressManager.completeBatch(progressId, false, new Error("全部失败"))
+      }
+
+      return { code: 0, msg: "success" }
     } catch (error) {
       this.logger.error("取消分享失败", error)
-      showMessage(this.pluginInstance.i18n["shareService"]["msgCancelError"] + error, 7000, "error")
+      // 单文档错误已经在上面处理
+      // 多文档错误会在 ProgressManager 中处理
       return { code: -1, msg: error }
     }
   }
@@ -519,7 +564,6 @@ class ShareService implements IShareHistoryService {
         const errorMsg =
           this.pluginInstance.i18n["shareService"]["shareErrorWithDoc"].replace("[param1]", docId) + resp.msg
         this.addLog(errorMsg, "error")
-        showMessage(this.pluginInstance.i18n["shareService"]["msgShareError"] + resp.msg, 7000, "error")
 
         // 分享失败时也记录历史记录
         try {
@@ -539,6 +583,8 @@ class ShareService implements IShareHistoryService {
           this.logger.error(`保存分享失败历史记录失败: ${docId}`, historyError)
         }
 
+        // 单文档操作显示错误消息
+        showMessage(this.pluginInstance.i18n["shareService"]["msgShareError"] + resp.msg, 7000, "error")
         return
       }
 
@@ -572,6 +618,9 @@ class ShareService implements IShareHistoryService {
 
       // 异步处理所有媒体资源，确保按顺序执行
       void this.processAllMediaResources(docId, data.media, data.dataViewMedia)
+
+      // 单文档操作显示成功消息
+      showMessage(this.pluginInstance.i18n["shareService"]["msgShareSuccess"], 3000, "info")
     } catch (e) {
       // 分享失败时也记录历史记录
       try {
@@ -606,11 +655,17 @@ class ShareService implements IShareHistoryService {
 
       const exceptionMsg = this.pluginInstance.i18n["shareService"]["shareErrorWithDoc"].replace("[param1]", docId) + e
       this.addLog(exceptionMsg, "error")
+
+      // 单文档操作显示错误消息
       showMessage(this.pluginInstance.i18n["shareService"]["msgShareError"] + e, 7000, "error")
     }
   }
 
-  private async processShareMedia(docId: string, mediaList: any[]) {
+  private async processShareMedia(
+    docId: string,
+    mediaList: any[],
+    progressCallback?: (completed: number, error?: any) => void
+  ) {
     const processingMsg = this.pluginInstance.i18n["shareService"]["processingMedia"] + "：" + docId
     this.addLog(processingMsg, "info")
     const { cfg } = await ApiUtils.getSiyuanKernelApi(this.pluginInstance)
@@ -684,7 +739,6 @@ class ShareService implements IShareHistoryService {
         } catch (e) {
           const mediaErrorMsg = this.pluginInstance.i18n["shareService"]["msgMediaUploadError"] + e
           this.addLog(mediaErrorMsg, "error")
-          showMessage(this.pluginInstance.i18n["shareService"]["msgMediaUploadError"] + e, 7000, "error")
         }
       }
       const msgGroupProcessSuccess = this.pluginInstance.i18n["shareService"]["msgGroupProcessSuccess"]
@@ -712,17 +766,18 @@ class ShareService implements IShareHistoryService {
       if (uploadResult.code === 0) {
         successCount += processedParams.length
         if (!hasNext) {
-          showMessage(
-            this.pluginInstance.i18n["shareService"]["msgYourDoc"] +
-              docId +
-              this.pluginInstance.i18n["shareService"]["msgSuccessUpdateMedia"],
-            3000,
-            "info"
-          )
+          // if (currentContext) {
+          //   // 资源处理成功，但让主文档上下文处理最终消息
+          // }
         }
         const msgCurrentMediaSuccess = this.pluginInstance.i18n["shareService"]["msgCurrentMediaSuccess"]
         const msgCurrentMediaSuccessWithParam = msgCurrentMediaSuccess.replace("[param1]", i + 1)
         this.addLog(msgCurrentMediaSuccessWithParam, "info")
+
+        // 调用进度回调
+        if (progressCallback) {
+          progressCallback(processedParams.length)
+        }
       } else {
         errorCount += processedParams.length
         let rtnMsg = uploadResult.msg
@@ -733,7 +788,11 @@ class ShareService implements IShareHistoryService {
         const msgCurrentMediaErrorWithParam = msgCurrentMediaError.replace("[param1]", i + 1)
         const errMsg = msgCurrentMediaErrorWithParam + rtnMsg
         this.addLog(errMsg, "error")
-        showMessage(errMsg, 7000, "error")
+
+        // 调用错误回调
+        if (progressCallback) {
+          progressCallback(processedParams.length, uploadResult.msg || rtnMsg)
+        }
       }
     }
 
@@ -743,12 +802,10 @@ class ShareService implements IShareHistoryService {
       .replace("[param2]", successCount)
       .replace("[param3]", errorCount)
     this.addLog(successPicWithParam, "info")
-    if (successCount === totalCount) {
-      showMessage(this.pluginInstance.i18n["shareService"]["success"], 3000, "info")
-    } else {
+    if (successCount !== totalCount) {
       const errorPic = this.pluginInstance.i18n["shareService"]["errorPic"]
       const msgWithParam = errorPic.replace("[param1]", errorCount)
-      showMessage(msgWithParam, 7000, "error")
+      this.addLog(msgWithParam, "error")
     }
   }
 
@@ -757,7 +814,11 @@ class ShareService implements IShareHistoryService {
    * @param docId 文档ID
    * @param mediaList 数据库媒体资源列表
    */
-  private async processDataViewMedia(docId: string, mediaList: any[]) {
+  private async processDataViewMedia(
+    docId: string,
+    mediaList: any[],
+    progressCallback?: (completed: number, error?: any) => void
+  ) {
     const processingMsg = this.pluginInstance.i18n["shareService"]["processingDataViewMedia"] + "：" + docId
     this.addLog(processingMsg, "info")
     const { cfg } = await ApiUtils.getSiyuanKernelApi(this.pluginInstance)
@@ -828,7 +889,6 @@ class ShareService implements IShareHistoryService {
         } catch (e) {
           const mediaErrorMsg = this.pluginInstance.i18n["shareService"]["msgDataViewMediaUploadError"] + e
           this.addLog(mediaErrorMsg, "error")
-          showMessage(this.pluginInstance.i18n["shareService"]["msgDataViewMediaUploadError"] + e, 7000, "error")
         }
       }
       const msgGroupProcessSuccess = this.pluginInstance.i18n["shareService"]["msgGroupProcessSuccess"]
@@ -854,17 +914,18 @@ class ShareService implements IShareHistoryService {
       if (uploadResult.code === 0) {
         successCount += processedParams.length
         if (!hasNext) {
-          showMessage(
-            this.pluginInstance.i18n["shareService"]["msgYourDoc"] +
-              docId +
-              this.pluginInstance.i18n["shareService"]["msgSuccessUpdateDataViewMedia"],
-            3000,
-            "info"
-          )
+          // if (currentContext) {
+          //   // 资源处理成功，但让主文档上下文处理最终消息
+          // }
         }
         const msgCurrentMediaSuccess = this.pluginInstance.i18n["shareService"]["msgCurrentDataViewMediaSuccess"]
         const msgCurrentMediaSuccessWithParam = msgCurrentMediaSuccess.replace("[param1]", i + 1)
         this.addLog(msgCurrentMediaSuccessWithParam, "info")
+
+        // 调用进度回调
+        if (progressCallback) {
+          progressCallback(processedParams.length)
+        }
       } else {
         errorCount += processedParams.length
         let rtnMsg = uploadResult.msg
@@ -875,7 +936,11 @@ class ShareService implements IShareHistoryService {
         const msgCurrentMediaErrorWithParam = msgCurrentMediaError.replace("[param1]", i + 1)
         const errMsg = msgCurrentMediaErrorWithParam + rtnMsg
         this.addLog(errMsg, "error")
-        showMessage(errMsg, 7000, "error")
+
+        // 调用错误回调
+        if (progressCallback) {
+          progressCallback(processedParams.length, uploadResult.msg || rtnMsg)
+        }
       }
     }
 
@@ -885,12 +950,10 @@ class ShareService implements IShareHistoryService {
       .replace("[param2]", successCount)
       .replace("[param3]", errorCount)
     this.addLog(successPicWithParam, "info")
-    if (successCount === totalCount) {
-      showMessage(this.pluginInstance.i18n["shareService"]["success"], 3000, "info")
-    } else {
+    if (successCount !== totalCount) {
       const errorPic = this.pluginInstance.i18n["shareService"]["errorDataViewMedia"]
       const msgWithParam = errorPic.replace("[param1]", errorCount)
-      showMessage(msgWithParam, 7000, "error")
+      this.addLog(msgWithParam, "error")
     }
   }
 
@@ -899,32 +962,48 @@ class ShareService implements IShareHistoryService {
    * 避免并发执行导致的后端处理混乱
    */
   private async processAllMediaResources(docId: string, media: any[], dataViewMedia: any[]) {
-    this.logger.debug(
-      `process all media resources => docId: ${docId}, media: ${JSON.stringify(media)}, dataViewMedia: ${JSON.stringify(
-        dataViewMedia
-      )}`
-    )
+    try {
+      const totalResources = (media?.length || 0) + (dataViewMedia?.length || 0)
 
-    // 先处理常规媒体资源
-    if (media && media.length > 0) {
-      showMessage(this.pluginInstance.i18n["shareService"]["msgProcessPic"], 7000, "info")
-      this.addLog(this.pluginInstance.i18n["shareService"]["msgStartPicBack"], "info")
-      await this.processShareMedia(docId, media)
-      this.addLog(this.pluginInstance.i18n["shareService"]["msgEndPicBack"], "info")
-    }
+      // 触发资源开始事件
+      if (totalResources > 0) {
+        resourceEventEmitter.emit(RESOURCE_EVENTS.START, { docId, totalResources })
+      }
 
-    // 再处理DataViews媒体资源
-    if (dataViewMedia && dataViewMedia.length > 0) {
-      showMessage(this.pluginInstance.i18n["shareService"]["msgDataViewProcessPic"], 7000, "info")
-      this.addLog(this.pluginInstance.i18n["shareService"]["msgStartDataViewMediaBack"], "info")
-      await this.processDataViewMedia(docId, dataViewMedia)
-      this.addLog(this.pluginInstance.i18n["shareService"]["msgEndDataViewMediaBack"], "info")
-    }
+      // 处理常规媒体资源
+      if (media && media.length > 0) {
+        this.addLog(this.pluginInstance.i18n["shareService"]["msgStartPicBack"], "info")
+        await this.processShareMedia(docId, media, (completed, error) => {
+          if (completed > 0) {
+            resourceEventEmitter.emit(RESOURCE_EVENTS.PROGRESS, { docId, completed })
+          }
+          if (error) {
+            resourceEventEmitter.emit(RESOURCE_EVENTS.ERROR, { docId, error })
+          }
+        })
+        this.addLog(this.pluginInstance.i18n["shareService"]["msgEndPicBack"], "info")
+      }
 
-    // 只有在没有媒体资源的情况下显示分享成功消息
-    // 如果有媒体资源，成功消息会在各自的处理方法中显示
-    if ((!media || media.length === 0) && (!dataViewMedia || dataViewMedia.length === 0)) {
-      showMessage(this.pluginInstance.i18n["shareService"]["msgShareSuccess"], 3000, "info")
+      // 处理DataViews媒体资源
+      if (dataViewMedia && dataViewMedia.length > 0) {
+        this.addLog(this.pluginInstance.i18n["shareService"]["msgStartDataViewMediaBack"], "info")
+        await this.processDataViewMedia(docId, dataViewMedia, (completed, error) => {
+          if (completed > 0) {
+            resourceEventEmitter.emit(RESOURCE_EVENTS.PROGRESS, { docId, completed })
+          }
+          if (error) {
+            resourceEventEmitter.emit(RESOURCE_EVENTS.ERROR, { docId, error })
+          }
+        })
+        this.addLog(this.pluginInstance.i18n["shareService"]["msgEndDataViewMediaBack"], "info")
+      }
+
+      // 触发资源完成事件
+      resourceEventEmitter.emit(RESOURCE_EVENTS.COMPLETE, { docId })
+    } catch (error) {
+      this.logger.error(`Resource processing failed for doc ${docId}:`, error)
+      resourceEventEmitter.emit(RESOURCE_EVENTS.ERROR, { docId, error })
+      resourceEventEmitter.emit(RESOURCE_EVENTS.COMPLETE, { docId })
     }
   }
 
@@ -1013,148 +1092,72 @@ class ShareService implements IShareHistoryService {
   ): Promise<void> {
     const total = documentsToShare.length
 
-    // 单文档场景继续使用 showMessage，批量操作使用 ProgressManager
+    // 单文档场景直接使用 showMessage
     if (total === 1) {
-      // 显示开始消息
-      showMessage(
-        this.pluginInstance.i18n["shareService"]["msgBatchStart"].replace("[param1]", total.toString()),
-        5000,
-        "info"
-      )
-
-      // 使用并发控制处理所有文档，并实时更新进度
-      let completedCount = 0
-      const results = await this.processWithConcurrency(
-        documentsToShare,
-        async (doc, index) => {
-          try {
-            await this.handleOne(doc.docId, doc.settings, doc.options)
-
-            // 原子性地更新完成计数并显示进度
-            completedCount++
-            const progress = Math.round((completedCount / total) * 100)
-            const remaining = total - completedCount
-
-            // 更新日志
-            this.addLog(
-              this.pluginInstance.i18n["shareService"]["msgBatchProgress"]
-                .replace("[param1]", completedCount.toString())
-                .replace("[param2]", total.toString())
-                .replace("[param3]", progress.toString())
-                .replace("[param4]", remaining.toString()),
-              "info"
-            )
-
-            // 显示进度更新（每10个或最后几个）
-            if (completedCount % 10 === 0 || completedCount === total) {
-              showMessage(
-                this.pluginInstance.i18n["shareService"]["msgBatchProgress"]
-                  .replace("[param1]", completedCount.toString())
-                  .replace("[param2]", total.toString())
-                  .replace("[param3]", progress.toString())
-                  .replace("[param4]", remaining.toString()),
-                3000,
-                "info"
-              )
-            }
-
-            return { success: true, docId: doc.docId, index }
-          } catch (error) {
-            this.logger.error(`分享文档 ${doc.docId} 失败:`, error)
-            return { success: false, docId: doc.docId, error, index }
-          }
-        },
-        maxConcurrency
-      )
-
-      // 统计结果并显示进度
-      const successful = results.filter((r) => r?.success).length
-      const failed = results.filter((r) => !r?.success).length
-
-      // 显示完成消息
-      if (failed === 0) {
-        showMessage(
-          this.pluginInstance.i18n["shareService"]["msgBatchSuccess"].replace("[param1]", total.toString()),
-          5000,
-          "info"
-        )
-      } else {
-        showMessage(
-          this.pluginInstance.i18n["shareService"]["msgBatchPartialSuccess"]
-            .replace("[param1]", successful.toString())
-            .replace("[param2]", total.toString())
-            .replace("[param3]", failed.toString()),
-          7000,
-          "error"
-        )
-      }
-    } else {
-      // 批量操作，使用 ProgressManager
-      const progressId = ProgressManager.startBatch("批量分享", total)
-
-      // 使用并发控制处理所有文档，并实时更新进度
-      let completedCount = 0
-      const results = await this.processWithConcurrency(
-        documentsToShare,
-        async (doc, index) => {
-          try {
-            // 获取文档标题用于进度显示
-            const cfg = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
-            const { blogApi } = useSiyuanApi(cfg)
-            const post = await blogApi.getPost(doc.docId)
-            const docTitle = post?.title || doc.docId
-
-            await this.handleOne(doc.docId, doc.settings, doc.options)
-
-            // 原子性地更新完成计数并更新 ProgressManager
-            completedCount++
-            const progress = Math.round((completedCount / total) * 100)
-            const remaining = total - completedCount
-
-            // 更新日志
-            this.addLog(
-              this.pluginInstance.i18n["shareService"]["msgBatchProgress"]
-                .replace("[param1]", completedCount.toString())
-                .replace("[param2]", total.toString())
-                .replace("[param3]", progress.toString())
-                .replace("[param4]", remaining.toString()),
-              "info"
-            )
-
-            // 更新 ProgressManager 进度
-            ProgressManager.updateProgress(progressId, {
-              completed: completedCount,
-              currentDocId: doc.docId,
-              currentDocTitle: docTitle,
-            })
-
-            return { success: true, docId: doc.docId, index }
-          } catch (error) {
-            this.logger.error(`分享文档 ${doc.docId} 失败:`, error)
-            // 记录错误到 ProgressManager
-            ProgressManager.addError(progressId, doc.docId, error)
-            return { success: false, docId: doc.docId, error, index }
-          }
-        },
-        maxConcurrency
-      )
-
-      // 统计结果
-      const successful = results.filter((r) => r?.success).length
-      const failed = results.filter((r) => !r?.success).length
-
-      // 完成批处理
-      if (failed === 0) {
-        // 全部成功
-        ProgressManager.completeBatch(progressId, true)
-      } else if (successful > 0) {
-        // 部分成功
-        ProgressManager.completeBatch(progressId, false, new Error("部分失败"))
-      } else {
-        // 全部失败
-        ProgressManager.completeBatch(progressId, false, new Error("全部失败"))
-      }
+      await this.handleOne(documentsToShare[0].docId, documentsToShare[0].settings, documentsToShare[0].options)
+      // handleOne 会处理所有逻辑，包括成功/失败的 showMessage
+      return
     }
+
+    // 多文档场景使用 ProgressManager
+    const progressId = ProgressManager.startBatch(
+      this.pluginInstance.i18n["progressManager"]["sharingDocuments"].replace("[param1]", total.toString()),
+      total
+    )
+
+    // 使用并发控制处理所有文档，并实时更新进度
+    let completedCount = 0
+    const results = await this.processWithConcurrency(
+      documentsToShare,
+      async (doc, index) => {
+        try {
+          // 获取文档标题用于进度显示
+          const cfg = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
+          const { blogApi } = useSiyuanApi(cfg)
+          const post = await blogApi.getPost(doc.docId)
+          const docTitle = post?.title || doc.docId
+
+          await this.handleOne(doc.docId, doc.settings, doc.options)
+
+          // 原子性地更新完成计数
+          completedCount++
+          const progress = Math.round((completedCount / total) * 100)
+          const remaining = total - completedCount
+
+          // 更新日志
+          this.addLog(
+            this.pluginInstance.i18n["shareService"]["msgBatchProgress"]
+              .replace("[param1]", completedCount.toString())
+              .replace("[param2]", total.toString())
+              .replace("[param3]", progress.toString())
+              .replace("[param4]", remaining.toString()),
+            "info"
+          )
+
+          // 更新 ProgressManager 进度
+          ProgressManager.updateProgress(progressId, {
+            completed: completedCount,
+            currentDocId: doc.docId,
+            currentDocTitle: docTitle,
+          })
+
+          return { success: true, docId: doc.docId, index }
+        } catch (error) {
+          this.logger.error(`分享文档 ${doc.docId} 失败:`, error)
+          // 记录错误到 ProgressManager
+          ProgressManager.addError(progressId, doc.docId, error)
+          return { success: false, docId: doc.docId, error, index }
+        }
+      },
+      maxConcurrency
+    )
+
+    // 统计结果
+    const successful = results.filter((r) => r?.success).length
+    const failed = results.filter((r) => !r?.success).length
+
+    // 标记文档完成状态
+    ProgressManager.markDocumentsCompleted(progressId)
   }
 
   private addLog(msg: string, type: "info" | "error") {
@@ -1164,6 +1167,13 @@ class ShareService implements IShareHistoryService {
     } else {
       this.logger.error(msg)
     }
+  }
+
+  private handleResourceErrorForSingleDoc(docId: string, error: any) {
+    // 查找对应的文档历史记录
+    // 更新历史记录状态为失败
+    // 显示资源处理错误消息
+    showMessage(this.pluginInstance.i18n["shareService"]["msgResourceError"] + error, 7000, "error")
   }
 }
 

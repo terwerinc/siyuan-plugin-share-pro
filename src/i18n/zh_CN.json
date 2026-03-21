@@ -159,7 +159,9 @@
     "msgBatchSuccess": "成功分享全部[param1]个文档",
     "msgBatchPartialSuccess": "部分成功：[param1]/[param2]个文档已分享，[param3]个失败",
     "msgCancelError": "取消分享失败：",
-    "msgCancelPartialSuccess": "部分成功：[param1]/[param2]个文档已取消，[param3]个失败"
+    "msgCancelSuccess": "成功取消分享",
+    "msgCancelPartialSuccess": "部分成功：[param1]/[param2]个文档已取消，[param3]个失败",
+    "msgResourceError": "资源处理失败："
   },
   "topbar": {
     "shareSuccessError": "分享服务异常，请联系 youweics@163.com：",
@@ -373,7 +375,11 @@
     "errorAll": "处理全部[param1]个文档失败",
     "cancelConfirm": "确定要取消当前操作吗？",
     "currentDocument": "当前:",
-    "autoCloseIn": "[param1]秒后自动关闭"
+    "autoCloseIn": "[param1]秒后自动关闭",
+    "processingResources": "正在处理资源...",
+    "resourcesProcessed": "资源: [param1]/[param2]",
+    "resourceError": "资源处理失败",
+    "waitingForResourceCompletion": "等待资源处理完成..."
   },
   "seo": {
     "saveSuccess": "SEO设置保存并同步成功",

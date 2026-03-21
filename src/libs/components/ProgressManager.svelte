@@ -2,8 +2,8 @@
   import { onMount, onDestroy } from "svelte"
   import { showMessage } from "siyuan"
   import ShareProPlugin from "../../index"
-  import { ProgressManager } from "../utils/ProgressManager"
-  import { progressStore } from "../utils/progressStore"
+  import { ProgressManager } from "../../utils/progress/ProgressManager"
+  import { progressStore } from "../../utils/progress/progressStore"
 
   // Props
   export let pluginInstance: ShareProPlugin
@@ -18,7 +18,7 @@
   let unsubscribe: () => void
 
   onMount(() => {
-    unsubscribe = progressStore.subscribe(value => {
+    unsubscribe = progressStore.subscribe((value) => {
       currentBatch = value
       isVisible = !!value
 
@@ -84,11 +84,7 @@
     e.stopPropagation()
     if (currentBatch) {
       ProgressManager.cancelBatch(currentBatch.id)
-      showMessage(
-        pluginInstance.i18n["progressManager"]["progressCanceled"],
-        3000,
-        "info"
-      )
+      showMessage(pluginInstance.i18n["progressManager"]["progressCanceled"], 3000, "info")
     }
   }
 </script>
@@ -101,27 +97,23 @@
         <div class="progress-title">
           {currentBatch.operationName}
         </div>
-        <button
-          class="close-button"
-          on:click={handleClose}
-          title={pluginInstance.i18n["cancel"] || "Close"}
-        >
+        <button class="close-button" on:click={handleClose} title={pluginInstance.i18n["cancel"] || "Close"}>
           ×
         </button>
       </div>
 
       <!-- Status indicator -->
       <div class="progress-status">
-        {#if currentBatch.status === 'processing'}
+        {#if currentBatch.status === "processing"}
           <span class="status-icon processing">⚡</span>
           <span class="status-text">{pluginInstance.i18n["progressManager"]["progressRunning"] || "In Progress"}</span>
-        {:else if currentBatch.status === 'success'}
+        {:else if currentBatch.status === "success"}
           <span class="status-icon success">✓</span>
           <span class="status-text">{pluginInstance.i18n["progressManager"]["progressSuccess"] || "Success"}</span>
-        {:else if currentBatch.status === 'error'}
+        {:else if currentBatch.status === "error"}
           <span class="status-icon error">✗</span>
           <span class="status-text">{pluginInstance.i18n["progressManager"]["progressError"] || "Error"}</span>
-        {:else if currentBatch.status === 'canceled'}
+        {:else if currentBatch.status === "canceled"}
           <span class="status-icon canceled">■</span>
           <span class="status-text">{pluginInstance.i18n["progressManager"]["progressCanceled"] || "Canceled"}</span>
         {/if}
@@ -134,12 +126,40 @@
           <span class="progress-percentage">{currentBatch.percentage}%</span>
         </div>
         <div class="progress-bar">
-          <div
-            class="progress-fill"
-            style="width: {currentBatch.percentage}%; transition: width 0.3s ease;"
-          ></div>
+          <div class="progress-fill" style="width: {currentBatch.percentage}%; transition: width 0.3s ease;" />
         </div>
       </div>
+
+      <!-- Resource progress (if applicable) -->
+      {#if currentBatch.totalResources > 0}
+        <div class="resource-progress">
+          <div class="resource-info">
+            <span class="resource-label"
+              >{pluginInstance.i18n["progressManager"]["resourcesProcessed"] || "Resources:"}</span
+            >
+            <span class="resource-count">{currentBatch.completedResources}/{currentBatch.totalResources}</span>
+          </div>
+          <div class="resource-bar">
+            <div
+              class="resource-fill"
+              style="width: {Math.round(
+                (currentBatch.completedResources / currentBatch.totalResources) * 100
+              )}%; transition: width 0.3s ease;"
+            />
+          </div>
+        </div>
+      {/if}
+
+      <!-- Waiting for resource completion -->
+      {#if currentBatch.documentsCompleted && currentBatch.isResourceProcessing}
+        <div class="waiting-info">
+          <span class="waiting-icon">⏳</span>
+          <span class="waiting-text"
+            >{pluginInstance.i18n["progressManager"]["waitingForResourceCompletion"] ||
+              "Waiting for resource processing to complete..."}</span
+          >
+        </div>
+      {/if}
 
       <!-- Current document -->
       {#if currentBatch.currentDocTitle}
@@ -287,6 +307,53 @@
     font-size 12px
     color rgba(255, 255, 255, 0.6)
     text-align right
+    font-style italic
+
+  .resource-progress
+    display flex
+    flex-direction column
+    gap 8px
+    margin-top 8px
+
+  .resource-info
+    display flex
+    justify-content space-between
+    align-items center
+    font-size 13px
+    color rgba(255, 255, 255, 0.8)
+
+  .resource-label
+    font-weight 600
+    color rgba(255, 255, 255, 0.9)
+
+  .resource-count
+    font-weight 500
+    color #fa8c16
+
+  .resource-bar
+    height 4px
+    background-color rgba(255, 255, 255, 0.2)
+    border-radius 2px
+    overflow hidden
+
+  .resource-fill
+    height 100%
+    background linear-gradient(90deg, #fa8c16, #faad14)
+    border-radius 2px
+    transition width 0.3s ease
+
+  .waiting-info
+    display flex
+    align-items center
+    gap 8px
+    font-size 13px
+    color rgba(255, 255, 255, 0.85)
+    margin-top 8px
+
+  .waiting-icon
+    font-size 16px
+
+  .waiting-text
     font-style italic
 
   /* Dark mode support */
