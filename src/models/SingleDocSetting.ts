@@ -7,7 +7,6 @@
  *  of this license document, but changing it is not allowed.
  */
 
-import { SettingKeys } from "../utils/SettingKeys"
 
 /**
  * 文档级别设置
@@ -79,6 +78,15 @@ class SingleDocSetting {
    * @since 1.16.0
    */
   public shareReferences?: boolean
+
+  /**
+   * 用户手动选择的子文档ID列表
+   * 当用户在ShareUI中自定义选择子文档时使用，优先级高于自动获取
+   *
+   * @author terwer
+   * @since 1.16.0
+   */
+  public selectedSubdocIds?: string[]
 }
 
 export { SingleDocSetting }

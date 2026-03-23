@@ -27,9 +27,9 @@
   import { PasswordUtils } from "../../utils/PasswordUtils"
   import { SettingKeys } from "../../utils/SettingKeys"
   import { icons } from "../../utils/svg"
-  import SubdocumentTreePreview from "../components/subdocument/SubdocumentTreePreview.svelte"
-  import ProgressManager from "../components/ProgressManager.svelte"
   import Confirm from "../components/Confirm.svelte"
+  import ProgressManager from "../components/ProgressManager.svelte"
+  import SubdocumentTreePreview from "../components/subdocument/SubdocumentTreePreview.svelte"
 
   export let pluginInstance: ShareProPlugin
   export let shareService: ShareService
@@ -104,6 +104,7 @@
       expiresTime: "", // 分享有效期
       shareSubdocuments: false, // 是否分享子文档
       shareReferences: false, // 是否分享引用文档
+      selectedSubdocIds: [], // 用户手动选择的子文档ID列表
     } as SingleDocSetting,
 
     // 层级3: shareOptions - 分享选项
@@ -116,10 +117,10 @@
 
     // 操作状态机
     operationState: {
-        status: 'idle', // 'idle' | 'sharing' | 'canceling' | 'shared' | 'error'
-        message: '',
-        error: null
-    }
+      status: "idle", // 'idle' | 'sharing' | 'canceling' | 'shared' | 'error'
+      message: "",
+      error: null,
+    },
   }
 
   // ========================================
@@ -129,7 +130,7 @@
     const keyInfo = vipInfo.data
     void widgetInvoke.showShareManageDialog(keyInfo)
   }
-  
+
   // const showManageTab = () => {
   //   const keyInfo = vipInfo.data
   //   void widgetInvoke.showShareManageTab(keyInfo)
@@ -145,14 +146,14 @@
     }
 
     // 防止重复点击
-    if (formData.operationState.status === 'sharing' || formData.operationState.status === 'canceling') {
+    if (formData.operationState.status === "sharing" || formData.operationState.status === "canceling") {
       return
     }
 
     if (!formData.shared) {
       // 开始分享
       try {
-        formData.operationState.status = 'sharing'
+        formData.operationState.status = "sharing"
 
         const shareOptions: Partial<ShareOptions> = {}
         if (formData.shareOptions.passwordEnabled) {
@@ -168,15 +169,15 @@
         await shareService.createShare(docId, formData.singleDocSetting, shareOptions)
         // 初始化
         await initSingleDocMode()
-        formData.operationState.status = 'shared'
+        formData.operationState.status = "shared"
         formData.operationState.message = pluginInstance.i18n["msgShareSuccess"]
       } catch (e) {
         formData.shared = false
-        formData.operationState.status = 'error'
+        formData.operationState.status = "error"
         formData.operationState.error = e
         formData.operationState.message = pluginInstance.i18n["msgShareError"]
         console.error(e)
-        showMessage(pluginInstance.i18n["ui"]["shareSuccessError"]+e.toString(), 3000, "info")
+        showMessage(pluginInstance.i18n["ui"]["shareSuccessError"] + e.toString(), 3000, "info")
       }
     } else {
       // 状态检测
@@ -185,28 +186,28 @@
       if (formData?.shareData?.shareStatus && formData.shareData.shareStatus !== "COMPLETED") {
         formData.lock = true
         showMessage(pluginInstance.i18n["ui"]["msgIngError"], 3000, "info")
-        formData.operationState.status = 'idle'
+        formData.operationState.status = "idle"
         return
       }
 
       // 取消分享
       try {
-        formData.operationState.status = 'canceling'
+        formData.operationState.status = "canceling"
 
         const ret = await shareService.cancelShare(docId)
         if (ret.code === 0) {
           // 初始化
           await initSingleDocMode()
-          formData.operationState.status = 'idle'
+          formData.operationState.status = "idle"
           showMessage(pluginInstance.i18n["topbar"]["cancelSuccess"], 3000, "info")
         } else {
-          formData.operationState.status = 'error'
+          formData.operationState.status = "error"
           formData.operationState.error = ret.msg
           formData.operationState.message = pluginInstance.i18n["msgCancelError"]
           showMessage(pluginInstance.i18n["topbar"]["cancelError"] + ret.msg, 7000, "error")
         }
       } catch (e) {
-        formData.operationState.status = 'error'
+        formData.operationState.status = "error"
         formData.operationState.error = e
         formData.operationState.message = pluginInstance.i18n["msgCancelError"]
         console.error(e)
@@ -214,7 +215,6 @@
       }
     }
   }
-
 
   const handleReShare = async () => {
     if (!isSingleDocMode) {
@@ -269,7 +269,7 @@
     title: "",
     message: "",
     onConfirm: () => {},
-    onCancel: () => {}
+    onCancel: () => {},
   }
 
   /**
@@ -300,7 +300,9 @@
       // 从启用变为禁用 - 需要确认是否取消已分享的子文档
       subdocumentConfirmConfig = {
         title: pluginInstance.i18n["tipTitle"] || "确认操作",
-        message: pluginInstance.i18n["cs"]["confirmCancelSubdocuments"] || "您已分享了子文档，现在禁用子文档分享将取消已分享的子文档。是否继续？",
+        message:
+          pluginInstance.i18n["cs"]["confirmCancelSubdocuments"] ||
+          "您已分享了子文档，现在禁用子文档分享将取消已分享的子文档。是否继续？",
         onConfirm: async () => {
           // 用户确认 - 更新配置并重新分享
           formData.singleDocSetting.shareSubdocuments = newChecked
@@ -309,14 +311,16 @@
         onCancel: () => {
           // 用户取消 - 恢复原状态
           event.target.checked = oldChecked
-        }
+        },
       }
       showSubdocumentConfirm = true
     } else if (!oldChecked && newChecked) {
       // 从禁用变为启用 - 需要确认是否更新分享以包含子文档
       subdocumentConfirmConfig = {
         title: pluginInstance.i18n["tipTitle"] || "确认操作",
-        message: pluginInstance.i18n["cs"]["confirmAddSubdocuments"] || "您已分享了文档，现在启用子文档分享将重新分享以包含所有子文档。是否继续？",
+        message:
+          pluginInstance.i18n["cs"]["confirmAddSubdocuments"] ||
+          "您已分享了文档，现在启用子文档分享将重新分享以包含所有子文档。是否继续？",
         onConfirm: async () => {
           // 用户确认 - 更新配置并重新分享
           formData.singleDocSetting.shareSubdocuments = newChecked
@@ -325,7 +329,7 @@
         onCancel: () => {
           // 用户取消 - 恢复原状态
           event.target.checked = oldChecked
-        }
+        },
       }
       showSubdocumentConfirm = true
     }
@@ -337,7 +341,7 @@
     title: "",
     message: "",
     onConfirm: () => {},
-    onCancel: () => {}
+    onCancel: () => {},
   }
 
   /**
@@ -368,7 +372,9 @@
       // 从启用变为禁用 - 需要确认是否取消已分享的引用文档
       referenceConfirmConfig = {
         title: pluginInstance.i18n["tipTitle"] || "确认操作",
-        message: pluginInstance.i18n["cs"]["confirmCancelReferences"] || "您已分享了引用文档，现在禁用引用文档分享将取消已分享的引用文档。是否继续？",
+        message:
+          pluginInstance.i18n["cs"]["confirmCancelReferences"] ||
+          "您已分享了引用文档，现在禁用引用文档分享将取消已分享的引用文档。是否继续？",
         onConfirm: async () => {
           // 用户确认 - 更新配置并重新分享
           formData.singleDocSetting.shareReferences = newChecked
@@ -377,14 +383,16 @@
         onCancel: () => {
           // 用户取消 - 恢复原状态
           event.target.checked = oldChecked
-        }
+        },
       }
       showReferenceConfirm = true
     } else if (!oldChecked && newChecked) {
       // 从禁用变为启用 - 需要确认是否更新分享以包含引用文档
       referenceConfirmConfig = {
         title: pluginInstance.i18n["tipTitle"] || "确认操作",
-        message: pluginInstance.i18n["cs"]["confirmAddReferences"] || "您已分享了文档，现在启用引用文档分享将重新分享以包含所有引用文档。是否继续？",
+        message:
+          pluginInstance.i18n["cs"]["confirmAddReferences"] ||
+          "您已分享了文档，现在启用引用文档分享将重新分享以包含所有引用文档。是否继续？",
         onConfirm: async () => {
           // 用户确认 - 更新配置并重新分享
           formData.singleDocSetting.shareReferences = newChecked
@@ -393,7 +401,7 @@
         onCancel: () => {
           // 用户取消 - 恢复原状态
           event.target.checked = oldChecked
-        }
+        },
       }
       showReferenceConfirm = true
     }
@@ -556,7 +564,7 @@
 </script>
 
 <div id="share">
-  <ProgressManager pluginInstance={pluginInstance} />
+  <ProgressManager {pluginInstance} />
   <Confirm
     show={showSubdocumentConfirm}
     title={subdocumentConfirmConfig.title}
@@ -584,24 +592,24 @@
     }}
   />
   <!-- 操作遮罩层 -->
-  {#if formData.operationState.status === 'sharing' || formData.operationState.status === 'canceling'}
+  {#if formData.operationState.status === "sharing" || formData.operationState.status === "canceling"}
     <div class="operation-overlay">
       <div class="overlay-content">
-        <div class="loading-spinner-large"></div>
+        <div class="loading-spinner-large" />
         <div class="overlay-message">
-        {#if formData.operationState.status === 'sharing'}
-          {pluginInstance.i18n["ui"]["sharingIng"]}
-        {:else if formData.operationState.status === 'canceling'}
-          {pluginInstance.i18n["ui"]["cancelingIng"]}
-        {/if}
-      </div>
+          {#if formData.operationState.status === "sharing"}
+            {pluginInstance.i18n["ui"]["sharingIng"]}
+          {:else if formData.operationState.status === "canceling"}
+            {pluginInstance.i18n["ui"]["cancelingIng"]}
+          {/if}
+        </div>
       </div>
     </div>
   {/if}
   {#if isSingleDocMode && typeof formData.post.title === "undefined"}
     <!-- 单文档模式但加载中 -->
     <div class="professional-loading">
-      <div class="professional-spinner"></div>
+      <div class="professional-spinner" />
       <span class="professional-loading-text">加载中...</span>
     </div>
   {:else}
@@ -660,14 +668,14 @@
             <button
               class="primary-action-btn {formData.shared ? 'cancel-share' : ''}"
               on:click={handleShare}
-              disabled={formData.operationState.status === 'sharing' || formData.operationState.status === 'canceling'}
+              disabled={formData.operationState.status === "sharing" || formData.operationState.status === "canceling"}
               title={formData.shared ? pluginInstance.i18n["cancelShare"] : pluginInstance.i18n["startShare"]}
             >
-              {#if formData.operationState.status === 'sharing'}
-                <span class="loading-spinner"></span>
+              {#if formData.operationState.status === "sharing"}
+                <span class="loading-spinner" />
                 {pluginInstance.i18n["startShare"]}
-              {:else if formData.operationState.status === 'canceling'}
-                <span class="loading-spinner"></span>
+              {:else if formData.operationState.status === "canceling"}
+                <span class="loading-spinner" />
                 {pluginInstance.i18n["cancelShare"]}
               {:else if formData.shared}
                 {pluginInstance.i18n["cancelShare"]}
@@ -682,23 +690,23 @@
 
     {#if isSingleDocMode && formData.shared && !formData.lock}
       <!-- 单文档模式且已分享：显示详细选项 -->
-        <div class="setting-row">
-          <span class="setting-label">{pluginInstance.i18n["ui"]["copyTitle"]}</span>
-          <div class="input-group">
-            <input
-                    type="text"
-                    bind:value={formData.shareLink}
-                    readonly
-                    class="share-link-input"
-                    on:click={viewDoc}
-                    title={pluginInstance.i18n["ui"]["clickView"]}
-            />
-            <button on:click={copyWebLink}>{pluginInstance.i18n["ui"]["copyWebLink"]}</button>
-          </div>
+      <div class="setting-row">
+        <span class="setting-label">{pluginInstance.i18n["ui"]["copyTitle"]}</span>
+        <div class="input-group">
+          <input
+            type="text"
+            bind:value={formData.shareLink}
+            readonly
+            class="share-link-input"
+            on:click={viewDoc}
+            title={pluginInstance.i18n["ui"]["clickView"]}
+          />
+          <button on:click={copyWebLink}>{pluginInstance.i18n["ui"]["copyWebLink"]}</button>
         </div>
+      </div>
 
-        <div class="divider" />
-     {/if}
+      <div class="divider" />
+    {/if}
 
     {#if isSingleDocMode}
       <!-- 单文档模式：紧凑分享配置 -->
@@ -760,15 +768,12 @@
       <!-- 深度控制（按需显示） -->
       {#if formData.singleDocSetting.docTreeEnable || formData.singleDocSetting.outlineEnable}
         <div class="setting-row">
-          <span class="setting-label"></span>
+          <span class="setting-label" />
           <div class="input-group compact-depth-config">
             {#if formData.singleDocSetting.docTreeEnable}
               <div class="depth-item">
                 <span class="depth-label">{pluginInstance.i18n["cs"]["docTreeDepth"]}</span>
-                <select
-                  bind:value={formData.singleDocSetting.docTreeLevel}
-                  class="b3-select compact-select"
-                >
+                <select bind:value={formData.singleDocSetting.docTreeLevel} class="b3-select compact-select">
                   {#each [1, 2, 3, 4, 5, 6] as level}
                     <option value={level}>{level}</option>
                   {/each}
@@ -779,18 +784,8 @@
             {#if formData.singleDocSetting.outlineEnable}
               <div class="depth-item">
                 <span class="depth-label">{pluginInstance.i18n["cs"]["outlineDepth"]}</span>
-                <select
-                  bind:value={formData.singleDocSetting.outlineLevel}
-                  class="b3-select compact-select"
-                >
-                  {#each [
-                    { label: "h1", value: 1 },
-                    { label: "h2", value: 2 },
-                    { label: "h3", value: 3 },
-                    { label: "h4", value: 4 },
-                    { label: "h5", value: 5 },
-                    { label: "h6", value: 6 }
-                  ] as item}
+                <select bind:value={formData.singleDocSetting.outlineLevel} class="b3-select compact-select">
+                  {#each [{ label: "h1", value: 1 }, { label: "h2", value: 2 }, { label: "h3", value: 3 }, { label: "h4", value: 4 }, { label: "h5", value: 5 }, { label: "h6", value: 6 }] as item}
                     <option value={item.value}>{item.label}</option>
                   {/each}
                 </select>
@@ -805,10 +800,11 @@
         <!-- 子文档树预览 -->
         <div class="subdocument-preview-section">
           <SubdocumentTreePreview
-            pluginInstance={pluginInstance}
-            docId={docId}
+            {pluginInstance}
+            {docId}
             onSubdocumentSelect={(selectedDocIds) => {
-              // 处理选中的子文档
+              // 保存用户选择的子文档ID到文档设置
+              formData.singleDocSetting.selectedSubdocIds = selectedDocIds
               logger.debug("Selected subdocuments:", selectedDocIds)
             }}
           />
