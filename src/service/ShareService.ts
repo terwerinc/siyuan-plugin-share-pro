@@ -11,10 +11,10 @@ import { showMessage } from "siyuan"
 import { Post } from "zhi-blog-api"
 import { ILogger, simpleLogger } from "zhi-lib-base"
 import {
+  DEFAULT_SHARE_REFERENCES_MAX_DEPTH,
   isDev,
   NULL_VALUE_FOR_SIYUAN_ATTR_REMOVE,
   SHARE_PRO_STORE_NAME,
-  DEFAULT_SHARE_REFERENCES_MAX_DEPTH,
 } from "../Constants"
 import { ServiceResponse, ShareApi } from "../api/share-api"
 import { useDataTable } from "../composables/useDataTable"
