@@ -124,6 +124,20 @@
       message: "",
       error: null,
     },
+
+    // 更新分享下拉菜单状态
+    showUpdateMenu: false,
+  }
+
+  // ========================================
+  // 下拉菜单控制
+  // ========================================
+  const toggleUpdateMenu = () => {
+    formData.showUpdateMenu = !formData.showUpdateMenu
+  }
+
+  const closeUpdateMenu = () => {
+    formData.showUpdateMenu = false
   }
 
   // ========================================
@@ -219,11 +233,14 @@
     }
   }
 
-  const handleReShare = async () => {
+  const handleReShare = async (forceUpdate = false) => {
     if (!isSingleDocMode) {
       logger.warn("handleReShare called in non-single-doc mode, ignored")
       return
     }
+
+    // 关闭下拉菜单
+    closeUpdateMenu()
 
     // == 文档属性 ==
     // 有效期
@@ -239,6 +256,10 @@
     if (formData.shareOptions.passwordEnabled) {
       shareOptions.passwordEnabled = formData.shareOptions.passwordEnabled
       shareOptions.password = formData.shareOptions.password
+    }
+    // 强制更新选项
+    if (forceUpdate) {
+      shareOptions.forceUpdate = true
     }
 
     // 重新分享
@@ -697,9 +718,36 @@
           <!-- 单文档功能按钮：需要docId，仅单文档模式显示 -->
           <div class="doc-actions">
             {#if formData.shared}
-              <button type="button" class="action-btn" title={pluginInstance.i18n["reShare"]} on:click={handleReShare}>
-                {@html icons.iconReShare}
-              </button>
+              <!-- 更新分享下拉菜单 -->
+              <div class="update-share-dropdown" class:open={formData.showUpdateMenu}>
+                <button
+                  type="button"
+                  class="action-btn update-share-btn"
+                  title={pluginInstance.i18n["ui"]["updateShare"]}
+                  on:click={toggleUpdateMenu}
+                >
+                  {@html icons.iconReShare}
+                  <span class="btn-text">{pluginInstance.i18n["ui"]["updateShare"]}</span>
+                  <span class="dropdown-arrow">▼</span>
+                </button>
+                {#if formData.showUpdateMenu}
+                  <div class="dropdown-menu" on:click|stopPropagation>
+                    <div class="dropdown-item-wrapper">
+                      <button type="button" class="dropdown-item" on:click|stopPropagation={() => handleReShare(false)}>
+                        {pluginInstance.i18n["ui"]["quickUpdate"]}
+                      </button>
+                      <div class="item-tip">{pluginInstance.i18n["ui"]["quickUpdateTip"]}</div>
+                    </div>
+                    <div class="dropdown-divider" />
+                    <div class="dropdown-item-wrapper">
+                      <button type="button" class="dropdown-item item-danger" on:click|stopPropagation={() => handleReShare(true)}>
+                        {pluginInstance.i18n["ui"]["fullUpdate"]}
+                      </button>
+                      <div class="item-tip">{pluginInstance.i18n["ui"]["fullUpdateTip"]}</div>
+                    </div>
+                  </div>
+                {/if}
+              </div>
             {/if}
             <!-- 核心操作按钮 - 付费软件专业设计 -->
             <button
@@ -1499,4 +1547,117 @@
       margin-top 12px
       font-size 16px
       font-weight 500
+
+    /* 更新分享下拉菜单 - Ant Design 风格 */
+    .update-share-dropdown
+      position relative
+      display inline-block
+
+    .update-share-btn
+      display inline-flex
+      align-items center
+      gap 6px
+      height 32px
+      padding 0 12px
+      border-radius 6px
+      background-color #fff
+      border 1px solid #d9d9d9
+      cursor pointer
+      transition all 0.2s
+      font-size 14px
+      color #595959
+
+      &:hover
+        color #40a9ff
+        border-color #40a9ff
+
+      .btn-text
+        font-size 14px
+
+      .dropdown-arrow
+        font-size 10px
+        transition transform 0.2s
+
+    .update-share-dropdown.open
+      .update-share-btn
+        border-color #40a9ff
+        color #40a9ff
+
+      .dropdown-arrow
+        transform rotate(180deg)
+
+    .dropdown-menu
+      position absolute
+      top 100%
+      right 0
+      margin-top 2px
+      background-color #fff
+      border 1px solid #f0f0f0
+      border-radius 6px
+      box-shadow 0 6px 16px rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12)
+      min-width 120px
+      z-index 1050
+      padding 0
+
+    .dropdown-item-wrapper
+      position relative
+
+    .dropdown-item
+      display block
+      width 100%
+      height 32px
+      line-height 32px
+      padding 0 12px
+      border none
+      background transparent
+      cursor pointer
+      text-align left
+      font-size 14px
+      color #333
+      transition background 0.2s
+
+      &:hover
+        background #f5f5f5
+
+        + .item-tip
+          display block
+
+    .item-tip
+      display none
+      position absolute
+      right 100%
+      left auto
+      top 50%
+      transform translateY(-50%)
+      margin-right 8px
+      padding 6px 10px
+      background rgba(0, 0, 0, 0.75)
+      color #fff
+      font-size 12px
+      line-height 1.4
+      border-radius 4px
+      white-space nowrap
+      z-index 1100
+      pointer-events none
+
+      &::before
+        content ''
+        position absolute
+        right -4px
+        left auto
+        top 50%
+        transform translateY(-50%)
+        border 4px solid transparent
+        border-left-color rgba(0, 0, 0, 0.75)
+
+    .item-danger
+      color #ff4d4f
+
+      &:hover
+        background #fff1f0
+
+    .dropdown-divider
+      height 1px
+      background #f0f0f0
+      margin 4px 0
 </style>

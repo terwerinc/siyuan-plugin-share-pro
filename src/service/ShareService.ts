@@ -266,20 +266,23 @@ class ShareService implements IShareHistoryService {
       this.addLog(this.pluginInstance.i18n["shareService"]["getPost"], "info")
 
       // ===== 微观增量检测（内置行为，不可关闭）=====
-      const currentModifiedTime = post?.dateUpdated ? new Date(post.dateUpdated).getTime() : Date.now()
-      const history = await this.localShareHistory.getHistoryByDocId(docId)
+      // 如果 forceUpdate 为 true，跳过增量检测，强制重新分享
+      if (!options?.forceUpdate) {
+        const currentModifiedTime = post?.dateUpdated ? new Date(post.dateUpdated).getTime() : Date.now()
+        const history = await this.localShareHistory.getHistoryByDocId(docId)
 
-      // 首次分享或有变更时继续
-      if (history && currentModifiedTime <= history.docModifiedTime) {
-        // 文档未变更，跳过分享
-        const docTitle = post?.title || docId
-        this.logger.info(`文档未变更，跳过分享: ${docTitle}`)
-        // 批量操作时不显示单文档 toast，避免 toast 爆炸
-        if (!options?.skipMsg) {
-          const skipMsg = this.pluginInstance.i18n["shareService"]["msgDocSkipped"].replace("[param1]", docTitle)
-          showMessage(skipMsg, 3000, "info")
+        // 首次分享或有变更时继续
+        if (history && currentModifiedTime <= history.docModifiedTime) {
+          // 文档未变更，跳过分享
+          const docTitle = post?.title || docId
+          this.logger.info(`文档未变更，跳过分享: ${docTitle}`)
+          // 批量操作时不显示单文档 toast，避免 toast 爆炸
+          if (!options?.skipMsg) {
+            const skipMsg = this.pluginInstance.i18n["shareService"]["msgDocSkipped"].replace("[param1]", docTitle)
+            showMessage(skipMsg, 3000, "info")
+          }
+          return { skipped: true, reason: "noChange" }
         }
-        return { skipped: true, reason: "noChange" }
       }
       // ===== 增量检测结束 =====
 

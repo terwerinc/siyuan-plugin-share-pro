@@ -26,12 +26,18 @@ class ShareOptions {
    * 增量分享服务调用时设为 true，由上层统一显示汇总
    */
   public skipBatchMsg?: boolean
+  /**
+   * 是否强制更新分享（忽略增量检测）
+   * 用于文档树深度等设置变更后需要强制重新分享的场景
+   */
+  public forceUpdate?: boolean
 
   public constructor() {
     this.passwordEnabled = false
     this.password = ""
     this.skipMsg = false
     this.skipBatchMsg = false
+    this.forceUpdate = false
   }
 }
 
