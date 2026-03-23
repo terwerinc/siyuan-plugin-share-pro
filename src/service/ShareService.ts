@@ -20,7 +20,12 @@ import { ServiceResponse, ShareApi } from "../api/share-api"
 import { useDataTable } from "../composables/useDataTable"
 import { useEmbedBlock } from "../composables/useEmbedBlock"
 import { useFold } from "../composables/useFold"
-import { getSubdocCount, getSubdocsPaged, useSiyuanApi } from "../composables/useSiyuanApi"
+import {
+  convertSiyuanDateToTimestamp,
+  getSubdocCount,
+  getSubdocsPaged,
+  useSiyuanApi,
+} from "../composables/useSiyuanApi"
 import ShareProPlugin from "../index"
 import { ShareOptions } from "../models/ShareOptions"
 import { ShareProConfig } from "../models/ShareProConfig"
@@ -245,14 +250,34 @@ class ShareService implements IShareHistoryService {
 
   /**
    * 处理单个文档的分享逻辑（核心私有方法）
+   * 内置增量检测：自动跳过未变更的文档
    */
-  private async handleOne(docId: string, settings?: Partial<SingleDocSetting>, options?: Partial<ShareOptions>) {
+  private async handleOne(
+    docId: string,
+    settings?: Partial<SingleDocSetting>,
+    options?: Partial<ShareOptions>
+  ): Promise<{ skipped: boolean; reason?: string }> {
     try {
-      await this.updateSingleDocSettings(docId, true, settings)
       const cfg = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
       const { blogApi } = useSiyuanApi(cfg, settings)
       const post = await blogApi.getPost(docId)
       this.addLog(this.pluginInstance.i18n["shareService"]["getPost"], "info")
+
+      // ===== 微观增量检测（内置行为，不可关闭）=====
+      const currentModifiedTime = post?.dateUpdated ? convertSiyuanDateToTimestamp(post.dateUpdated) : Date.now()
+      const history = await this.localShareHistory.getHistoryByDocId(docId)
+
+      // 首次分享或有变更时继续
+      if (history && currentModifiedTime <= history.docModifiedTime) {
+        // 文档未变更，跳过分享
+        const docTitle = post?.title || docId
+        this.logger.info(`文档未变更，跳过分享: ${docTitle}`)
+        showMessage(`文档未变更，已跳过: ${docTitle}`, 3000, "info")
+        return { skipped: true, reason: "noChange" }
+      }
+      // ===== 增量检测结束 =====
+
+      await this.updateSingleDocSettings(docId, true, settings)
 
       const { getEmbedBlocks } = useEmbedBlock(cfg)
       const { getDataViews } = useDataTable(cfg)
@@ -276,14 +301,16 @@ class ShareService implements IShareHistoryService {
 
       if (resp.code !== 0) {
         await this.handleShareFailure(docId, post, resp.msg)
-        return
+        return { skipped: false }
       }
 
       await this.handleShareSuccess(docId, post, resp, options)
       void this.processAllMediaResources(docId, resp.data.media, resp.data.dataViewMedia)
       showMessage(this.pluginInstance.i18n["shareService"]["msgShareSuccess"], 3000, "info")
+      return { skipped: false }
     } catch (e) {
       await this.handleShareException(docId, e)
+      return { skipped: false }
     }
   }
 
@@ -310,6 +337,9 @@ class ShareService implements IShareHistoryService {
     )
 
     let completedCount = 0
+    let skippedCount = 0
+    let sharedCount = 0
+
     await this.processWithConcurrency(
       documentsToShare,
       async (doc) => {
@@ -319,24 +349,39 @@ class ShareService implements IShareHistoryService {
           const post = await blogApi.getPost(doc.docId)
           const docTitle = post?.title || doc.docId
 
-          await this.handleOne(doc.docId, doc.settings, doc.options)
+          const result = await this.handleOne(doc.docId, doc.settings, doc.options)
 
           completedCount++
-          ProgressManager.updateProgress(progressId, {
-            completed: completedCount,
-            currentDocId: doc.docId,
-            currentDocTitle: docTitle,
-          })
 
-          return { success: true, docId: doc.docId }
+          if (result?.skipped) {
+            // 文档被跳过（未变更）
+            skippedCount++
+            ProgressManager.addSkipped(progressId, doc.docId, docTitle)
+          } else {
+            // 文档已分享
+            sharedCount++
+            ProgressManager.updateProgress(progressId, {
+              completed: completedCount,
+              currentDocId: doc.docId,
+              currentDocTitle: docTitle,
+            })
+          }
+
+          return { success: true, docId: doc.docId, skipped: result?.skipped }
         } catch (error) {
           this.logger.error(`分享文档 ${doc.docId} 失败:`, error)
+          completedCount++
           ProgressManager.addError(progressId, doc.docId, error)
           return { success: false, docId: doc.docId, error }
         }
       },
       maxConcurrency
     )
+
+    // 批量完成后汇总提示
+    if (skippedCount > 0) {
+      showMessage(`分享完成：${sharedCount} 个文档，跳过 ${skippedCount} 个未变更文档`, 5000, "info")
+    }
 
     ProgressManager.markDocumentsCompleted(progressId)
   }

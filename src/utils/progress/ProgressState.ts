@@ -17,6 +17,8 @@ export interface ProgressState {
   errors: Array<{ docId: string; error: any }>
   startTime: number
   endTime: number | null
+  // 跳过的文档数（增量检测未变更）
+  skippedCount: number
   // Resource processing fields
   totalResources: number // 总资源数
   completedResources: number // 已完成资源数

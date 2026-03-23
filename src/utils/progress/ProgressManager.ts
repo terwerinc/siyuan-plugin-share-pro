@@ -27,6 +27,7 @@ export class ProgressManager {
       errors: [],
       startTime: Date.now(),
       endTime: null,
+      skippedCount: 0, // 跳过的文档数
       // Resource processing fields
       totalResources: 0,
       completedResources: 0,
@@ -143,6 +144,28 @@ export class ProgressManager {
         ...currentState,
         errors: [...currentState.errors, { docId, error }],
         status: "error",
+      }
+    })
+  }
+
+  /**
+   * Add a skipped document to the batch operation
+   * 用于增量检测时跳过未变更的文档
+   */
+  static addSkipped(id: string, docId: string, docTitle: string) {
+    progressStore.update((currentState) => {
+      if (!currentState || currentState.id !== id) return currentState
+
+      const newSkippedCount = (currentState.skippedCount || 0) + 1
+      const newCompleted = currentState.completed + 1
+
+      return {
+        ...currentState,
+        completed: newCompleted,
+        skippedCount: newSkippedCount,
+        currentDocId: docId,
+        currentDocTitle: docTitle + " (已跳过)",
+        percentage: Math.round((newCompleted / currentState.total) * 100),
       }
     })
   }

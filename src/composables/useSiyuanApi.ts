@@ -219,7 +219,7 @@ export const getIncrementalDocumentsCount = async (
 // =====================================================================================================================
 
 /**
- * 将时间戳转换为思源数据库使用的日期字符串格式 (YYYYMMDDHHmmss)
+ * 将时间戳转换为思源数据库使用的日期字符串格式 (yyyyMMddhhmmss)
  * @param timestamp 时间戳（毫秒）
  */
 const convertTimestampToSiyuanDate = (timestamp?: number): string => {
@@ -232,6 +232,40 @@ const convertTimestampToSiyuanDate = (timestamp?: number): string => {
     date.getMinutes().toString().padStart(2, "0") +
     date.getSeconds().toString().padStart(2, "0")
   )
+}
+
+/**
+ * 将思源数据库日期字符串格式 (yyyyMMddhhmmss) 转换为时间戳
+ * @param siyuanDate 思源日期字符串，例如 "20230814204310"
+ * @returns 毫秒时间戳，解析失败返回 0
+ */
+export const convertSiyuanDateToTimestamp = (siyuanDate: string | number): number => {
+  if (!siyuanDate) {
+    return 0
+  }
+
+  const dateStr = String(siyuanDate)
+
+  // 思源格式: yyyyMMddhhmmss (14位)
+  if (dateStr.length !== 14) {
+    // 尝试直接解析（可能是其他格式）
+    const parsed = parseInt(dateStr)
+    if (!isNaN(parsed) && parsed > 1000000000000) {
+      // 看起来已经是时间戳
+      return parsed
+    }
+    return 0
+  }
+
+  const year = parseInt(dateStr.substring(0, 4))
+  const month = parseInt(dateStr.substring(4, 6)) - 1 // 月份从0开始
+  const day = parseInt(dateStr.substring(6, 8))
+  const hour = parseInt(dateStr.substring(8, 10))
+  const minute = parseInt(dateStr.substring(10, 12))
+  const second = parseInt(dateStr.substring(12, 14))
+
+  const date = new Date(year, month, day, hour, minute, second)
+  return date.getTime()
 }
 
 /**
