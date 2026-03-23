@@ -62,10 +62,7 @@
     // 只有在成功且无错误的情况下才启用自动关闭
     // 使用文档级别的错误判断
     const shouldAutoClose =
-      currentBatch &&
-      currentBatch.status === "success" &&
-      !hasErrors &&
-      !currentBatch.isResourceProcessing
+      currentBatch && currentBatch.status === "success" && !hasErrors && !currentBatch.isResourceProcessing
 
     if (shouldAutoClose) {
       countdown = 5
