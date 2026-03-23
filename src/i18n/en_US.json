@@ -378,7 +378,18 @@
     "waitingForResourceCompletion": "Waiting for resource processing to complete...",
     "errorsDetected": "Errors detected:",
     "documentErrors": "Document errors",
-    "resourceErrors": "Resource errors"
+    "resourceErrors": "Resource errors",
+    "operationCompleted": "Operation Completed",
+    "operationFailed": "Operation Failed",
+    "operationCanceled": "Operation Canceled"
+  },
+  "lastShareTime": {
+    "label": "Last shared",
+    "justNow": "Just now",
+    "minutesAgo": "[param1]m ago",
+    "hoursAgo": "[param1]h ago",
+    "yesterday": "Yesterday",
+    "daysAgo": "[param1]d ago"
   },
   "seo": {
     "saveSuccess": "SEO settings saved and synced successfully",

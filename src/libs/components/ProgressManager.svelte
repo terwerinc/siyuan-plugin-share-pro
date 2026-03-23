@@ -44,11 +44,12 @@
     clearAutoCloseTimer()
 
     // 只有在成功且无错误的情况下才启用自动关闭
-    const shouldAutoClose = currentBatch &&
-      currentBatch.status === 'success' &&
+    const shouldAutoClose =
+      currentBatch &&
+      currentBatch.status === "success" &&
       currentBatch.errors.length === 0 &&
       currentBatch.resourceErrors.length === 0 &&
-      !currentBatch.isResourceProcessing;
+      !currentBatch.isResourceProcessing
 
     if (shouldAutoClose) {
       countdown = 5
@@ -108,7 +109,17 @@
       <!-- Header -->
       <div class="progress-header">
         <div class="progress-title">
-          {currentBatch.operationName}
+          {#if currentBatch.status === "processing"}
+            {currentBatch.operationName}
+          {:else if currentBatch.status === "success"}
+            {pluginInstance.i18n["progressManager"]["operationCompleted"] || "操作完成"}
+          {:else if currentBatch.status === "error"}
+            {pluginInstance.i18n["progressManager"]["operationFailed"] || "操作失败"}
+          {:else if currentBatch.status === "canceled"}
+            {pluginInstance.i18n["progressManager"]["operationCanceled"] || "操作已取消"}
+          {:else}
+            {currentBatch.operationName}
+          {/if}
         </div>
         <button class="close-button" on:click={handleClose} title={pluginInstance.i18n["cancel"] || "Close"}>
           ×
@@ -198,7 +209,9 @@
           </div>
           {#if currentBatch.errors.length > 0}
             <div class="document-errors">
-              <span class="error-type">📄 {pluginInstance.i18n["progressManager"]["documentErrors"] || "Document errors"}:</span>
+              <span class="error-type"
+                >📄 {pluginInstance.i18n["progressManager"]["documentErrors"] || "Document errors"}:</span
+              >
               <ul class="error-list">
                 {#each currentBatch.errors as error, index}
                   <li class="error-item" title={error.error}>
@@ -210,7 +223,9 @@
           {/if}
           {#if currentBatch.resourceErrors.length > 0}
             <div class="resource-errors">
-              <span class="error-type">🖼️ {pluginInstance.i18n["progressManager"]["resourceErrors"] || "Resource errors"}:</span>
+              <span class="error-type"
+                >🖼️ {pluginInstance.i18n["progressManager"]["resourceErrors"] || "Resource errors"}:</span
+              >
               <ul class="error-list">
                 {#each currentBatch.resourceErrors as error, index}
                   <li class="error-item" title={error.error}>

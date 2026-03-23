@@ -382,7 +382,18 @@
     "waitingForResourceCompletion": "等待资源处理完成...",
     "errorsDetected": "检测到错误：",
     "documentErrors": "文档错误",
-    "resourceErrors": "资源错误"
+    "resourceErrors": "资源错误",
+    "operationCompleted": "操作完成",
+    "operationFailed": "操作失败",
+    "operationCanceled": "操作已取消"
+  },
+  "lastShareTime": {
+    "label": "上次分享",
+    "justNow": "刚刚",
+    "minutesAgo": "[param1]分钟前",
+    "hoursAgo": "[param1]小时前",
+    "yesterday": "昨天",
+    "daysAgo": "[param1]天前"
   },
   "seo": {
     "saveSuccess": "SEO设置保存并同步成功",

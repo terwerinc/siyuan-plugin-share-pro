@@ -78,6 +78,7 @@
     post: Post as any,
     shared: false,
     shareData: {} as any,
+    lastShareTime: null as number | null, // 上次分享时间戳
     lock: false,
     shareLink: "",
     kernelApi: SiyuanKernelApi,
@@ -437,6 +438,68 @@
     window.open(formData.shareLink)
   }
 
+  /**
+   * 格式化上次分享时间为相对时间
+   * 大厂设计规范：
+   * - 1小时内：显示相对时间（刚刚、5分钟前）
+   * - 24小时内：显示相对时间（3小时前）
+   * - 昨天：显示"昨天 HH:mm"（如：昨天 14:32）
+   * - 2-30天：显示相对时间（2天前）
+   * - 超过30天：显示具体日期（2024-03-20）
+   */
+  const formatLastShareTime = (timestamp: number | null): string => {
+    if (!timestamp) return ""
+
+    const now = Date.now()
+    const diff = now - timestamp
+    const minutes = Math.floor(diff / (1000 * 60))
+    const hours = Math.floor(diff / (1000 * 60 * 60))
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+
+    const date = new Date(timestamp)
+    const hoursStr = date.getHours().toString().padStart(2, "0")
+    const minutesStr = date.getMinutes().toString().padStart(2, "0")
+
+    // 小于1小时显示分钟
+    if (minutes < 60) {
+      if (minutes < 1) return pluginInstance.i18n["lastShareTime"]["justNow"] || "刚刚"
+      return (pluginInstance.i18n["lastShareTime"]["minutesAgo"] || "[param1]分钟前").replace(
+        "[param1]",
+        minutes.toString()
+      )
+    }
+
+    // 小于24小时显示小时
+    if (hours < 24) {
+      return (pluginInstance.i18n["lastShareTime"]["hoursAgo"] || "[param1]小时前").replace(
+        "[param1]",
+        hours.toString()
+      )
+    }
+
+    // 昨天：显示"昨天 HH:mm"
+    if (days === 1) {
+      const yesterdayLabel = pluginInstance.i18n["lastShareTime"]["yesterday"] || "昨天"
+      return `${yesterdayLabel} ${hoursStr}:${minutesStr}`
+    }
+
+    // 2-7天显示天数
+    if (days < 7) {
+      return (pluginInstance.i18n["lastShareTime"]["daysAgo"] || "[param1]天前").replace("[param1]", days.toString())
+    }
+
+    // 7-30天显示"X天前"或具体日期（根据配置）
+    if (days < 30) {
+      return (pluginInstance.i18n["lastShareTime"]["daysAgo"] || "[param1]天前").replace("[param1]", days.toString())
+    }
+
+    // 超过30天显示具体日期
+    const year = date.getFullYear()
+    const month = (date.getMonth() + 1).toString().padStart(2, "0")
+    const day = date.getDate().toString().padStart(2, "0")
+    return `${year}-${month}-${day}`
+  }
+
   // ========================================
   // 单文档模式专属辅助方法
   // ========================================
@@ -514,6 +577,9 @@
     const docInfo = await shareService.getSharedDocInfo(docId, cfg?.serviceApiConfig?.token)
     formData.shared = docInfo.code === 0
     formData.shareData = docInfo?.data ? JSON.parse(docInfo.data) : null
+    // 提取上次分享时间（从服务端返回的 createdAt 字段解析）
+    const createdAtStr = formData.shareData?.createdAt
+    formData.lastShareTime = createdAtStr ? new Date(createdAtStr).getTime() : null
 
     // 生成分享链接
     const customDomain = cfg?.appConfig?.domain ?? "https://siyuan.wiki"
@@ -618,7 +684,16 @@
       <div class="share-title-row">
         {#if isSingleDocMode}
           <!-- 单文档模式：显示文档标题 -->
-          <div class="share-title">{formData.post.title}</div>
+          <div class="share-title-wrapper">
+            <div class="share-title">{formData.post.title}</div>
+            {#if formData.shared && formData.lastShareTime}
+              <div class="last-share-time" title={new Date(formData.lastShareTime).toLocaleString()}>
+                {pluginInstance.i18n["lastShareTime"]["label"] || "上次分享"}：{formatLastShareTime(
+                  formData.lastShareTime
+                )}
+              </div>
+            {/if}
+          </div>
         {:else}
           <!-- 非单文档模式：显示通用标题 -->
           <div class="share-title">{pluginInstance.i18n["sharePro"]}</div>
@@ -951,8 +1026,27 @@
       justify-content space-between
       gap 12px
 
+    .share-title-wrapper
+      display flex
+      flex-direction column
+      flex-grow 1
+      gap 4px
+
     .share-title
       flex-grow 1
+
+    .last-share-time
+      font-size 12px
+      color var(--b3-theme-on-surface-light)
+      opacity 0.75
+      font-weight 400
+      line-height 1.4
+      letter-spacing 0.2px
+      transition opacity 0.2s ease, color 0.2s ease
+
+      &:hover
+        opacity 1
+        color var(--b3-theme-on-surface)
 
     .global-actions
       display flex
