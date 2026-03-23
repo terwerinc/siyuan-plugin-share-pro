@@ -1,6 +1,9 @@
 import { writable } from "svelte/store"
 import type { ProgressState } from "./ProgressState"
 
+// 重新导出 ProgressState 类型，方便使用者从统一入口导入
+export type { ProgressState } from "./ProgressState"
+
 /**
  * 全局进度状态存储
  */

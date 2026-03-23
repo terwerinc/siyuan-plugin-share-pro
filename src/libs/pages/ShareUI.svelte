@@ -1493,44 +1493,6 @@
       margin-top 12px
       border-top 1px solid var(--b3-theme-surface-light)
 
-    .progress-section
-      margin-top 12px
-      padding 12px
-      background-color var(--b3-theme-surface-light)
-      border-radius 4px
-
-    .progress-bar
-      width 100%
-      height 8px
-      background-color var(--b3-theme-surface)
-      border-radius 4px
-      overflow hidden
-
-    .progress-fill
-      height 100%
-      background-color var(--b3-theme-primary)
-      transition width 0.3s ease
-
-    .progress-text
-      margin-top 4px
-      font-size 12px
-      color var(--b3-theme-on-surface)
-      text-align center
-
-    .cancel-btn
-      margin-top 8px
-      padding 4px 12px
-      font-size 12px
-      background-color var(--b3-theme-error)
-      color white
-      border none
-      border-radius 3px
-      cursor pointer
-      transition all 0.2s ease
-
-      //&:hover
-      //  background-color darken(var(--b3-theme-error), 10%)
-
     /* 暗色模式 */
     html[data-theme-mode="dark"] #share
       .divider
