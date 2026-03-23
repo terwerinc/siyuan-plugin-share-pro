@@ -399,6 +399,7 @@
   "lastShareTime": {
     "label": "Last shared",
     "justNow": "Just now",
+    "secondsAgo": "[param1]s ago",
     "minutesAgo": "[param1]m ago",
     "hoursAgo": "[param1]h ago",
     "today": "Today",

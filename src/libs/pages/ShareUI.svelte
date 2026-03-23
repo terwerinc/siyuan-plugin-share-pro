@@ -373,8 +373,9 @@
   /**
    * 格式化上次分享时间（大厂UI规范）
    *
-   * - 1分钟内：刚刚
-   * - 1-60分钟：X分钟前
+   * - 10秒内：刚刚
+   * - 10-60秒：XX秒前
+   * - 1-60分钟：XX分钟前
    * - 今天：今天 HH:mm（如：今天 14:30）
    * - 昨天：昨天 HH:mm（如：昨天 14:30）
    * - 超过24小时：YYYY/M/D HH:mm（如：2026/3/20 23:22）
@@ -385,17 +386,23 @@
     const now = new Date()
     const date = new Date(timestamp)
     const diff = now.getTime() - timestamp
+    const seconds = Math.floor(diff / 1000)
     const minutes = Math.floor(diff / (1000 * 60))
 
     const hoursStr = date.getHours().toString().padStart(2, "0")
     const minutesStr = date.getMinutes().toString().padStart(2, "0")
 
-    // 小于1分钟：刚刚
-    if (minutes < 1) {
+    // 小于10秒：刚刚
+    if (seconds < 10) {
       return pluginInstance.i18n["lastShareTime"]["justNow"]
     }
 
-    // 小于60分钟：X分钟前
+    // 10-60秒：XX秒前
+    if (seconds < 60) {
+      return pluginInstance.i18n["lastShareTime"]["secondsAgo"].replace("[param1]", seconds.toString())
+    }
+
+    // 小于60分钟：XX分钟前
     if (minutes < 60) {
       return pluginInstance.i18n["lastShareTime"]["minutesAgo"].replace("[param1]", minutes.toString())
     }

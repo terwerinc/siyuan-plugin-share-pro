@@ -403,6 +403,7 @@
   "lastShareTime": {
     "label": "上次分享",
     "justNow": "刚刚",
+    "secondsAgo": "[param1]秒前",
     "minutesAgo": "[param1]分钟前",
     "hoursAgo": "[param1]小时前",
     "today": "今天",
