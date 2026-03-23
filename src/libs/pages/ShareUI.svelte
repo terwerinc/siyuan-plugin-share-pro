@@ -627,24 +627,31 @@
         <!-- 全局功能按钮：不需要docId，始终显示 -->
         <div class="global-actions">
           {#if formData.userPreferences.incrementalShareConfig.enabled === true}
-            <span
+            <button
+              type="button"
               class="action-btn"
               title={pluginInstance.i18n["incrementalShare"]["title"]}
               on:click={() => pluginInstance.showIncrementalShareUI()}
             >
               {@html icons.iconIncremental}
-            </span>
+            </button>
           {/if}
-          <span class="action-btn" title={pluginInstance.i18n["manageDoc"]} on:click={() => showManageDialog()}>
+          <button
+            type="button"
+            class="action-btn"
+            title={pluginInstance.i18n["manageDoc"]}
+            on:click={() => showManageDialog()}
+          >
             {@html icons.iconManage}
-          </span>
-          <span
+          </button>
+          <button
+            type="button"
             class="action-btn"
             title={pluginInstance.i18n["shareSetting"]}
             on:click={() => pluginInstance.openSetting()}
           >
             {@html icons.iconSettings}
-          </span>
+          </button>
         </div>
       </div>
     </div>
@@ -660,9 +667,9 @@
           <!-- 单文档功能按钮：需要docId，仅单文档模式显示 -->
           <div class="doc-actions">
             {#if formData.shared}
-              <span class="action-btn" title={pluginInstance.i18n["reShare"]} on:click={handleReShare}>
+              <button type="button" class="action-btn" title={pluginInstance.i18n["reShare"]} on:click={handleReShare}>
                 {@html icons.iconReShare}
-              </span>
+              </button>
             {/if}
             <!-- 核心操作按钮 - 付费软件专业设计 -->
             <button
@@ -1154,10 +1161,16 @@
       color #333
       padding 4px
       border-radius 4px
+      background-color transparent
+      border none
+      outline none
 
       &:hover
         background-color rgba(0, 115, 230, 0.1)
         color #0073e6
+
+      &:focus
+        outline none
 
       svg
         width 16px
