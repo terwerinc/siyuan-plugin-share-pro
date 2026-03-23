@@ -86,7 +86,7 @@ class ShareService implements IShareHistoryService {
         await this.handleOne(docId, settings, options)
       } else {
         const documentsToShare = await this.flattenDocumentsForSharing(docId, settings, options, config)
-        await this.batchProcessDocuments(documentsToShare)
+        await this.batchProcessDocuments(documentsToShare, 10, options)
       }
     } catch (error) {
       this.logger.error("创建分享失败", error)
@@ -272,7 +272,11 @@ class ShareService implements IShareHistoryService {
         // 文档未变更，跳过分享
         const docTitle = post?.title || docId
         this.logger.info(`文档未变更，跳过分享: ${docTitle}`)
-        showMessage(`文档未变更，已跳过: ${docTitle}`, 3000, "info")
+        // 批量操作时不显示单文档 toast，避免 toast 爆炸
+        if (!options?.skipMsg) {
+          const skipMsg = this.pluginInstance.i18n["shareService"]["msgDocSkipped"].replace("[param1]", docTitle)
+          showMessage(skipMsg, 3000, "info")
+        }
         return { skipped: true, reason: "noChange" }
       }
       // ===== 增量检测结束 =====
@@ -306,7 +310,10 @@ class ShareService implements IShareHistoryService {
 
       await this.handleShareSuccess(docId, post, resp, options)
       void this.processAllMediaResources(docId, resp.data.media, resp.data.dataViewMedia)
-      showMessage(this.pluginInstance.i18n["shareService"]["msgShareSuccess"], 3000, "info")
+      // 批量操作时不显示单文档 toast，避免 toast 爆炸
+      if (!options?.skipMsg) {
+        showMessage(this.pluginInstance.i18n["shareService"]["msgShareSuccess"], 3000, "info")
+      }
       return { skipped: false }
     } catch (e) {
       await this.handleShareException(docId, e)
@@ -319,7 +326,8 @@ class ShareService implements IShareHistoryService {
    */
   private async batchProcessDocuments(
     documentsToShare: Array<{ docId: string; settings: Partial<SingleDocSetting>; options: Partial<ShareOptions> }>,
-    maxConcurrency = 10
+    maxConcurrency = 10,
+    parentOptions?: Partial<ShareOptions>
   ): Promise<void> {
     const total = documentsToShare.length
 
@@ -349,7 +357,9 @@ class ShareService implements IShareHistoryService {
           const post = await blogApi.getPost(doc.docId)
           const docTitle = post?.title || doc.docId
 
-          const result = await this.handleOne(doc.docId, doc.settings, doc.options)
+          // 批量操作时跳过单文档 toast，避免 toast 爆炸
+          const batchOptions = { ...doc.options, skipMsg: true }
+          const result = await this.handleOne(doc.docId, doc.settings, batchOptions)
 
           completedCount++
 
@@ -378,9 +388,12 @@ class ShareService implements IShareHistoryService {
       maxConcurrency
     )
 
-    // 批量完成后汇总提示
-    if (skippedCount > 0) {
-      showMessage(`分享完成：${sharedCount} 个文档，跳过 ${skippedCount} 个未变更文档`, 5000, "info")
+    // 批量完成后汇总提示（除非上层指定跳过）
+    if (!parentOptions?.skipBatchMsg) {
+      const batchCompleteMsg = this.pluginInstance.i18n["shareService"]["msgBatchComplete"]
+        .replace("[param1]", sharedCount.toString())
+        .replace("[param2]", skippedCount.toString())
+      showMessage(batchCompleteMsg, 5000, "info")
     }
 
     ProgressManager.markDocumentsCompleted(progressId)

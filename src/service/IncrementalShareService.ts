@@ -595,7 +595,8 @@ export class IncrementalShareService {
 
     for (let attempt = 0; attempt <= retryConfig.maxRetries; attempt++) {
       try {
-        await this.shareService.createShare(docId, undefined, undefined)
+        // 批量操作时跳过单文档 toast 和批量汇总 toast，由上层统一显示汇总
+        await this.shareService.createShare(docId, undefined, { skipMsg: true, skipBatchMsg: true })
 
         // 获取分享信息以获得分享链接
         try {

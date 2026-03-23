@@ -164,7 +164,7 @@ export class ProgressManager {
         completed: newCompleted,
         skippedCount: newSkippedCount,
         currentDocId: docId,
-        currentDocTitle: docTitle + " (已跳过)",
+        currentDocTitle: docTitle,
         percentage: Math.round((newCompleted / currentState.total) * 100),
       }
     })

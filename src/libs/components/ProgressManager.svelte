@@ -212,6 +212,9 @@
         <div class="current-document">
           <span class="doc-label">{pluginInstance.i18n["progressManager"]["currentDocument"]}</span>
           <span class="doc-title">{currentBatch.currentDocTitle}</span>
+          {#if currentBatch.skippedCount > 0 && currentBatch.currentDocId}
+            <span class="doc-skipped">({pluginInstance.i18n["progressManager"]["skipped"]})</span>
+          {/if}
         </div>
       {/if}
 
