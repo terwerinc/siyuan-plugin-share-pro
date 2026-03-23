@@ -184,15 +184,12 @@ export class LocalBlacklistService implements ShareBlacklist {
   /**
    * 移除黑名单项
    */
-  public async removeItem(id: string): Promise<void> {
-    this.logger.debug(`✅ [Local] removeItem: ${id}`)
+  public async removeItem(id: string, type: "notebook" | "document"): Promise<void> {
+    this.logger.debug(`✅ [Local] removeItem: ${id}, type=${type}`)
     try {
-      // 需要先确定是笔记本还是文档级别的黑名单项
-      // 这里采用一种简单的方式：先尝试从笔记本黑名单中移除，如果失败再尝试从文档黑名单中移除
-      try {
+      if (type === "notebook") {
         await this.removeNotebookFromBlacklist(id)
-      } catch (notebookError) {
-        // 如果从笔记本黑名单中移除失败，尝试从文档黑名单中移除
+      } else {
         await this.removeDocumentFromBlacklist(id)
       }
     } catch (error) {

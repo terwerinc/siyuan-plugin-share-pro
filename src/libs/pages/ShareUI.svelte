@@ -25,8 +25,12 @@
   import { ShareService } from "../../service/ShareService"
   import { AttrUtils } from "../../utils/AttrUtils"
   import { PasswordUtils } from "../../utils/PasswordUtils"
+  import { progressStore } from "../../utils/progress/progressStore"
   import { SettingKeys } from "../../utils/SettingKeys"
   import { icons } from "../../utils/svg"
+  import Confirm from "../components/Confirm.svelte"
+  import ProgressManager from "../components/ProgressManager.svelte"
+  import SubdocumentTreePreview from "../components/subdocument/SubdocumentTreePreview.svelte"
 
   export let pluginInstance: ShareProPlugin
   export let shareService: ShareService
@@ -75,6 +79,7 @@
     post: Post as any,
     shared: false,
     shareData: {} as any,
+    lastShareTime: null as number | null, // 上次分享时间戳
     lock: false,
     shareLink: "",
     kernelApi: SiyuanKernelApi,
@@ -83,6 +88,7 @@
     // 存储位置：本地配置/服务端配置（appConfig）
     userPreferences: {
       showPassword: false, // 密码显示偏好
+      shareSubdocuments: false, // 全局子文档分享设置
       incrementalShareConfig: {
         // 增量分享配置
         enabled: true, // 默认启用
@@ -98,6 +104,9 @@
       outlineEnable: false, // 是否显示大纲
       outlineLevel: 6, // 大纲层级
       expiresTime: "", // 分享有效期
+      shareSubdocuments: false, // 是否分享子文档
+      shareReferences: false, // 是否分享引用文档
+      selectedSubdocIds: [], // 用户手动选择的子文档ID列表
     } as SingleDocSetting,
 
     // 层级3: shareOptions - 分享选项
@@ -107,6 +116,27 @@
       passwordEnabled: false, // 密码保护开关
       password: "", // 分享密码（敏感信息）
     } as ShareOptions,
+
+    // 操作状态机
+    operationState: {
+      status: "idle", // 'idle' | 'sharing' | 'canceling' | 'shared' | 'error'
+      message: "",
+      error: null,
+    },
+
+    // 更新分享下拉菜单状态
+    showUpdateMenu: false,
+  }
+
+  // ========================================
+  // 下拉菜单控制
+  // ========================================
+  const toggleUpdateMenu = () => {
+    formData.showUpdateMenu = !formData.showUpdateMenu
+  }
+
+  const closeUpdateMenu = () => {
+    formData.showUpdateMenu = false
   }
 
   // ========================================
@@ -116,7 +146,7 @@
     const keyInfo = vipInfo.data
     void widgetInvoke.showShareManageDialog(keyInfo)
   }
-  
+
   // const showManageTab = () => {
   //   const keyInfo = vipInfo.data
   //   void widgetInvoke.showShareManageTab(keyInfo)
@@ -131,9 +161,16 @@
       return
     }
 
-    if (formData.shared) {
-      // 分享
+    // 防止重复点击
+    if (formData.operationState.status === "sharing" || formData.operationState.status === "canceling") {
+      return
+    }
+
+    if (!formData.shared) {
+      // 开始分享
       try {
+        formData.operationState.status = "sharing"
+
         const shareOptions: Partial<ShareOptions> = {}
         if (formData.shareOptions.passwordEnabled) {
           shareOptions.passwordEnabled = formData.shareOptions.passwordEnabled
@@ -144,13 +181,19 @@
         } else {
           formData.singleDocSetting.expiresTime = ""
         }
+
         await shareService.createShare(docId, formData.singleDocSetting, shareOptions)
         // 初始化
         await initSingleDocMode()
+        formData.operationState.status = "shared"
+        formData.operationState.message = pluginInstance.i18n["msgShareSuccess"]
       } catch (e) {
         formData.shared = false
+        formData.operationState.status = "error"
+        formData.operationState.error = e
+        formData.operationState.message = pluginInstance.i18n["msgShareError"]
         console.error(e)
-        showMessage(pluginInstance.i18n["ui"]["shareSuccessError"]+e.toString(), 3000, "info")
+        showMessage(pluginInstance.i18n["ui"]["shareSuccessError"] + e.toString(), 3000, "info")
       }
     } else {
       // 状态检测
@@ -159,46 +202,84 @@
       if (formData?.shareData?.shareStatus && formData.shareData.shareStatus !== "COMPLETED") {
         formData.lock = true
         showMessage(pluginInstance.i18n["ui"]["msgIngError"], 3000, "info")
+        formData.operationState.status = "idle"
         return
       }
+
       // 取消分享
-      const ret = await shareService.cancelShare(docId)
-      if (ret.code === 0) {
-        // 初始化
-        await initSingleDocMode()
-        showMessage(pluginInstance.i18n["topbar"]["cancelSuccess"], 3000, "info")
-      } else {
-        showMessage(pluginInstance.i18n["topbar"]["cancelError"] + ret.msg, 7000, "error")
+      try {
+        formData.operationState.status = "canceling"
+
+        const ret = await shareService.cancelShare(docId)
+        if (ret.code === 0) {
+          // 初始化
+          await initSingleDocMode()
+          formData.operationState.status = "idle"
+          showMessage(pluginInstance.i18n["topbar"]["cancelSuccess"], 3000, "info")
+        } else {
+          formData.operationState.status = "error"
+          formData.operationState.error = ret.msg
+          formData.operationState.message = pluginInstance.i18n["msgCancelError"]
+          showMessage(pluginInstance.i18n["topbar"]["cancelError"] + ret.msg, 7000, "error")
+        }
+      } catch (e) {
+        formData.operationState.status = "error"
+        formData.operationState.error = e
+        formData.operationState.message = pluginInstance.i18n["msgCancelError"]
+        console.error(e)
+        showMessage(pluginInstance.i18n["topbar"]["cancelError"] + e.toString(), 7000, "error")
       }
     }
   }
 
-  const handleReShare = async () => {
+  const handleReShare = async (forceUpdate = false) => {
     if (!isSingleDocMode) {
       logger.warn("handleReShare called in non-single-doc mode, ignored")
       return
     }
 
-    // == 文档属性 ==
-    // 有效期
-    let expiredTime = Number(formData.singleDocSetting.expiresTime)
-    if (isNaN(expiredTime) || expiredTime < 0) {
-      expiredTime = 0
-    }
-    formData.singleDocSetting.expiresTime = expiredTime
-
-    // == 分享选项 ==
-    // 分享密码
-    const shareOptions: Partial<ShareOptions> = {}
-    if (formData.shareOptions.passwordEnabled) {
-      shareOptions.passwordEnabled = formData.shareOptions.passwordEnabled
-      shareOptions.password = formData.shareOptions.password
+    // 防止重复点击
+    if (formData.operationState.status === "sharing" || formData.operationState.status === "canceling") {
+      return
     }
 
-    // 重新分享
-    await shareService.createShare(docId, formData.singleDocSetting, shareOptions)
-    // 初始化
-    await initSingleDocMode()
+    // 关闭下拉菜单
+    closeUpdateMenu()
+
+    try {
+      formData.operationState.status = "sharing"
+
+      // == 文档属性 ==
+      // 有效期
+      let expiredTime = Number(formData.singleDocSetting.expiresTime)
+      if (isNaN(expiredTime) || expiredTime < 0) {
+        expiredTime = 0
+      }
+      formData.singleDocSetting.expiresTime = expiredTime
+
+      // == 分享选项 ==
+      // 分享密码
+      const shareOptions: Partial<ShareOptions> = {}
+      if (formData.shareOptions.passwordEnabled) {
+        shareOptions.passwordEnabled = formData.shareOptions.passwordEnabled
+        shareOptions.password = formData.shareOptions.password
+      }
+      // 强制更新选项
+      if (forceUpdate) {
+        shareOptions.forceUpdate = true
+      }
+
+      // 重新分享
+      await shareService.createShare(docId, formData.singleDocSetting, shareOptions)
+      // 初始化
+      await initSingleDocMode()
+      formData.operationState.status = "shared"
+    } catch (e) {
+      formData.operationState.status = "error"
+      formData.operationState.error = e
+      console.error(e)
+      showMessage(pluginInstance.i18n["ui"]["shareSuccessError"] + e.toString(), 3000, "info")
+    }
   }
 
   const handlePasswordChange = async () => {
@@ -218,6 +299,76 @@
         showMessage(pluginInstance.i18n["ui"]["updateOptionsError"], 3000, "error")
       }
     }
+  }
+
+  // ========================================
+  // 错误状态管理 - 文档级别隔离
+  // 关键设计：错误 banner 只显示发起操作的文档的错误
+  // ========================================
+  let showErrorDetails = false
+
+  // 直接使用 $progressStore，避免 subscribe 回调延迟
+  // $progressStore 是 Svelte 的响应式语法，会自动订阅并立即返回最新值
+  $: hasError = (() => {
+    const state = $progressStore
+    if (!state || state.status !== "error") {
+      return false
+    }
+    // 非单文档模式不显示错误
+    if (!isSingleDocMode || !docId) {
+      return false
+    }
+    // 关键：使用 initiatorDocId 判断当前文档是否是发起操作的文档
+    // initiatorDocId 是用户点击"分享"按钮的文档ID，不会随处理进度变化
+    return state.initiatorDocId === docId
+  })()
+
+  // 获取发起操作的文档的所有错误信息（用于错误详情弹窗）
+  // 当 initiatorDocId 匹配时，显示所有相关错误（包括子文档/引用文档的错误）
+  $: currentDocErrors = $progressStore?.initiatorDocId === docId ? $progressStore.errors : []
+  $: currentDocResourceErrors = $progressStore?.initiatorDocId === docId ? $progressStore.resourceErrors : []
+
+  // 响应式错误消息 - 确保在 progressStore 变化时自动更新
+  $: errorMessage = (() => {
+    const state = $progressStore
+    let message = ""
+
+    const errors = state?.initiatorDocId === docId ? state.errors : []
+    const resourceErrors = state?.initiatorDocId === docId ? state.resourceErrors : []
+
+    if (errors.length > 0) {
+      message += "📄 " + pluginInstance.i18n["progressManager"]["documentErrors"] + ":\n"
+      errors.forEach((error) => {
+        message += `• ${error.docId}: ${String(error.error)}\n`
+      })
+    }
+
+    if (resourceErrors.length > 0) {
+      if (message) message += "\n"
+      message += "🖼️ " + pluginInstance.i18n["progressManager"]["resourceErrors"] + ":\n"
+      resourceErrors.forEach((error) => {
+        message += `• ${error.docId}: ${String(error.error)}\n`
+      })
+    }
+
+    return message || pluginInstance.i18n["shareUI"]["noErrorDetails"]
+  })()
+
+  // 处理错误警告条点击
+  const handleErrorBannerClick = () => {
+    showErrorDetails = true
+  }
+
+  // 关闭错误详情
+  const handleCloseErrorDetails = () => {
+    showErrorDetails = false
+  }
+
+  // 清除错误状态 - 关闭进度弹窗即可，无需额外操作
+  const handleDismissError = (e?: Event) => {
+    if (e) e.stopPropagation()
+    // 关闭错误详情弹窗
+    showErrorDetails = false
   }
 
   const handleExpiresTime = async () => {
@@ -250,29 +401,95 @@
     window.open(formData.shareLink)
   }
 
+  /**
+   * 格式化上次分享时间（大厂UI规范）
+   *
+   * - 10秒内：刚刚
+   * - 10-60秒：XX秒前
+   * - 1-60分钟：XX分钟前
+   * - 今天：今天 HH:mm（如：今天 14:30）
+   * - 昨天：昨天 HH:mm（如：昨天 14:30）
+   * - 超过24小时：YYYY/M/D HH:mm（如：2026/3/20 23:22）
+   */
+  const formatLastShareTime = (timestamp: number | null): string => {
+    if (!timestamp) return ""
+
+    const now = new Date()
+    const date = new Date(timestamp)
+    const diff = now.getTime() - timestamp
+    const seconds = Math.floor(diff / 1000)
+    const minutes = Math.floor(diff / (1000 * 60))
+
+    const hoursStr = date.getHours().toString().padStart(2, "0")
+    const minutesStr = date.getMinutes().toString().padStart(2, "0")
+
+    // 小于10秒：刚刚
+    if (seconds < 10) {
+      return pluginInstance.i18n["lastShareTime"]["justNow"]
+    }
+
+    // 10-60秒：XX秒前
+    if (seconds < 60) {
+      return pluginInstance.i18n["lastShareTime"]["secondsAgo"].replace("[param1]", seconds.toString())
+    }
+
+    // 小于60分钟：XX分钟前
+    if (minutes < 60) {
+      return pluginInstance.i18n["lastShareTime"]["minutesAgo"].replace("[param1]", minutes.toString())
+    }
+
+    // 判断是否今天（同一天）
+    const isToday =
+      now.getDate() === date.getDate() && now.getMonth() === date.getMonth() && now.getFullYear() === date.getFullYear()
+
+    // 判断是否昨天
+    const yesterday = new Date(now)
+    yesterday.setDate(yesterday.getDate() - 1)
+    const isYesterday =
+      yesterday.getDate() === date.getDate() &&
+      yesterday.getMonth() === date.getMonth() &&
+      yesterday.getFullYear() === date.getFullYear()
+
+    // 今天：显示"今天 HH:mm"
+    if (isToday) {
+      const todayLabel = pluginInstance.i18n["lastShareTime"]["today"]
+      return `${todayLabel} ${hoursStr}:${minutesStr}`
+    }
+
+    // 昨天：显示"昨天 HH:mm"
+    if (isYesterday) {
+      const yesterdayLabel = pluginInstance.i18n["lastShareTime"]["yesterday"]
+      return `${yesterdayLabel} ${hoursStr}:${minutesStr}`
+    }
+
+    // 超过24小时：显示 YYYY/M/D HH:mm
+    const year = date.getFullYear()
+    const month = date.getMonth() + 1
+    const day = date.getDate()
+    return `${year}/${month}/${day} ${hoursStr}:${minutesStr}`
+  }
+
   // ========================================
   // 单文档模式专属辅助方法
   // ========================================
 
   const loadSingleDocSetting = async (cfg: ShareProConfig) => {
-    // 文档级别优先级最高
+    // 文档级别优先级最高 - 仅用于UI显示，不影响实际分享逻辑
     const docTreeEnable = await AttrUtils.getBool(pluginInstance, docId, SettingKeys.CUSTOM_DOC_TREE_ENABLE)
     const docTreeLevel = await AttrUtils.getInt(pluginInstance, docId, SettingKeys.CUSTOM_DOC_TREE_LEVEL)
     const outlineEnable = await AttrUtils.getBool(pluginInstance, docId, SettingKeys.CUSTOM_OUTLINE_ENABLE)
     const outlineLevel = await AttrUtils.getInt(pluginInstance, docId, SettingKeys.CUSTOM_OUTLINE_LEVEL)
-    // 适配配置
-    cfg.siyuanConfig.preferenceConfig = {
-      ...cfg.siyuanConfig.preferenceConfig,
-      docTreeEnable: docTreeEnable ?? cfg.siyuanConfig?.preferenceConfig?.docTreeEnable ?? false,
-      docTreeLevel: docTreeLevel ?? cfg.siyuanConfig?.preferenceConfig?.docTreeLevel ?? 3,
-      outlineEnable: outlineEnable ?? cfg.siyuanConfig?.preferenceConfig?.outlineEnable ?? false,
-      outlineLevel: outlineLevel ?? cfg.siyuanConfig?.preferenceConfig?.outlineLevel ?? 6,
-    }
-    // 文档树、文档大纲
-    formData.singleDocSetting.docTreeEnable = cfg.siyuanConfig.preferenceConfig.docTreeEnable
-    formData.singleDocSetting.docTreeLevel = cfg.siyuanConfig.preferenceConfig.docTreeLevel
-    formData.singleDocSetting.outlineEnable = cfg.siyuanConfig.preferenceConfig.outlineEnable
-    formData.singleDocSetting.outlineLevel = cfg.siyuanConfig.preferenceConfig.outlineLevel
+    const shareSubdocuments = await AttrUtils.getBool(pluginInstance, docId, SettingKeys.CUSTOM_SHARE_SUBDOCUMENTS)
+
+    // UI显示使用文档级设置，如果未设置则使用全局默认值
+    formData.singleDocSetting.docTreeEnable = docTreeEnable ?? cfg.appConfig?.docTreeEnabled ?? false
+    formData.singleDocSetting.docTreeLevel = docTreeLevel ?? cfg.appConfig?.docTreeLevel ?? 3
+    formData.singleDocSetting.outlineEnable = outlineEnable ?? cfg.appConfig?.outlineEnabled ?? false
+    formData.singleDocSetting.outlineLevel = outlineLevel ?? cfg.appConfig?.outlineLevel ?? 6
+    formData.singleDocSetting.shareSubdocuments = shareSubdocuments ?? cfg.appConfig?.shareSubdocuments ?? false
+    // 引用文档分享
+    const shareReferences = await AttrUtils.getBool(pluginInstance, docId, SettingKeys.CUSTOM_SHARE_REFERENCES)
+    formData.singleDocSetting.shareReferences = shareReferences ?? cfg.appConfig?.shareReferences ?? false
     // 分享有效期 - 界面上留空，只有实际有值时才显示
     const expiresTime = await AttrUtils.getInt(pluginInstance, docId, SettingKeys.CUSTOM_EXPIRES)
     formData.singleDocSetting.expiresTime = expiresTime > 0 ? expiresTime.toString() : ""
@@ -284,6 +501,7 @@
     formData.shareOptions.passwordEnabled =
       formData.shareData?.passwordEnabled ?? cfg.appConfig?.passwordEnabled ?? false
     formData.userPreferences.showPassword = cfg.appConfig?.showPassword ?? false
+    formData.userPreferences.shareSubdocuments = cfg.appConfig?.shareSubdocuments ?? false
     if (formData.shareOptions.passwordEnabled) {
       const rndPassword = PasswordUtils.getNewRndPassword()
       formData.shareOptions.password = formData.shareData?.password ?? rndPassword
@@ -295,6 +513,7 @@
       `Loaded password option => passwordEnabled=${formData.shareOptions.passwordEnabled}, showPassword=${formData.userPreferences.showPassword}`
     )
     logger.debug(`Loaded share options => ${JSON.stringify(formData.shareOptions)}`)
+    logger.debug(`Loaded user preferences => shareSubdocuments=${formData.userPreferences.shareSubdocuments}`)
   }
 
   // ========================================
@@ -311,6 +530,8 @@
     // 加载配置
     const cfg = await pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
 
+    // 加载全局配置
+    formData.userPreferences.shareSubdocuments = cfg?.appConfig?.shareSubdocuments ?? false
     // 加载增量分享配置
     formData.userPreferences.incrementalShareConfig.enabled = cfg?.appConfig?.incrementalShareConfig?.enabled ?? true
 
@@ -325,6 +546,10 @@
     const docInfo = await shareService.getSharedDocInfo(docId, cfg?.serviceApiConfig?.token)
     formData.shared = docInfo.code === 0
     formData.shareData = docInfo?.data ? JSON.parse(docInfo.data) : null
+
+    // 提取上次分享时间（从本地历史记录获取，使用 shareTime 而非 docModifiedTime）
+    const localHistory = await shareService.getLocalShareHistory(docId)
+    formData.lastShareTime = localHistory?.shareTime || null
 
     // 生成分享链接
     const customDomain = cfg?.appConfig?.domain ?? "https://siyuan.wiki"
@@ -348,8 +573,10 @@
 
     logger.info("[Non-Single-Doc] Initializing non-single-doc mode")
 
-    // 加载增量分享配置
+    // 加载全局配置
     const cfg = await pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
+    formData.userPreferences.shareSubdocuments = cfg?.appConfig?.shareSubdocuments ?? false
+    // 加载增量分享配置
     formData.userPreferences.incrementalShareConfig.enabled = cfg?.appConfig?.incrementalShareConfig?.enabled ?? true
 
     // 非单文档模式不需要加载文档数据，UI会自动隐藏需要docId的功能
@@ -373,10 +600,66 @@
 </script>
 
 <div id="share">
+  <ProgressManager {pluginInstance} {docId} />
+
+  <!-- 错误状态警告条 - 直接使用 progressStore，天然实现文档隔离 -->
+  {#if hasError}
+    <div
+      class="error-banner"
+      on:click={handleErrorBannerClick}
+      on:keydown={(e) => e.key === "Enter" && handleErrorBannerClick()}
+      role="button"
+      tabindex="0"
+    >
+      <span class="error-banner-icon">⚠️</span>
+      <span class="error-banner-text">
+        {pluginInstance.i18n["shareUI"]["errorBannerText"]}
+      </span>
+      <span class="error-banner-action">{pluginInstance.i18n["shareUI"]["viewDetails"]}</span>
+      <button
+        class="error-banner-close"
+        on:click|stopPropagation={handleDismissError}
+        title={pluginInstance.i18n["shareUI"]["dismissError"]}
+      >
+        ×
+      </button>
+    </div>
+  {/if}
+
+  <!-- 错误详情弹窗 - 使用 Confirm 组件实现 -->
+  <Confirm
+    show={showErrorDetails}
+    title={pluginInstance.i18n["shareUI"]["errorDetailsTitle"]}
+    message={errorMessage}
+    confirmText={pluginInstance.i18n["shareUI"]["clearError"]}
+    cancelText={pluginInstance.i18n["cancel"]}
+    onConfirm={() => {
+      handleCloseErrorDetails()
+      handleDismissError()
+    }}
+    onCancel={handleCloseErrorDetails}
+  />
+
+  <!-- 操作遮罩层 -->
+  {#if formData.operationState.status === "sharing" || formData.operationState.status === "canceling"}
+    <div class="operation-overlay">
+      <div class="overlay-content">
+        <div class="loading-spinner-large" />
+        <div class="overlay-message">
+          {#if formData.operationState.status === "sharing"}
+            {pluginInstance.i18n["ui"]["sharingIng"]}
+          {:else if formData.operationState.status === "canceling"}
+            {pluginInstance.i18n["ui"]["cancelingIng"]}
+          {/if}
+        </div>
+      </div>
+    </div>
+  {/if}
   {#if isSingleDocMode && typeof formData.post.title === "undefined"}
     <!-- 单文档模式但加载中 -->
-    <div class="loading-spinner">
-      <div class="spinner" />
+    <div class="professional-loading">
+      <div class="professional-spinner" />
+      <span class="professional-loading-text">加载中...</span>
     </div>
   {:else}
     <!-- 基本布局：始终显示 -->
@@ -384,7 +667,14 @@
       <div class="share-title-row">
         {#if isSingleDocMode}
           <!-- 单文档模式：显示文档标题 -->
-          <div class="share-title">{formData.post.title}</div>
+          <div class="share-title-wrapper">
+            <div class="share-title">{formData.post.title}</div>
+            {#if formData.shared && formData.lastShareTime}
+              <div class="last-share-time" title={new Date(formData.lastShareTime).toLocaleString()}>
+                {pluginInstance.i18n["lastShareTime"]["label"]}：{formatLastShareTime(formData.lastShareTime)}
+              </div>
+            {/if}
+          </div>
         {:else}
           <!-- 非单文档模式：显示通用标题 -->
           <div class="share-title">{pluginInstance.i18n["sharePro"]}</div>
@@ -393,24 +683,31 @@
         <!-- 全局功能按钮：不需要docId，始终显示 -->
         <div class="global-actions">
           {#if formData.userPreferences.incrementalShareConfig.enabled === true}
-            <span
+            <button
+              type="button"
               class="action-btn"
               title={pluginInstance.i18n["incrementalShare"]["title"]}
               on:click={() => pluginInstance.showIncrementalShareUI()}
             >
               {@html icons.iconIncremental}
-            </span>
+            </button>
           {/if}
-          <span class="action-btn" title={pluginInstance.i18n["manageDoc"]} on:click={() => showManageDialog()}>
+          <button
+            type="button"
+            class="action-btn"
+            title={pluginInstance.i18n["manageDoc"]}
+            on:click={() => showManageDialog()}
+          >
             {@html icons.iconManage}
-          </span>
-          <span
+          </button>
+          <button
+            type="button"
             class="action-btn"
             title={pluginInstance.i18n["shareSetting"]}
             on:click={() => pluginInstance.openSetting()}
           >
             {@html icons.iconSettings}
-          </span>
+          </button>
         </div>
       </div>
     </div>
@@ -426,17 +723,62 @@
           <!-- 单文档功能按钮：需要docId，仅单文档模式显示 -->
           <div class="doc-actions">
             {#if formData.shared}
-              <span class="action-btn" title={pluginInstance.i18n["reShare"]} on:click={handleReShare}>
-                {@html icons.iconReShare}
-              </span>
+              <!-- 更新分享下拉菜单 -->
+              <div class="update-share-dropdown" class:open={formData.showUpdateMenu}>
+                <button
+                  type="button"
+                  class="action-btn update-share-btn"
+                  title={pluginInstance.i18n["ui"]["updateShare"]}
+                  on:click={toggleUpdateMenu}
+                >
+                  {@html icons.iconReShare}
+                  <span class="btn-text">{pluginInstance.i18n["ui"]["updateShare"]}</span>
+                  <span class="dropdown-arrow">▼</span>
+                </button>
+                {#if formData.showUpdateMenu}
+                  <!-- svelte-ignore a11y-click-events-have-key-events -->
+                  <!-- svelte-ignore a11y-no-static-element-interactions -->
+                  <div class="dropdown-menu" on:click|stopPropagation>
+                    <div class="dropdown-item-wrapper">
+                      <button type="button" class="dropdown-item" on:click|stopPropagation={() => handleReShare(false)}>
+                        {pluginInstance.i18n["ui"]["quickUpdate"]}
+                      </button>
+                      <div class="item-tip">{pluginInstance.i18n["ui"]["quickUpdateTip"]}</div>
+                    </div>
+                    <div class="dropdown-divider" />
+                    <div class="dropdown-item-wrapper">
+                      <button
+                        type="button"
+                        class="dropdown-item item-danger"
+                        on:click|stopPropagation={() => handleReShare(true)}
+                      >
+                        {pluginInstance.i18n["ui"]["fullUpdate"]}
+                      </button>
+                      <div class="item-tip">{pluginInstance.i18n["ui"]["fullUpdateTip"]}</div>
+                    </div>
+                  </div>
+                {/if}
+              </div>
             {/if}
-            <input
+            <!-- 核心操作按钮 - 付费软件专业设计 -->
+            <button
+              class="primary-action-btn {formData.shared ? 'cancel-share' : ''}"
+              on:click={handleShare}
+              disabled={formData.operationState.status === "sharing" || formData.operationState.status === "canceling"}
               title={formData.shared ? pluginInstance.i18n["cancelShare"] : pluginInstance.i18n["startShare"]}
-              class="b3-switch fn__flex-center share-btn"
-              type="checkbox"
-              bind:checked={formData.shared}
-              on:change={handleShare}
-            />
+            >
+              {#if formData.operationState.status === "sharing"}
+                <span class="loading-spinner" />
+                {pluginInstance.i18n["startShare"]}
+              {:else if formData.operationState.status === "canceling"}
+                <span class="loading-spinner" />
+                {pluginInstance.i18n["cancelShare"]}
+              {:else if formData.shared}
+                {pluginInstance.i18n["cancelShare"]}
+              {:else}
+                {pluginInstance.i18n["startShare"]}
+              {/if}
+            </button>
           </div>
         {/if}
       </div>
@@ -444,22 +786,129 @@
 
     {#if isSingleDocMode && formData.shared && !formData.lock}
       <!-- 单文档模式且已分享：显示详细选项 -->
-      <div class="share-content">
-        <div class="setting-row">
-          <span class="setting-label">{pluginInstance.i18n["ui"]["copyTitle"]}</span>
-          <div class="input-group">
+      <div class="setting-row">
+        <span class="setting-label">{pluginInstance.i18n["ui"]["copyTitle"]}</span>
+        <div class="input-group">
+          <input
+            type="text"
+            bind:value={formData.shareLink}
+            readonly
+            class="share-link-input"
+            on:click={viewDoc}
+            title={pluginInstance.i18n["ui"]["clickView"]}
+          />
+          <button on:click={copyWebLink}>{pluginInstance.i18n["ui"]["copyWebLink"]}</button>
+        </div>
+      </div>
+
+      <div class="divider" />
+    {/if}
+
+    {#if isSingleDocMode}
+      <!-- 单文档模式：紧凑分享配置 -->
+      <div class="setting-row">
+        <span class="setting-label">分享配置</span>
+        <div class="input-group compact-share-config">
+          <!-- 子文档分享 -->
+          <label class="compact-switch">
             <input
-              type="text"
-              bind:value={formData.shareLink}
-              readonly
-              class="share-link-input"
-              on:click={viewDoc}
-              title={pluginInstance.i18n["ui"]["clickView"]}
+              type="checkbox"
+              bind:checked={formData.singleDocSetting.shareSubdocuments}
+              title={formData.singleDocSetting.shareSubdocuments
+                ? pluginInstance.i18n["cs"]["shareSubdocumentsDisabled"]
+                : pluginInstance.i18n["cs"]["shareSubdocumentsEnabled"]}
             />
-            <button on:click={copyWebLink}>{pluginInstance.i18n["ui"]["copyWebLink"]}</button>
+            <span class="compact-label">{pluginInstance.i18n["cs"]["shareSubdocuments"]}</span>
+          </label>
+
+          <!-- 引用文档分享 -->
+          <label class="compact-switch">
+            <input
+              type="checkbox"
+              bind:checked={formData.singleDocSetting.shareReferences}
+              title={formData.singleDocSetting.shareReferences
+                ? pluginInstance.i18n["cs"]["shareReferencesDisabled"]
+                : pluginInstance.i18n["cs"]["shareReferencesEnabled"]}
+            />
+            <span class="compact-label">{pluginInstance.i18n["cs"]["shareReferences"]}</span>
+          </label>
+
+          <!-- 文档树 -->
+          <label class="compact-switch">
+            <input
+              type="checkbox"
+              bind:checked={formData.singleDocSetting.docTreeEnable}
+              title={formData.singleDocSetting.docTreeEnable
+                ? pluginInstance.i18n["cs"]["docTreeDisabled"]
+                : pluginInstance.i18n["cs"]["docTreeEnabled"]}
+            />
+            <span class="compact-label">{pluginInstance.i18n["cs"]["docTree"]}</span>
+          </label>
+
+          <!-- 文档大纲 -->
+          <label class="compact-switch">
+            <input
+              type="checkbox"
+              bind:checked={formData.singleDocSetting.outlineEnable}
+              title={formData.singleDocSetting.outlineEnable
+                ? pluginInstance.i18n["cs"]["outlineDisabled"]
+                : pluginInstance.i18n["cs"]["outlineEnabled"]}
+            />
+            <span class="compact-label">{pluginInstance.i18n["cs"]["outline"]}</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- 深度控制（按需显示） -->
+      {#if formData.singleDocSetting.docTreeEnable || formData.singleDocSetting.outlineEnable}
+        <div class="setting-row">
+          <span class="setting-label" />
+          <div class="input-group compact-depth-config">
+            {#if formData.singleDocSetting.docTreeEnable}
+              <div class="depth-item">
+                <span class="depth-label">{pluginInstance.i18n["cs"]["docTreeDepth"]}</span>
+                <select bind:value={formData.singleDocSetting.docTreeLevel} class="b3-select compact-select">
+                  {#each [1, 2, 3, 4, 5, 6] as level}
+                    <option value={level}>{level}</option>
+                  {/each}
+                </select>
+              </div>
+            {/if}
+
+            {#if formData.singleDocSetting.outlineEnable}
+              <div class="depth-item">
+                <span class="depth-label">{pluginInstance.i18n["cs"]["outlineDepth"]}</span>
+                <select bind:value={formData.singleDocSetting.outlineLevel} class="b3-select compact-select">
+                  {#each [{ label: "h1", value: 1 }, { label: "h2", value: 2 }, { label: "h3", value: 3 }, { label: "h4", value: 4 }, { label: "h5", value: 5 }, { label: "h6", value: 6 }] as item}
+                    <option value={item.value}>{item.label}</option>
+                  {/each}
+                </select>
+              </div>
+            {/if}
           </div>
         </div>
+      {/if}
 
+      <!-- 子文档数量限制 -->
+      {#if formData.singleDocSetting.shareSubdocuments}
+        <!-- 子文档树预览 -->
+        <div class="subdocument-preview-section">
+          <SubdocumentTreePreview
+            {pluginInstance}
+            {docId}
+            onSubdocumentSelect={(selectedDocIds) => {
+              // 保存用户选择的子文档ID到文档设置
+              formData.singleDocSetting.selectedSubdocIds = selectedDocIds
+              logger.debug("Selected subdocuments:", selectedDocIds)
+            }}
+          />
+        </div>
+      {/if}
+    {/if}
+
+    {#if isSingleDocMode && formData.shared && !formData.lock}
+      <!-- 单文档模式且已分享：显示详细选项 -->
+      <div class="share-content">
         <div class="divider" />
 
         <div class="setting-row">
@@ -563,9 +1012,10 @@
 <style lang="stylus">
   #share
     /* 基础样式 */
-    font-family "Open Sans", "LXGW WenKai", "JetBrains Mono", "-apple-system", "Microsoft YaHei", "Times New Roman",
-    "方正北魏楷书_GBK", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans",
-    "Droid Sans", "Helvetica Neue", sans-serif
+    // 尽量继承宿主的字体，不要单独搞一套
+    //font-family "Open Sans", "LXGW WenKai", "JetBrains Mono", "-apple-system", "Microsoft YaHei", "Times New Roman",
+    //"方正北魏楷书_GBK", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans",
+    //"Droid Sans", "Helvetica Neue", sans-serif
     max-width 600px
     min-width auto
     margin auto
@@ -588,8 +1038,95 @@
       justify-content space-between
       gap 12px
 
+    .share-title-wrapper
+      display flex
+      flex-direction column
+      flex-grow 1
+      gap 4px
+
     .share-title
       flex-grow 1
+
+    .last-share-time
+      font-size 12px
+      color var(--b3-theme-on-surface-light)
+      opacity 0.75
+      font-weight 400
+      line-height 1.4
+      letter-spacing 0.2px
+      transition opacity 0.2s ease, color 0.2s ease
+
+      &:hover
+        opacity 1
+        color var(--b3-theme-on-surface)
+
+    // 大厂设计：错误警告条样式（参考阿里云/字节设计规范）
+    .error-banner
+      display flex
+      align-items center
+      gap 8px
+      padding 10px 14px
+      margin-bottom 12px
+      background-color #fff2f0
+      border 1px solid #ffccc7
+      border-radius 6px
+      color #f5222d
+      font-size 13px
+      cursor pointer
+      transition all 0.2s ease
+      box-shadow 0 2px 8px rgba(245, 34, 45, 0.08)
+
+      &:hover
+        background-color #fff1f0
+        border-color #ffa39e
+        box-shadow 0 4px 12px rgba(245, 34, 45, 0.12)
+
+    .error-banner-icon
+      font-size 16px
+      flex-shrink 0
+
+    .error-banner-text
+      flex-grow 1
+      font-weight 500
+
+    .error-banner-action
+      color #f5222d
+      font-weight 600
+      text-decoration underline
+      text-underline-offset 2px
+      flex-shrink 0
+
+    .error-banner-close
+      background none
+      border none
+      color #f5222d
+      font-size 18px
+      cursor pointer
+      padding 0 4px
+      line-height 1
+      opacity 0.6
+      transition opacity 0.2s ease
+      flex-shrink 0
+
+      &:hover
+        opacity 1
+
+    // 暗色模式适配
+    html[data-theme-mode="dark"] #share
+      .error-banner
+        background-color rgba(245, 34, 45, 0.15)
+        border-color rgba(245, 34, 45, 0.3)
+        color #ff7875
+
+        &:hover
+          background-color rgba(245, 34, 45, 0.2)
+          border-color rgba(245, 34, 45, 0.4)
+
+      .error-banner-action
+        color #ff7875
+
+      .error-banner-close
+        color #ff7875
 
     .global-actions
       display flex
@@ -602,19 +1139,29 @@
       margin 8px 0
       background-color #e0e0e0
 
-    .loading-spinner
+    .professional-loading
       display flex
+      flex-direction column
       justify-content center
       align-items center
-      height 80px
+      min-height 120px
+      padding 24px
+      gap 16px
 
-    .spinner
-      width 24px
-      height 24px
-      border 3px solid #ccc
-      border-top 3px solid #0073e6
+    .professional-spinner
+      width 32px
+      height 32px
+      border 3px solid transparent
+      border-top 3px solid var(--b3-theme-primary)
       border-radius 50%
-      animation spin 1s linear infinite
+      animation spin 1s ease-in-out infinite
+      box-shadow 0 4px 12px rgba(24, 144, 255, 0.2)
+
+    .professional-loading-text
+      font-size 14px
+      font-weight 500
+      color var(--b3-theme-on-surface)
+      opacity 0.9
 
     @keyframes spin
       from
@@ -634,6 +1181,58 @@
         outline: none
         transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1)  /* Ant Design标准过渡 */
 
+    /* 紧凑分享配置样式 */
+    .compact-share-config
+      display flex
+      gap 12px
+      align-items center
+      flex-wrap wrap
+
+    .compact-switch
+      display flex
+      align-items center
+      gap 4px
+      cursor pointer
+      padding 4px 8px
+      border-radius 4px
+      transition background-color 0.2s
+
+    .compact-switch:hover
+      background-color var(--b3-theme-surface-light)
+
+    .compact-switch input[type="checkbox"]
+      width 16px
+      height 16px
+      margin 0
+      cursor pointer
+
+    .compact-label
+      font-size 12px
+      color var(--b3-theme-on-background)
+      white-space nowrap
+
+    .compact-depth-config
+      display flex
+      gap 12px
+      align-items center
+      flex-wrap wrap
+
+    .depth-item
+      display flex
+      align-items center
+      gap 6px
+
+    .depth-label
+      font-size 12px
+      color var(--b3-theme-on-background)
+      white-space nowrap
+
+    .compact-select
+      width auto
+      min-width 60px
+      font-size 12px
+      padding 2px 8px
+
     html[data-theme-mode="dark"] #share
       .input-group input:focus,
       .password-input:focus,
@@ -647,6 +1246,7 @@
       justify-content space-between
       margin-bottom 8px
       gap 6px
+
 
     .setting-label
       font-size 14px
@@ -735,10 +1335,16 @@
       color #333
       padding 4px
       border-radius 4px
+      background-color transparent
+      border none
+      outline none
 
       &:hover
         background-color rgba(0, 115, 230, 0.1)
         color #0073e6
+
+      &:focus
+        outline none
 
       svg
         width 16px
@@ -807,6 +1413,10 @@
       right 8px
       width 24px
 
+    .subdocument-preview-section
+      margin-top 12px
+      border-top 1px solid var(--b3-theme-surface-light)
+
     /* 暗色模式 */
     html[data-theme-mode="dark"] #share
       .divider
@@ -862,4 +1472,203 @@
 
         &:checked
           background-color: #0073e6
+
+    /* 核心操作按钮 - 付费软件专业设计 */
+    .primary-action-btn
+      padding 6px 12px
+      font-size 13px
+      color white
+      border none
+      border-radius 4px
+      cursor pointer
+      background-color #0073e6
+      transition all 0.2s ease
+      height 28px
+      line-height 18px
+      font-weight 500
+      display flex
+      align-items center
+      gap 6px
+      width auto
+      max-width 100%
+
+    /* 取消分享状态 - 红色背景 */
+    .primary-action-btn.cancel-share
+      background-color #f5222d
+
+    .primary-action-btn.cancel-share:hover:not(:disabled)
+      background-color #d91a21
+      box-shadow 0 2px 8px rgba(245, 34, 45, 0.3)
+
+    .primary-action-btn.cancel-share:active:not(:disabled)
+      background-color #b3161d
+
+      &:hover:not(:disabled)
+        background-color #005bb5
+        box-shadow 0 2px 8px rgba(0, 115, 230, 0.3)
+
+      &:active:not(:disabled)
+        background-color #004999
+        transform translateY(1px)
+
+      &:disabled
+        background-color #cccccc
+        cursor not-allowed
+        opacity 0.7
+
+    .loading-spinner,
+    .loading-spinner-large
+      width 16px
+      height 16px
+      border 2px solid transparent
+      border-top 2px solid currentColor
+      border-radius 50%
+      animation spin 1s linear infinite
+
+    .loading-spinner-large
+      width 24px
+      height 24px
+      border-width 3px
+
+    @keyframes spin
+      from
+        transform rotate(0deg)
+      to
+        transform rotate(360deg)
+
+    /* 操作遮罩层 */
+    .operation-overlay
+      position absolute
+      top 0
+      left 0
+      right 0
+      bottom 0
+      background-color rgba(0, 0, 0, 0.6)
+      z-index 1000
+      display flex
+      align-items center
+      justify-content center
+      border-radius 8px
+
+    .overlay-content
+      text-align center
+      color white
+
+    .overlay-message
+      margin-top 12px
+      font-size 16px
+      font-weight 500
+
+    /* 更新分享下拉菜单 - Ant Design 风格 */
+    .update-share-dropdown
+      position relative
+      display inline-block
+
+    .update-share-btn
+      display inline-flex
+      align-items center
+      gap 6px
+      height 32px
+      padding 0 12px
+      border-radius 6px
+      background-color #fff
+      border 1px solid #d9d9d9
+      cursor pointer
+      transition all 0.2s
+      font-size 14px
+      color #595959
+
+      &:hover
+        color #40a9ff
+        border-color #40a9ff
+
+      .btn-text
+        font-size 14px
+
+      .dropdown-arrow
+        font-size 10px
+        transition transform 0.2s
+
+    .update-share-dropdown.open
+      .update-share-btn
+        border-color #40a9ff
+        color #40a9ff
+
+      .dropdown-arrow
+        transform rotate(180deg)
+
+    .dropdown-menu
+      position absolute
+      top 100%
+      right 0
+      margin-top 2px
+      background-color #fff
+      border 1px solid #f0f0f0
+      border-radius 6px
+      box-shadow 0 6px 16px rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12)
+      min-width 120px
+      z-index 1050
+      padding 0
+
+    .dropdown-item-wrapper
+      position relative
+
+    .dropdown-item
+      display block
+      width 100%
+      height 32px
+      line-height 32px
+      padding 0 12px
+      border none
+      background transparent
+      cursor pointer
+      text-align left
+      font-size 14px
+      color #333
+      transition background 0.2s
+
+      &:hover
+        background #f5f5f5
+
+        + .item-tip
+          display block
+
+    .item-tip
+      display none
+      position absolute
+      right 100%
+      left auto
+      top 50%
+      transform translateY(-50%)
+      margin-right 8px
+      padding 6px 10px
+      background rgba(0, 0, 0, 0.75)
+      color #fff
+      font-size 12px
+      line-height 1.4
+      border-radius 4px
+      white-space nowrap
+      z-index 1100
+      pointer-events none
+
+      &::before
+        content ''
+        position absolute
+        right -4px
+        left auto
+        top 50%
+        transform translateY(-50%)
+        border 4px solid transparent
+        border-left-color rgba(0, 0, 0, 0.75)
+
+    .item-danger
+      color #ff4d4f
+
+      &:hover
+        background #fff1f0
+
+    .dropdown-divider
+      height 1px
+      background #f0f0f0
+      margin 4px 0
 </style>

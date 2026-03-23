@@ -58,6 +58,17 @@ enum SettingKeys {
    * 文档黑名单标识
    */
   CUSTOM_SHARE_BLACKLIST_DOCUMENT = "custom-share-blacklist-document",
+
+  /**
+   * 子文档分享标识
+   */
+  CUSTOM_SHARE_SUBDOCUMENTS = "custom-share-subdocuments",
+
+
+  /**
+   * 引用文档分享标识
+   */
+  CUSTOM_SHARE_REFERENCES = "custom-share-references",
 }
 
 export { SettingKeys }

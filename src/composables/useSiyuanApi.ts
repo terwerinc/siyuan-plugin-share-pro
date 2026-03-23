@@ -11,7 +11,9 @@ import { simpleLogger } from "zhi-lib-base"
 import { SiYuanApiAdaptor, SiyuanConfig, SiyuanKernelApi } from "zhi-siyuan-api"
 import { isDev } from "../Constants"
 import { ShareProConfig } from "../models/ShareProConfig"
+import { SingleDocSetting } from "../models/SingleDocSetting"
 import { SettingKeys } from "../utils/SettingKeys"
+import { cleanDocTitle } from "../utils/utils"
 
 /**
  * 通用 Siyuan API 封装
@@ -19,11 +21,11 @@ import { SettingKeys } from "../utils/SettingKeys"
  * @author terwer
  * @since 1.15.0
  */
-export const useSiyuanApi = (cfg: ShareProConfig) => {
+export const useSiyuanApi = (cfg: ShareProConfig, docSettings?: Partial<SingleDocSetting>) => {
   const logger = simpleLogger("use-siyuan-api", "share-pro", isDev)
 
   if (cfg.siyuanConfig.apiUrl !== window.location.origin) {
-    logger.warn("siyuan api url not match, use default")
+    // logger.warn("siyuan api url not match, use default")
     cfg.siyuanConfig.apiUrl = window.location.origin
   }
   cfg.siyuanConfig.token = ""
@@ -33,10 +35,12 @@ export const useSiyuanApi = (cfg: ShareProConfig) => {
   // siyuanConfig.cookie = cfg.siyuanConfig.cookie
   // 一些常用设置
   siyuanConfig.preferenceConfig.fixTitle = cfg.siyuanConfig?.preferenceConfig?.fixTitle ?? false
-  siyuanConfig.preferenceConfig.docTreeEnable = cfg.appConfig?.docTreeEnabled ?? true
-  siyuanConfig.preferenceConfig.docTreeLevel = cfg.appConfig?.docTreeLevel ?? 3
-  siyuanConfig.preferenceConfig.outlineEnable = cfg.appConfig?.outlineEnabled ?? true
-  siyuanConfig.preferenceConfig.outlineLevel = cfg.appConfig?.outlineLevel ?? 6
+  // 文档树设置 - 文档级 > 全局，默认开启
+  siyuanConfig.preferenceConfig.docTreeEnable = docSettings?.docTreeEnable ?? cfg.appConfig?.docTreeEnabled ?? true
+  siyuanConfig.preferenceConfig.docTreeLevel = docSettings?.docTreeLevel ?? cfg.appConfig?.docTreeLevel ?? 3
+  // 文档大纲设置 - 文档级 > 全局，默认开启
+  siyuanConfig.preferenceConfig.outlineEnable = docSettings?.outlineEnable ?? cfg.appConfig?.outlineEnabled ?? true
+  siyuanConfig.preferenceConfig.outlineLevel = docSettings?.outlineLevel ?? cfg.appConfig?.outlineLevel ?? 6
   siyuanConfig.preferenceConfig.removeFirstH1 = true
   siyuanConfig.preferenceConfig.removeMdWidgetTag = true
   const blogApi = new SiYuanApiAdaptor(siyuanConfig)
@@ -215,7 +219,7 @@ export const getIncrementalDocumentsCount = async (
 // =====================================================================================================================
 
 /**
- * 将时间戳转换为思源数据库使用的日期字符串格式 (YYYYMMDDHHmmss)
+ * 将时间戳转换为思源数据库使用的日期字符串格式 (yyyyMMddhhmmss)
  * @param timestamp 时间戳（毫秒）
  */
 const convertTimestampToSiyuanDate = (timestamp?: number): string => {
@@ -231,6 +235,40 @@ const convertTimestampToSiyuanDate = (timestamp?: number): string => {
 }
 
 /**
+ * 将思源数据库日期字符串格式 (yyyyMMddhhmmss) 转换为时间戳
+ * @param siyuanDate 思源日期字符串，例如 "20230814204310"
+ * @returns 毫秒时间戳，解析失败返回 0
+ */
+export const convertSiyuanDateToTimestamp = (siyuanDate: string | number): number => {
+  if (!siyuanDate) {
+    return 0
+  }
+
+  const dateStr = String(siyuanDate)
+
+  // 思源格式: yyyyMMddhhmmss (14位)
+  if (dateStr.length !== 14) {
+    // 尝试直接解析（可能是其他格式）
+    const parsed = parseInt(dateStr)
+    if (!isNaN(parsed) && parsed > 1000000000000) {
+      // 看起来已经是时间戳
+      return parsed
+    }
+    return 0
+  }
+
+  const year = parseInt(dateStr.substring(0, 4))
+  const month = parseInt(dateStr.substring(4, 6)) - 1 // 月份从0开始
+  const day = parseInt(dateStr.substring(6, 8))
+  const hour = parseInt(dateStr.substring(8, 10))
+  const minute = parseInt(dateStr.substring(10, 12))
+  const second = parseInt(dateStr.substring(12, 14))
+
+  const date = new Date(year, month, day, hour, minute, second)
+  return date.getTime()
+}
+
+/**
  * 生成时间条件SQL片段（不包含 AND 前缀）
  * @param lastShareTime 上次分享时间戳
  */
@@ -240,4 +278,221 @@ const generateTimeCondition = (lastShareTime?: number): string => {
     return `b.updated > '${lastUpdated}'`
   }
   return ""
+}
+
+// =====================================================================================================================
+// 子文档获取相关方法
+// =====================================================================================================================
+
+/**
+ * 获取指定文档的子文档总数
+ *
+ * @param kernelApi 思源内核 API
+ * @param docId 文档ID
+ */
+export const getSubdocCount = async (kernelApi: SiyuanKernelApi, docId: string): Promise<number> => {
+  const logger = simpleLogger("use-siyuan-api", "share-pro", isDev)
+  const escapedDocId = docId.replace(/'/g, "''")
+
+  const sql = `
+    SELECT COUNT(DISTINCT b1.root_id) AS count
+    FROM blocks b1
+    WHERE b1.root_id = '${escapedDocId}' OR b1.path LIKE '%/${escapedDocId}%'
+  `
+
+  logger.debug("getSubdocCount SQL:", sql)
+  const data = await kernelApi.sql(sql)
+  return data?.[0]?.count || 0
+}
+
+/**
+ * 分页获取子文档列表
+ *
+ * @deprecated 已经废弃，必须使用思源笔记官方的 filetree/listDocsByPath API 获取子文档列表
+ * @param kernelApi 思源内核 API
+ * @param docId 文档ID
+ * @param page 页码（从0开始）
+ * @param pageSize 每页大小
+ */
+export const getSubdocsPaged = async (
+  kernelApi: SiyuanKernelApi,
+  docId: string,
+  page: number,
+  pageSize: number
+): Promise<
+  Array<{
+    docId: string
+    docTitle: string
+    path: string
+    modifiedTime: number
+    createdTime: number
+  }>
+> => {
+  const logger = simpleLogger("use-siyuan-api", "share-pro", isDev)
+  const offset = page * pageSize
+  const escapedDocId = docId.replace(/'/g, "''")
+
+  const sql = `
+    SELECT DISTINCT b2.root_id, b2.content, b2.path, b2.updated, b2.created
+    FROM blocks b2
+    WHERE b2.id IN (
+        SELECT DISTINCT b1.root_id
+        FROM blocks b1
+        WHERE b1.root_id = '${escapedDocId}' OR b1.path LIKE '%/${escapedDocId}%'
+        ORDER BY b1.updated DESC, b1.created DESC
+        LIMIT ${pageSize} OFFSET ${offset}
+    )
+    ORDER BY b2.updated DESC, b2.created DESC, b2.id
+  `
+
+  logger.debug("getSubdocsPaged SQL:", sql)
+  const resData = await kernelApi.sql(sql)
+  if (!resData || resData.length === 0) {
+    return []
+  }
+
+  return resData.map((row: any) => ({
+    docId: row.root_id,
+    docTitle: row.content || "Untitled Document",
+    path: row.path,
+    // 转换思源的时间格式为Unix时间戳
+    modifiedTime:
+      row.updated && typeof row.updated === "string"
+        ? new Date(
+            parseInt(row.updated.substring(0, 4)),
+            parseInt(row.updated.substring(4, 6)) - 1,
+            parseInt(row.updated.substring(6, 8)),
+            parseInt(row.updated.substring(8, 10)),
+            parseInt(row.updated.substring(10, 12)),
+            parseInt(row.updated.substring(12, 14))
+          ).getTime()
+        : parseInt(row.updated) || 0,
+    createdTime:
+      row.created && typeof row.created === "string"
+        ? new Date(
+            parseInt(row.created.substring(0, 4)),
+            parseInt(row.created.substring(4, 6)) - 1,
+            parseInt(row.created.substring(6, 8)),
+            parseInt(row.created.substring(8, 10)),
+            parseInt(row.created.substring(10, 12)),
+            parseInt(row.created.substring(12, 14))
+          ).getTime()
+        : parseInt(row.created) || 0,
+  }))
+}
+
+/**
+ * 使用思源官方 API 获取子文档树结构（支持懒加载）
+ *
+ * @param kernelApi 思源内核 API
+ * @param notebookId 笔记本ID
+ * @param docPath 文档路径（用于构建完整的路径）
+ * @returns 子文档列表
+ */
+export const getSubdocTreeByPath = async (
+  kernelApi: SiyuanKernelApi,
+  notebookId: string,
+  docPath: string
+): Promise<
+  Array<{
+    docId: string
+    docTitle: string
+    path: string
+    parentId: string | null
+    depth: number
+    modifiedTime: number
+    createdTime: number
+    hasChildren: boolean
+  }>
+> => {
+  const logger = simpleLogger("use-siyuan-api", "share-pro", isDev)
+
+  try {
+    // 构建API请求参数
+    const requestData = {
+      notebook: notebookId,
+      path: docPath,
+      app: "jwis",
+    }
+
+    logger.debug("Calling filetree/listDocsByPath with:", requestData)
+
+    // 调用思源官方API
+    const response = await kernelApi.siyuanRequest("/api/filetree/listDocsByPath", requestData)
+
+    // 思源API直接返回数据对象，没有code/data包装层
+    // response 结构: { box: "...", files: [...], path: "..." }
+    if (!response || !Array.isArray(response.files)) {
+      logger.error("Invalid response from filetree/listDocsByPath:", response)
+      return []
+    }
+
+    const files = response.files || []
+    const basePath = response.path || ""
+
+    // 转换数据格式
+    const subdocs = files.map((file: any) => {
+      // 安全处理路径和名称
+      const fullPath = file.path || ""
+      const fileName = file.name || "Untitled Document"
+
+      // 从路径中提取父文档ID
+      const pathParts = fullPath.split("/").filter((part: string) => part.trim() !== "" && !part.endsWith(".sy"))
+      const parentId = pathParts.length > 1 ? pathParts[pathParts.length - 2] : null
+
+      // 计算深度（基于basePath）
+      const safeBasePath = basePath || ""
+      const baseParts = safeBasePath.split("/").filter((part: string) => part.trim() !== "" && !part.endsWith(".sy"))
+      const depth = pathParts.length - baseParts.length
+
+      return {
+        docId: file.id || "",
+        docTitle: cleanDocTitle(fileName),
+        path: fullPath,
+        parentId: parentId,
+        depth: depth,
+        modifiedTime: file.mtime || 0,
+        createdTime: file.ctime || 0,
+        hasChildren: (file.subFileCount || 0) > 0,
+      }
+    })
+
+    logger.debug("Got subdoc tree:", subdocs)
+    return subdocs
+  } catch (error) {
+    logger.error("Error getting subdoc tree by path:", error)
+    return []
+  }
+}
+
+/**
+ * 获取文档的笔记本信息
+ *
+ * @param kernelApi 思源内核 API
+ * @param docId 文档ID
+ * @returns 笔记本ID和文档路径，如果文档不存在则返回 null
+ */
+export const getDocNotebookInfo = async (
+  kernelApi: SiyuanKernelApi,
+  docId: string
+): Promise<{ notebookId: string; docPath: string } | null> => {
+  const logger = simpleLogger("use-siyuan-api", "share-pro", isDev)
+
+  try {
+    // 先获取文档的基本信息
+    const blockInfo = await kernelApi.getBlockByID(docId)
+    if (!blockInfo) {
+      logger.warn(`Document ${docId} not found`)
+      return null
+    }
+
+    const notebookId = blockInfo.box || ""
+    const docPath = blockInfo.path || `/${docId}.sy`
+
+    logger.debug(`Document ${docId} belongs to notebook ${notebookId}, path: ${docPath}`)
+    return { notebookId, docPath }
+  } catch (error) {
+    logger.error("Error getting document notebook info:", error)
+    return null
+  }
 }

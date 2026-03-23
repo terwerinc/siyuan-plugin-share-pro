@@ -7,12 +7,12 @@
  *  of this license document, but changing it is not allowed.
  */
 
+import { NULL_VALUE_FOR_SIYUAN_ATTR_REMOVE } from "../Constants"
 import ShareProPlugin from "../index"
+import { SingleDocSetting } from "../models/SingleDocSetting"
 import { ApiUtils } from "./ApiUtils"
 import { SettingKeys } from "./SettingKeys"
-import { SingleDocSetting } from "../models/SingleDocSetting"
 import { isEmptyString } from "./utils"
-import { NULL_VALUE_FOR_SIYUAN_ATTR_REMOVE } from "../Constants"
 
 /**
  * 通用属性读取
@@ -83,6 +83,21 @@ class AttrUtils {
         settingKey: SettingKeys.CUSTOM_EXPIRES,
         isNumber: false,
       },
+      {
+        objectKey: "shareSubdocuments",
+        settingKey: SettingKeys.CUSTOM_SHARE_SUBDOCUMENTS,
+        isNumber: false,
+      },
+      {
+        objectKey: "shareReferences",
+        settingKey: SettingKeys.CUSTOM_SHARE_REFERENCES,
+        isNumber: false,
+      },
+      {
+        objectKey: "maxSubdocuments",
+        settingKey: SettingKeys.CUSTOM_MAX_SUBDOCUMENTS,
+        isNumber: true,
+      },
     ]
 
     // 处理每个字段
@@ -116,6 +131,79 @@ class AttrUtils {
 
     // 类型断言（因 Partial 转完整 Record）
     return attrs as Record<SettingKeys, string>
+  }
+
+  /**
+   * 将文档属性键值对转换为 SingleDocSetting 对象
+   * @param attrs 文档属性键值对
+   * @returns SingleDocSetting 对象
+   */
+  public static fromAttrs(attrs: Record<string, string>): Partial<SingleDocSetting> {
+    const settings: Partial<SingleDocSetting> = {}
+
+    // 字段映射配置（与toAttrs保持一致）
+    const fieldMappings: Array<{ objectKey: keyof SingleDocSetting; settingKey: SettingKeys; isNumber: boolean }> = [
+      {
+        objectKey: "docTreeEnable",
+        settingKey: SettingKeys.CUSTOM_DOC_TREE_ENABLE,
+        isNumber: false,
+      },
+      {
+        objectKey: "docTreeLevel",
+        settingKey: SettingKeys.CUSTOM_DOC_TREE_LEVEL,
+        isNumber: true,
+      },
+      {
+        objectKey: "outlineEnable",
+        settingKey: SettingKeys.CUSTOM_OUTLINE_ENABLE,
+        isNumber: false,
+      },
+      {
+        objectKey: "outlineLevel",
+        settingKey: SettingKeys.CUSTOM_OUTLINE_LEVEL,
+        isNumber: true,
+      },
+      {
+        objectKey: "expiresTime",
+        settingKey: SettingKeys.CUSTOM_EXPIRES,
+        isNumber: false,
+      },
+      {
+        objectKey: "shareSubdocuments",
+        settingKey: SettingKeys.CUSTOM_SHARE_SUBDOCUMENTS,
+        isNumber: false,
+      },
+      {
+        objectKey: "shareReferences",
+        settingKey: SettingKeys.CUSTOM_SHARE_REFERENCES,
+        isNumber: false,
+      },
+      {
+        objectKey: "maxSubdocuments",
+        settingKey: SettingKeys.CUSTOM_MAX_SUBDOCUMENTS,
+        isNumber: true,
+      },
+    ]
+
+    fieldMappings.forEach(({ objectKey, settingKey, isNumber }) => {
+      const attrValue = attrs[settingKey]
+
+      // 检查属性是否存在且不为空
+      if (attrValue !== undefined && attrValue !== NULL_VALUE_FOR_SIYUAN_ATTR_REMOVE && attrValue !== "") {
+        if (isNumber) {
+          const numValue = parseInt(attrValue)
+          if (!isNaN(numValue)) {
+            settings[objectKey] = numValue as any
+          }
+        } else if (attrValue === "true" || attrValue === "false") {
+          settings[objectKey] = (attrValue === "true") as any
+        } else {
+          settings[objectKey] = attrValue as any
+        }
+      }
+    })
+
+    return settings
   }
 }
 

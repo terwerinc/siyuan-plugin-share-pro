@@ -16,10 +16,28 @@
 class ShareOptions {
   public passwordEnabled?: boolean
   public password?: string
+  /**
+   * 是否跳过单文档提示消息（handleOne 层级）
+   * 批量操作时设为 true，避免 toast 爆炸
+   */
+  public skipMsg?: boolean
+  /**
+   * 是否跳过批量汇总提示消息（createShare/batchProcessDocuments 层级）
+   * 增量分享服务调用时设为 true，由上层统一显示汇总
+   */
+  public skipBatchMsg?: boolean
+  /**
+   * 是否强制更新分享（忽略增量检测）
+   * 用于文档树深度等设置变更后需要强制重新分享的场景
+   */
+  public forceUpdate?: boolean
 
   public constructor() {
     this.passwordEnabled = false
     this.password = ""
+    this.skipMsg = false
+    this.skipBatchMsg = false
+    this.forceUpdate = false
   }
 }
 

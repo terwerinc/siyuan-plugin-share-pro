@@ -36,7 +36,10 @@ module.exports = {
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "@typescript-eslint/ban-types": "off",
+    "@typescript-eslint/no-inferrable-types": "off",
     "turbo/no-undeclared-env-vars": "off",
     "prettier/prettier": "error",
+    "svelte/valid-compile": "off",
+    "svelte/no-at-html-tags": "off",
   },
 }

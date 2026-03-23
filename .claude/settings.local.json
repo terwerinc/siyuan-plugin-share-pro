@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx openspec validate add-subdocument-sharing --strict)",
+      "Bash(pnpm run build)",
+      "Bash(pnpm build:*)",
+      "Bash(git checkout:*)",
+      "Bash(mkdir:*)",
+      "Bash(pnpm install:*)",
+      "Bash(/usr/local/bin/node /Volumes/workspace/myproject/zhi-framework/zhi/tools/vite-config-custom/node_modules/vitest/vitest.mjs --run --reporter /Users/terwer/Applications/WebStorm.app/Contents/plugins/javascript-plugin/helpers/vitest-intellij/node_modules/vitest-intellij-reporter-safe.js --testNamePattern=\"^ ?SiYuanApiAdaptor test siyuan getPost$\" /Volumes/workspace/myproject/zhi-framework/zhi/libs/zhi-siyuan-api/src/lib/adaptor/siYuanApiAdaptor.spec.ts)",
+      "Read(//Volumes/workspace/myproject/zhi-framework/zhi/**)",
+      "Bash(/usr/local/bin/node ./tools/vite-config-custom/node_modules/vitest/vitest.mjs --run --reporter basic --testNamePattern=\"test siyuan getPost\" ./libs/zhi-siyuan-api/src/lib/adaptor/siYuanApiAdaptor.spec.ts)",
+      "WebFetch(domain:www.mintlify.com)"
+    ]
+  }
+}

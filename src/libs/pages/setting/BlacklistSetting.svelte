@@ -43,17 +43,16 @@
     isLoading = true
     try {
       // 将前端的filterType转换为后端需要的类型
-      const backendType = filterType === "all" ? "all" : 
-                         filterType === "NOTEBOOK" ? "notebook" : "document"
+      const backendType = filterType === "all" ? "all" : filterType === "NOTEBOOK" ? "notebook" : "document"
 
       // 统一调用后端接口，同时处理类型筛选和搜索
       totalItems = await blacklistService.getItemsCount(backendType, searchTerm)
       totalPages = Math.ceil(totalItems / pageSize)
       const results = await blacklistService.getItemsPaged(currentPage, pageSize, backendType, searchTerm)
-      
+
       // 转换为 DTO 格式
-      blacklistItems = results.map((item) => ({
-        id: 0,
+      blacklistItems = results.map((item, index) => ({
+        id: index, // 使用索引作为唯一标识
         type: item.type === "notebook" ? "NOTEBOOK" : "DOCUMENT",
         targetId: item.id,
         targetName: item.name,
@@ -96,7 +95,7 @@
 
   // 智能搜索相关
   let searchKeyword = ""
-  let searchResults: Array<{id: string, name: string}> = []
+  let searchResults: Array<{ id: string; name: string }> = []
   let showSearchDropdown = false
   let isSearching = false
 
@@ -137,7 +136,7 @@
     if (searchTimeout) {
       clearTimeout(searchTimeout)
     }
-    
+
     searchTimeout = setTimeout(() => {
       currentPage = 0 // 重置到第一页
       if (searchTerm.trim()) {
@@ -152,7 +151,7 @@
   const handlePageChange = (newPage: number) => {
     if (newPage < 0 || newPage >= totalPages) return
     currentPage = newPage
-    
+
     if (searchTerm.trim()) {
       searchBlacklist()
     } else {
@@ -237,7 +236,9 @@
       // 调用本地黑名单服务
       for (const item of filteredItems) {
         if (selectedItems.has(item.id)) {
-          await blacklistService.removeItem(item.targetId)
+          // 传递正确的类型参数
+          const backendType = item.type === "NOTEBOOK" ? "notebook" : "document"
+          await blacklistService.removeItem(item.targetId, backendType)
         }
       }
 
@@ -245,7 +246,7 @@
       selectedItems.clear()
       selectedItems = selectedItems
       await loadBlacklist()
-      
+
       // 触发配置变化事件，通知其他组件刷新
       // 暂时注释掉错误的事件触发代码
     } catch (error) {
@@ -264,6 +265,24 @@
       selectedItems.add(itemId)
     }
     selectedItems = selectedItems
+  }
+
+  // 全选/取消全选
+  const toggleSelectAll = () => {
+    const allSelected = filteredItems.every((item) => selectedItems.has(item.id))
+    if (allSelected) {
+      // 取消全选
+      filteredItems.forEach((item) => selectedItems.delete(item.id))
+    } else {
+      // 全选
+      filteredItems.forEach((item) => selectedItems.add(item.id))
+    }
+    selectedItems = selectedItems
+  }
+
+  // 检查是否全选
+  const isAllSelected = () => {
+    return filteredItems.length > 0 && filteredItems.every((item) => selectedItems.has(item.id))
   }
 
   // 搜索处理
@@ -322,7 +341,7 @@
   }
 
   // 选择搜索结果
-  const selectSearchResult = (item: {id: string, name: string}) => {
+  const selectSearchResult = (item: { id: string; name: string }) => {
     formData.targetId = item.id
     formData.targetName = item.name
     searchResults = []
@@ -333,7 +352,7 @@
   const onCancel = () => {
     dialog.destroy()
   }
-  
+
   // 当类型改变时清空搜索结果
   const handleTypeChange = () => {
     searchResults = []
@@ -362,12 +381,22 @@
           <option value="DOCUMENT">{pluginInstance.i18n.incrementalShare.blacklist.document}</option>
         </select>
         {#if !showAddForm}
-          <button class="b3-button b3-button--primary" style="white-space: nowrap;" on:click={showAddFormFn} disabled={isLoading}>
+          <button
+            class="b3-button b3-button--primary"
+            style="white-space: nowrap;"
+            on:click={showAddFormFn}
+            disabled={isLoading}
+          >
             {pluginInstance.i18n.incrementalShare.blacklist.add}
           </button>
         {/if}
         {#if selectedItems.size > 0}
-          <button class="b3-button b3-button--cancel" style="white-space: nowrap;" on:click={handleDeleteItems} disabled={isLoading}>
+          <button
+            class="b3-button b3-button--cancel"
+            style="white-space: nowrap;"
+            on:click={handleDeleteItems}
+            disabled={isLoading}
+          >
             {pluginInstance.i18n.incrementalShare.blacklist.delete} ({selectedItems.size})
           </button>
         {/if}
@@ -387,18 +416,22 @@
         <div class="add-form-content">
           <div class="form-row">
             <div class="form-col">
-              <label
+              <label for="blacklist-type"
                 >{pluginInstance.i18n.incrementalShare.blacklist.type}
                 <span style="color:red">*</span></label
               >
-              <select class="b3-select fn__block" bind:value={formData.type} on:change={handleTypeChange}>
+              <select
+                id="blacklist-type"
+                class="b3-select fn__block"
+                bind:value={formData.type}
+                on:change={handleTypeChange}
+              >
                 <option value="DOCUMENT">{pluginInstance.i18n.incrementalShare.blacklist.document}</option>
-                <option value="NOTEBOOK"
-                  >{pluginInstance.i18n.incrementalShare.blacklist.notebook}</option
-                >
+                <option value="NOTEBOOK">{pluginInstance.i18n.incrementalShare.blacklist.notebook}</option>
               </select>
             </div>
             <div class="form-col">
+              <!-- svelte-ignore a11y-label-has-associated-control -->
               <label
                 >{pluginInstance.i18n.incrementalShare.blacklist.targetName}
                 <span style="color:red">*</span></label
@@ -416,6 +449,8 @@
                 {#if showSearchDropdown}
                   <div class="search-dropdown">
                     {#each searchResults as item}
+                      <!-- svelte-ignore a11y-click-events-have-key-events -->
+                      <!-- svelte-ignore a11y-no-static-element-interactions -->
                       <div class="dropdown-item" on:click={() => selectSearchResult(item)}>
                         {item.name}
                       </div>
@@ -430,8 +465,9 @@
           </div>
           <div class="form-row">
             <div class="form-col">
-              <label>{pluginInstance.i18n.incrementalShare.blacklist.note}</label>
+              <label for="blacklist-note">{pluginInstance.i18n.incrementalShare.blacklist.note}</label>
               <input
+                id="blacklist-note"
                 class="b3-text-field fn__block"
                 bind:value={formData.note}
                 placeholder={pluginInstance.i18n.incrementalShare.blacklist.notePlaceholder}
@@ -439,7 +475,11 @@
             </div>
           </div>
           <div class="form-actions">
-            <button class="b3-button b3-button--primary" on:click={handleAddItem} disabled={isLoading || !formData.targetId}>
+            <button
+              class="b3-button b3-button--primary"
+              on:click={handleAddItem}
+              disabled={isLoading || !formData.targetId}
+            >
               {pluginInstance.i18n.incrementalShare.blacklist.confirmAdd}
             </button>
           </div>
@@ -462,13 +502,13 @@
           <table class="b3-list">
             <thead>
               <tr>
-                <th style="width: 40px;"><input type="checkbox" /></th>
+                <th style="width: 40px;">
+                  <input type="checkbox" checked={isAllSelected()} on:change={toggleSelectAll} />
+                </th>
                 <th>{pluginInstance.i18n.incrementalShare.blacklist.targetName}</th>
                 <th style="width: 120px;">{pluginInstance.i18n.incrementalShare.blacklist.type}</th>
                 <th>{pluginInstance.i18n.incrementalShare.blacklist.note}</th>
-                <th style="width: 150px;"
-                  >{pluginInstance.i18n.incrementalShare.blacklist.createdAt}</th
-                >
+                <th style="width: 150px;">{pluginInstance.i18n.incrementalShare.blacklist.createdAt}</th>
               </tr>
             </thead>
             <tbody>
@@ -526,8 +566,8 @@
 </div>
 
 <style>
-  .config__tab-container{
-      overflow: hidden;
+  .config__tab-container {
+    overflow: hidden;
   }
 
   .form-item {
@@ -551,13 +591,13 @@
     margin-bottom: 12px;
     flex-wrap: wrap; /* 允许换行以适应小屏幕 */
   }
-  
+
   @media screen and (max-width: 768px) {
     .search-filter-row {
       flex-direction: column;
       align-items: stretch;
     }
-    
+
     .search-filter-row > * {
       margin-bottom: 8px;
     }
@@ -581,7 +621,7 @@
     min-height: 32px; /* 确保有足够的高度显示内容 */
     width: 100%;
   }
-  
+
   .add-form-header button {
     flex-shrink: 0; /* 防止按钮被压缩 */
   }
@@ -711,7 +751,8 @@
   .item-id {
     font-size: 11px;
     color: var(--b3-theme-on-surface);
-    font-family: monospace;
+    /* 尽量继承宿主的字体，不要单独搞一套 */
+    /*font-family: monospace;*/
   }
 
   .type-badge {

@@ -13,9 +13,9 @@
   import { onMount } from "svelte"
   import { simpleLogger } from "zhi-lib-base"
   import {
-      getIncrementalDocumentsCount,
-      getIncrementalDocumentsPaged,
-      useSiyuanApi,
+    getIncrementalDocumentsCount,
+    getIncrementalDocumentsPaged,
+    useSiyuanApi,
   } from "../../composables/useSiyuanApi"
   import { isDev, SHARE_PRO_STORE_NAME } from "../../Constants"
   import ShareProPlugin from "../../index"
@@ -24,7 +24,7 @@
   import { icons } from "../../utils/svg"
   import BlacklistSetting from "./setting/BlacklistSetting.svelte"
   import ShareManage from "./ShareManage.svelte"
- // 添加黑名单管理组件导入
+  // 添加黑名单管理组件导入
 
   export let pluginInstance: ShareProPlugin
   export let cfg: ShareProConfig
@@ -35,7 +35,7 @@
   let selectedDocs = new Set<string>()
   let searchTerm = ""
   let keyInfo: any = null
-  let isStatsCollapsed = true  // 统计区域默认折叠
+  let isStatsCollapsed = true // 统计区域默认折叠
 
   // 统一的文档列表（新文档和更新文档合并）
   let combinedDocs: Array<{ docId: string; docTitle: string; shareTime?: number; type: "new" | "updated" }> = []
@@ -72,7 +72,7 @@
       showMessage(vipTip + "，" + pluginInstance.i18n?.openLicensePage, 7000, "error")
       return
     }
-    
+
     keyInfo = vipInfo.data
 
     const dialog = new Dialog({
@@ -262,7 +262,7 @@
     // 重新加载文档，将搜索词传递给后端
     loadDocuments()
   }
-  
+
   // 刷新按钮处理函数
   const handleRefresh = async () => {
     // 重新加载配置
@@ -316,26 +316,29 @@
       const result = await pluginInstance.incrementalShareService.bulkShareDocuments(selectedDocsArray)
 
       if (result.successCount > 0) {
-        showMessage(
-          `${pluginInstance.i18n.incrementalShare.shareSuccess}: ${result.successCount} ${pluginInstance.i18n.incrementalShare.documents}`,
-          3000,
-          "info"
-        )
+        // 消息重复了，保留内部的
+        // showMessage(
+        //   `${pluginInstance.i18n.incrementalShare.shareSuccess}: ${result.successCount} ${pluginInstance.i18n.incrementalShare.documents}`,
+        //   3000,
+        //   "info"
+        // )
         await loadDocuments()
         selectedDocs.clear()
         selectAll = false
       }
 
-      if (result.failedCount > 0) {
-        showMessage(
-          `${pluginInstance.i18n.incrementalShare.shareFailed}: ${result.failedCount} ${pluginInstance.i18n.incrementalShare.documents}`,
-          7000,
-          "error"
-        )
-      }
+      // 消息重复了，保留内部的
+      // if (result.failedCount > 0) {
+      //   showMessage(
+      //     `${pluginInstance.i18n.incrementalShare.shareFailed}: ${result.failedCount} ${pluginInstance.i18n.incrementalShare.documents}`,
+      //     7000,
+      //     "error"
+      //   )
+      // }
     } catch (error) {
       logger.error(`${pluginInstance.i18n.incrementalShare.shareError}:`, error)
-      showMessage(pluginInstance.i18n.incrementalShare.shareError, 7000, "error")
+      // 消息重复了，保留内部的
+      // showMessage(pluginInstance.i18n.incrementalShare.shareError, 7000, "error")
     } finally {
       isLoading = false
     }
@@ -349,7 +352,11 @@
       <button class="btn-icon" on:click={openShareManageDialog} title={pluginInstance.i18n.manageDoc}>
         {@html icons.iconManage}
       </button>
-      <button class="btn-icon" on:click={openBlacklistManageDialog} title={pluginInstance.i18n.incrementalShare.blacklist.title}>
+      <button
+        class="btn-icon"
+        on:click={openBlacklistManageDialog}
+        title={pluginInstance.i18n.incrementalShare.blacklist.title}
+      >
         {@html icons.iconBan}
       </button>
     </div>
@@ -382,8 +389,10 @@
     <div class="share-stats">
       <div class="stat-header">
         <button class="collapse-toggle" on:click={toggleStatsCollapse}>
-          {isStatsCollapsed ? pluginInstance.i18n.incrementalShare.expandStats : pluginInstance.i18n.incrementalShare.collapseStats}
-          <span class="toggle-icon">{isStatsCollapsed ? '▶' : '▼'}</span>
+          {isStatsCollapsed
+            ? pluginInstance.i18n.incrementalShare.expandStats
+            : pluginInstance.i18n.incrementalShare.collapseStats}
+          <span class="toggle-icon">{isStatsCollapsed ? "▶" : "▼"}</span>
         </button>
       </div>
       {#if !isStatsCollapsed}
@@ -496,7 +505,8 @@
 <style lang="stylus">
 .incremental-share-ui
   padding 16px
-  font-family var(--b3-font-family)
+  // 尽量继承宿主的字体，不要单独搞一套
+  //font-family var(--b3-font-family)
   background var(--b3-theme-background)
   border-radius 8px
   max-width 1200px

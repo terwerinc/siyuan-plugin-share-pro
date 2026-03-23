@@ -54,7 +54,7 @@ export interface ShareBlacklist {
   /**
    * 移除黑名单项
    */
-  removeItem(id: string): Promise<void>
+  removeItem(id: string, type: "notebook" | "document"): Promise<void>
 
   /**
    * 检查指定ID是否在黑名单中

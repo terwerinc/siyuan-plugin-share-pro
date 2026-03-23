@@ -17,15 +17,18 @@ importers:
       copy-to-clipboard:
         specifier: ^3.3.3
         version: 3.3.3
+      eventemitter3:
+        specifier: ^5.0.4
+        version: 5.0.4
       zhi-blog-api:
-        specifier: ^1.74.2
-        version: 1.74.2(typescript@5.9.3)
+        specifier: ^1.75.0
+        version: 1.75.0(typescript@5.9.3)
       zhi-lib-base:
         specifier: ^0.8.0
         version: 0.8.0
       zhi-siyuan-api:
-        specifier: ^2.30.0
-        version: 2.30.0(typescript@5.9.3)
+        specifier: ^2.35.1
+        version: 2.35.1(typescript@5.9.3)
     devDependencies:
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.1.2
@@ -1415,6 +1418,9 @@ packages:
     resolution: {integrity: sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==}
     engines: {node: '>=0.10.0'}
 
+  eventemitter3@5.0.4:
+    resolution: {integrity: sha512-mlsTRyGaPBjPedk6Bvw+aqbsXDtoAyAzm5MO7JgU+yVRyMQ5O8bD4Kcci7BS85f93veegeCPkL8R4GLClnjLFw==}
+
   events@3.3.0:
     resolution: {integrity: sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==}
     engines: {node: '>=0.8.x'}
@@ -1529,7 +1535,7 @@ packages:
 
   glob@7.2.3:
     resolution: {integrity: sha512-nFR0zLpU2YCaRxwoCJvL6UvCH2JFyFVIvwTLsIf21AuHlMskA1hhTdk+LlYJtOlYt9v6dvszD2BGRqBL+iQK9Q==}
-    deprecated: Glob versions prior to v9 are no longer supported
+    deprecated: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
 
   globals@13.24.0:
     resolution: {integrity: sha512-AhO5QUcj8llrbG09iWhPU2B204J1xnPeL8kQmVorSsy+Sjj1sk8gIyh6cUocGmH4L0UuhAJy+hJMRA4mgA4mFQ==}
@@ -2737,8 +2743,8 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
-  zhi-blog-api@1.74.2:
-    resolution: {integrity: sha512-DBEpt1ep4L7QleRxZ+g68VXliVMy5JHYIMCgBnEP0FIxmO6TQRgQMXw4rDpF4YYrFMDBvNgDlWmuss1A/LV31Q==}
+  zhi-blog-api@1.75.0:
+    resolution: {integrity: sha512-Ee7Uert6iGXgdmPhm/LvCRZpk5ImYrKXcd1RXgVo2ooxqQiSergz8f9jFSWfgn3S3x/oNqrKs5v0pJW6f4JCuA==}
 
   zhi-common@1.35.0:
     resolution: {integrity: sha512-PX/NpBXxbw2CxMWQhOWQSKouznuFRdZ0IQVR7T8vOkdctONbH2QgIMlFyL656IiiK659vuQibYSwp9PzEC6X1w==}
@@ -2746,8 +2752,8 @@ packages:
   zhi-lib-base@0.8.0:
     resolution: {integrity: sha512-3Ky5p6KvLWpXy2tlb/JIfSEKLSe5w43PBLM6g+hNcWwpL9S62emgcpUAHzGWBbC0vlLBLungt2LOsmwAfhrZ0w==}
 
-  zhi-siyuan-api@2.30.0:
-    resolution: {integrity: sha512-gv/zS37+o1pBezjkXFHhzX5AkqsJo/9juZNVj99+demHrkJFv0X17o+GNBVlRIiSwZOVyzryDSAjILNG0Q47JQ==}
+  zhi-siyuan-api@2.35.1:
+    resolution: {integrity: sha512-zloVkSd9v3t10ZNFkWFH31URQIhp/m28LWYr+zlZZOhIWPM+IIHC1w4LYtrYaq5Oa2LvEjR23ndKQ7LCZphqXQ==}
 
 snapshots:
 
@@ -4208,6 +4214,8 @@ snapshots:
 
   esutils@2.0.3: {}
 
+  eventemitter3@5.0.4: {}
+
   events@3.3.0: {}
 
   evp_bytestokey@1.0.3:
@@ -5543,7 +5551,7 @@ snapshots:
 
   yocto-queue@0.1.0: {}
 
-  zhi-blog-api@1.74.2(typescript@5.9.3):
+  zhi-blog-api@1.75.0(typescript@5.9.3):
     dependencies:
       zhi-common: 1.35.0(typescript@5.9.3)
       zhi-lib-base: 0.8.0
@@ -5562,9 +5570,9 @@ snapshots:
 
   zhi-lib-base@0.8.0: {}
 
-  zhi-siyuan-api@2.30.0(typescript@5.9.3):
+  zhi-siyuan-api@2.35.1(typescript@5.9.3):
     dependencies:
-      zhi-blog-api: 1.74.2(typescript@5.9.3)
+      zhi-blog-api: 1.75.0(typescript@5.9.3)
       zhi-common: 1.35.0(typescript@5.9.3)
       zhi-lib-base: 0.8.0
     transitivePeerDependencies:

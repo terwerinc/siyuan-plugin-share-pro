@@ -79,4 +79,20 @@ const truncateByChineseChar = (str: string, maxChineseChars: number): string => 
   return str.substring(0, endIndex)
 }
 
-export { getChineseCharCount, isEmptyString, safeParse, truncateByChineseChar }
+/**
+ * 清理文档标题，移除不必要的后缀（如 .sy）
+ * @param title 文档标题
+ * @returns 清理后的标题
+ */
+const cleanDocTitle = (title: string): string => {
+  if (!title) return ""
+
+  // 移除 .sy 后缀（思源笔记的默认后缀）
+  if (title.endsWith(".sy")) {
+    return title.slice(0, -3)
+  }
+
+  return title
+}
+
+export { getChineseCharCount, isEmptyString, safeParse, truncateByChineseChar, cleanDocTitle }
