@@ -1005,6 +1005,7 @@ class ShareService implements IShareHistoryService {
     sPost.mt_excerpt = post.mt_excerpt
     sPost.docTree = post.docTree
     sPost.docTreeLevel = post.docTreeLevel
+    sPost.docTreeHierarchy = post.docTreeHierarchy
     sPost.outline = post.outline
     sPost.outlineLevel = post.outlineLevel
     sPost.embedBlocks = embedBlocks

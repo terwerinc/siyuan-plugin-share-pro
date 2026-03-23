@@ -23,7 +23,7 @@
 ## 更新摘要
 **变更内容**
 - 增强ShareUI.svelte组件的相对时间显示系统
-- 添加formatLastShareTime函数，支持友好的时间格式化显示
+- 新增formatLastShareTime函数，支持友好的时间格式化显示
 - 实现大厂设计规范的时间显示策略
 - 完善国际化支持（中文和英文）
 
@@ -328,24 +328,12 @@ ShareUI.svelte组件增强了相对时间显示系统，提供了友好的时间
 ### 时间显示策略
 系统采用大厂设计规范，根据时间差提供不同级别的显示：
 
-1. **小于1小时**：显示相对时间
-   - 1分钟内：显示"刚刚"
-   - 1-59分钟：显示"[X]分钟前"
-
-2. **小于24小时**：显示相对小时
-   - 显示"[X]小时前"
-
-3. **昨天**：显示"昨天 HH:mm"
-   - 例如："昨天 14:32"
-
-4. **2-7天**：显示相对天数
-   - 显示"[X]天前"
-
-5. **7-30天**：显示相对天数
-   - 显示"[X]天前"
-
-6. **超过30天**：显示具体日期
-   - 显示"YYYY-MM-DD"
+1. **小于10秒**：显示"刚刚"
+2. **10-60秒**：显示"[X]秒前"
+3. **小于60分钟**：显示"[X]分钟前"
+4. **今天**：显示"今天 HH:mm"
+5. **昨天**：显示"昨天 HH:mm"
+6. **超过24小时**：显示"YYYY/M/D HH:mm"
 
 ### 实现细节
 - **时间计算**：使用当前时间减去分享时间戳计算差异
@@ -361,8 +349,10 @@ ShareUI.svelte组件增强了相对时间显示系统，提供了友好的时间
 "lastShareTime": {
   "label": "上次分享",
   "justNow": "刚刚",
+  "secondsAgo": "[param1]秒前",
   "minutesAgo": "[param1]分钟前",
   "hoursAgo": "[param1]小时前",
+  "today": "今天",
   "yesterday": "昨天",
   "daysAgo": "[param1]天前"
 }
@@ -373,8 +363,10 @@ ShareUI.svelte组件增强了相对时间显示系统，提供了友好的时间
 "lastShareTime": {
   "label": "Last shared",
   "justNow": "Just now",
+  "secondsAgo": "[param1]s ago",
   "minutesAgo": "[param1]m ago",
   "hoursAgo": "[param1]h ago",
+  "today": "Today",
   "yesterday": "Yesterday",
   "daysAgo": "[param1]d ago"
 }
@@ -386,7 +378,7 @@ ShareUI.svelte组件增强了相对时间显示系统，提供了友好的时间
 ```svelte
 {#if formData.shared && formData.lastShareTime}
   <div class="last-share-time" title={new Date(formData.lastShareTime).toLocaleString()}>
-    {pluginInstance.i18n["lastShareTime"]["label"] || "上次分享"}：{formatLastShareTime(
+    {pluginInstance.i18n["lastShareTime"]["label"]}：{formatLastShareTime(
       formData.lastShareTime
     )}
   </div>
@@ -407,29 +399,27 @@ ShareUI.svelte组件增强了相对时间显示系统，提供了友好的时间
 flowchart TD
 A["输入时间戳"] --> B["计算当前时间差"]
 B --> C{"时间差判断"}
-C --> |"小于1分钟"| D["显示'刚刚'"]
-C --> |"1-59分钟"| E["显示'X分钟前'"]
-C --> |"小于24小时"| F["显示'X小时前'"]
-C --> |"昨天"| G["显示'昨天 HH:mm'"]
-C --> |"2-7天"| H["显示'X天前'"]
-C --> |"7-30天"| I["显示'X天前'"]
-C --> |"超过30天"| J["显示'YYYY-MM-DD'"]
-D --> K["输出相对时间"]
-E --> K
-F --> K
-G --> K
-H --> K
-I --> K
-J --> K
+C --> |"小于10秒"| D["显示'刚刚'"]
+C --> |"10-60秒"| E["显示'X秒前'"]
+C --> |"小于60分钟"| F["显示'X分钟前'"]
+C --> |"今天"| G["显示'今天 HH:mm'"]
+C --> |"昨天"| H["显示'昨天 HH:mm'"]
+C --> |"超过24小时"| I["显示'YYYY/M/D HH:mm'"]
+D --> J["输出相对时间"]
+E --> J
+F --> J
+G --> J
+H --> J
+I --> J
 ```
 
 **图表来源**
-- [src/libs/pages/ShareUI.svelte:475-526](file://src/libs/pages/ShareUI.svelte#L475-L526)
+- [src/libs/pages/ShareUI.svelte:383-439](file://src/libs/pages/ShareUI.svelte#L383-L439)
 
 **章节来源**
-- [src/libs/pages/ShareUI.svelte:475-526](file://src/libs/pages/ShareUI.svelte#L475-L526)
-- [src/i18n/zh_CN.json:398-405](file://src/i18n/zh_CN.json#L398-L405)
-- [src/i18n/en_US.json:394-401](file://src/i18n/en_US.json#L394-L401)
+- [src/libs/pages/ShareUI.svelte:383-439](file://src/libs/pages/ShareUI.svelte#L383-L439)
+- [src/i18n/zh_CN.json:403-412](file://src/i18n/zh_CN.json#L403-L412)
+- [src/i18n/en_US.json:399-408](file://src/i18n/en_US.json#L399-L408)
 
 ## 依赖关系分析
 - 组件耦合
@@ -462,7 +452,7 @@ RT --> I18N["i18n System"]
 - [src/libs/pages/ShareManage.svelte:21-21](file://src/libs/pages/ShareManage.svelte#L21-L21)
 - [src/libs/pages/IncrementalShareUI.svelte:11-26](file://src/libs/pages/IncrementalShareUI.svelte#L11-L26)
 - [src/topbar.ts:21-21](file://src/topbar.ts#L21-L21)
-- [src/libs/pages/ShareUI.svelte:475-526](file://src/libs/pages/ShareUI.svelte#L475-L526)
+- [src/libs/pages/ShareUI.svelte:383-439](file://src/libs/pages/ShareUI.svelte#L383-L439)
 
 章节来源
 - [src/libs/pages/ShareSetting.svelte:15-23](file://src/libs/pages/ShareSetting.svelte#L15-L23)
@@ -491,7 +481,7 @@ RT --> I18N["i18n System"]
 - [src/libs/pages/ShareManage.svelte:250-287](file://src/libs/pages/ShareManage.svelte#L250-L287)
 - [src/libs/components/ProgressManager.svelte:32-40](file://src/libs/components/ProgressManager.svelte#L32-L40)
 - [src/libs/components/ProgressManager.svelte:84-101](file://src/libs/components/ProgressManager.svelte#L84-L101)
-- [src/libs/pages/ShareUI.svelte:475-526](file://src/libs/pages/ShareUI.svelte#L475-L526)
+- [src/libs/pages/ShareUI.svelte:383-439](file://src/libs/pages/ShareUI.svelte#L383-L439)
 
 ## 故障排查指南
 - 设置页无法打开
@@ -511,14 +501,14 @@ RT --> I18N["i18n System"]
   - 检查时间戳有效性
   - 确认i18n配置正确
   - 验证formatLastShareTime函数调用
-  - 参考：[相对时间格式化:475-526](file://src/libs/pages/ShareUI.svelte#L475-L526)
+  - 参考：[相对时间格式化:383-439](file://src/libs/pages/ShareUI.svelte#L383-L439)
 
 章节来源
 - [src/index.ts:73-95](file://src/index.ts#L73-L95)
 - [src/libs/pages/IncrementalShareUI.svelte:146-245](file://src/libs/pages/IncrementalShareUI.svelte#L146-L245)
 - [src/libs/pages/ShareManage.svelte:250-287](file://src/libs/pages/ShareManage.svelte#L250-L287)
 - [src/libs/components/ProgressManager.svelte:20-40](file://src/libs/components/ProgressManager.svelte#L20-L40)
-- [src/libs/pages/ShareUI.svelte:475-526](file://src/libs/pages/ShareUI.svelte#L475-L526)
+- [src/libs/pages/ShareUI.svelte:383-439](file://src/libs/pages/ShareUI.svelte#L383-L439)
 
 ## 结论
 该UI组件系统以Svelte为核心，采用页面组件与通用组件分离的设计，具备良好的可维护性与复用性。通过标签页、表格工具集与进度管理组件，实现了从设置到分享再到管理的完整工作流。**新增的相对时间显示系统**进一步提升了用户体验，提供了符合大厂设计规范的时间格式化功能。建议在后续迭代中持续关注大数据场景下的性能优化与无障碍访问完善。
@@ -553,12 +543,14 @@ RT --> I18N["i18n System"]
 ### 相对时间显示系统配置
 - **中文配置**：位于src/i18n/zh_CN.json的lastShareTime节点
 - **英文配置**：位于src/i18n/en_US.json的lastShareTime节点
-- **样式配置**：位于ShareUI.svelte的1122-1134行
+- **样式配置**：位于ShareUI.svelte的991-1003行
 - **国际化键值**：
   - label：显示标签
   - justNow：刚刚
+  - secondsAgo：秒前
   - minutesAgo：分钟前
   - hoursAgo：小时前
+  - today：今天
   - yesterday：昨天
   - daysAgo：天前
 
@@ -570,6 +562,6 @@ RT --> I18N["i18n System"]
 - [src/libs/components/tab/Tab.svelte:13-16](file://src/libs/components/tab/Tab.svelte#L13-L16)
 - [src/libs/components/ProgressManager.svelte:8-10](file://src/libs/components/ProgressManager.svelte#L8-L10)
 - [src/libs/components/bench/Bench.svelte:16-50](file://src/libs/components/bench/Bench.svelte#L16-L50)
-- [src/libs/pages/ShareUI.svelte:475-526](file://src/libs/pages/ShareUI.svelte#L475-L526)
-- [src/i18n/zh_CN.json:398-405](file://src/i18n/zh_CN.json#L398-L405)
-- [src/i18n/en_US.json:394-401](file://src/i18n/en_US.json#L394-L401)
+- [src/libs/pages/ShareUI.svelte:383-439](file://src/libs/pages/ShareUI.svelte#L383-L439)
+- [src/i18n/zh_CN.json:403-412](file://src/i18n/zh_CN.json#L403-L412)
+- [src/i18n/en_US.json:399-408](file://src/i18n/en_US.json#L399-L408)
