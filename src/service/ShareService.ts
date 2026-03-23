@@ -224,6 +224,13 @@ class ShareService implements IShareHistoryService {
   }
 
   /**
+   * 根据文档ID获取本地分享历史（用于ShareUI显示上次分享时间）
+   */
+  public async getLocalShareHistory(docId: string): Promise<ShareHistoryItem | undefined> {
+    return await this.localShareHistory.getHistoryByDocId(docId)
+  }
+
+  /**
    * 获取VIP信息
    */
   public async getVipInfo(token: string): Promise<ServiceResponse> {

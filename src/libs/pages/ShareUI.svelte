@@ -371,59 +371,64 @@
   }
 
   /**
-   * 格式化上次分享时间为相对时间
-   * 大厂设计规范：
-   * - 1小时内：显示相对时间（刚刚、5分钟前）
-   * - 24小时内：显示相对时间（3小时前）
-   * - 昨天：显示"昨天 HH:mm"（如：昨天 14:32）
-   * - 2-30天：显示相对时间（2天前）
-   * - 超过30天：显示具体日期（2024-03-20）
+   * 格式化上次分享时间（大厂UI规范）
+   *
+   * - 1分钟内：刚刚
+   * - 1-60分钟：X分钟前
+   * - 今天：今天 HH:mm（如：今天 14:30）
+   * - 昨天：昨天 HH:mm（如：昨天 14:30）
+   * - 超过24小时：YYYY/M/D HH:mm（如：2026/3/20 23:22）
    */
   const formatLastShareTime = (timestamp: number | null): string => {
     if (!timestamp) return ""
 
-    const now = Date.now()
-    const diff = now - timestamp
-    const minutes = Math.floor(diff / (1000 * 60))
-    const hours = Math.floor(diff / (1000 * 60 * 60))
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-
+    const now = new Date()
     const date = new Date(timestamp)
+    const diff = now.getTime() - timestamp
+    const minutes = Math.floor(diff / (1000 * 60))
+
     const hoursStr = date.getHours().toString().padStart(2, "0")
     const minutesStr = date.getMinutes().toString().padStart(2, "0")
 
-    // 小于1小时显示分钟
+    // 小于1分钟：刚刚
+    if (minutes < 1) {
+      return pluginInstance.i18n["lastShareTime"]["justNow"]
+    }
+
+    // 小于60分钟：X分钟前
     if (minutes < 60) {
-      if (minutes < 1) return pluginInstance.i18n["lastShareTime"]["justNow"]
       return pluginInstance.i18n["lastShareTime"]["minutesAgo"].replace("[param1]", minutes.toString())
     }
 
-    // 小于24小时显示小时
-    if (hours < 24) {
-      return pluginInstance.i18n["lastShareTime"]["hoursAgo"].replace("[param1]", hours.toString())
+    // 判断是否今天（同一天）
+    const isToday =
+      now.getDate() === date.getDate() && now.getMonth() === date.getMonth() && now.getFullYear() === date.getFullYear()
+
+    // 判断是否昨天
+    const yesterday = new Date(now)
+    yesterday.setDate(yesterday.getDate() - 1)
+    const isYesterday =
+      yesterday.getDate() === date.getDate() &&
+      yesterday.getMonth() === date.getMonth() &&
+      yesterday.getFullYear() === date.getFullYear()
+
+    // 今天：显示"今天 HH:mm"
+    if (isToday) {
+      const todayLabel = pluginInstance.i18n["lastShareTime"]["today"]
+      return `${todayLabel} ${hoursStr}:${minutesStr}`
     }
 
     // 昨天：显示"昨天 HH:mm"
-    if (days === 1) {
+    if (isYesterday) {
       const yesterdayLabel = pluginInstance.i18n["lastShareTime"]["yesterday"]
       return `${yesterdayLabel} ${hoursStr}:${minutesStr}`
     }
 
-    // 2-7天显示天数
-    if (days < 7) {
-      return pluginInstance.i18n["lastShareTime"]["daysAgo"].replace("[param1]", days.toString())
-    }
-
-    // 7-30天显示"X天前"或具体日期（根据配置）
-    if (days < 30) {
-      return pluginInstance.i18n["lastShareTime"]["daysAgo"].replace("[param1]", days.toString())
-    }
-
-    // 超过30天显示具体日期
+    // 超过24小时：显示 YYYY/M/D HH:mm
     const year = date.getFullYear()
-    const month = (date.getMonth() + 1).toString().padStart(2, "0")
-    const day = date.getDate().toString().padStart(2, "0")
-    return `${year}-${month}-${day}`
+    const month = date.getMonth() + 1
+    const day = date.getDate()
+    return `${year}/${month}/${day} ${hoursStr}:${minutesStr}`
   }
 
   // ========================================
@@ -503,9 +508,10 @@
     const docInfo = await shareService.getSharedDocInfo(docId, cfg?.serviceApiConfig?.token)
     formData.shared = docInfo.code === 0
     formData.shareData = docInfo?.data ? JSON.parse(docInfo.data) : null
-    // 提取上次分享时间（从服务端返回的 createdAt 字段解析）
-    const createdAtStr = formData.shareData?.createdAt
-    formData.lastShareTime = createdAtStr ? new Date(createdAtStr).getTime() : null
+
+    // 提取上次分享时间（从本地历史记录获取，更准确）
+    const localHistory = await shareService.getLocalShareHistory(docId)
+    formData.lastShareTime = localHistory?.docModifiedTime || new Date().getTime()
 
     // 生成分享链接
     const customDomain = cfg?.appConfig?.domain ?? "https://siyuan.wiki"

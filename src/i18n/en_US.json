@@ -401,6 +401,7 @@
     "justNow": "Just now",
     "minutesAgo": "[param1]m ago",
     "hoursAgo": "[param1]h ago",
+    "today": "Today",
     "yesterday": "Yesterday",
     "daysAgo": "[param1]d ago"
   },
