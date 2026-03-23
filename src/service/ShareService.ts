@@ -7,6 +7,7 @@
  *  of this license document, but changing it is not allowed.
  */
 
+import { showMessage } from "siyuan"
 import { Post } from "zhi-blog-api"
 import { ILogger, simpleLogger } from "zhi-lib-base"
 import { isDev, NULL_VALUE_FOR_SIYUAN_ATTR_REMOVE, SHARE_PRO_STORE_NAME } from "../Constants"
@@ -26,10 +27,9 @@ import { AttrUtils } from "../utils/AttrUtils"
 import { ImageUtils } from "../utils/ImageUtils"
 import { SettingKeys } from "../utils/SettingKeys"
 import { shareHistoryCache } from "../utils/ShareHistoryCache"
-import { LocalShareHistory } from "./LocalShareHistory"
-import { showMessage } from "siyuan"
 import { ProgressManager } from "../utils/progress/ProgressManager"
-import { resourceEventEmitter, RESOURCE_EVENTS } from "../utils/progress/ResourceEventEmitter"
+import { RESOURCE_EVENTS, resourceEventEmitter } from "../utils/progress/ResourceEventEmitter"
+import { LocalShareHistory } from "./LocalShareHistory"
 
 /**
  * 分享服务
@@ -258,55 +258,111 @@ class ShareService implements IShareHistoryService {
   }
 
   /**
-   * 获取引用的文档列表
+   * 获取引用的文档列表（递归获取，最大深度3层）
+   *
+   * @param docId 文档ID
+   * @param config 配置
+   * @param maxDepth 最大递归深度（默认3层）
+   * @returns 引用文档列表（扁平化，已去重）
    */
   private async getReferencedDocuments(
     docId: string,
-    config: ShareProConfig
+    config: ShareProConfig,
+    maxDepth: number = 3
   ): Promise<Array<{ docId: string; docTitle: string }>> {
-    const referencedDocs = []
+    const allReferencedDocs: Array<{ docId: string; docTitle: string }> = []
+    const processedDocIds = new Set<string>()
+
+    try {
+      await this.collectReferencedDocsRecursive(docId, config, allReferencedDocs, processedDocIds, 0, maxDepth)
+    } catch (error) {
+      this.logger.error(`获取引用文档失败:`, error)
+    }
+
+    return allReferencedDocs
+  }
+
+  /**
+   * 递归收集引用文档
+   *
+   * @param currentDocId 当前文档ID
+   * @param config 配置
+   * @param result 结果列表
+   * @param processedDocIds 已处理的文档ID集合（用于循环引用检测）
+   * @param currentDepth 当前深度
+   * @param maxDepth 最大深度
+   */
+  private async collectReferencedDocsRecursive(
+    currentDocId: string,
+    config: ShareProConfig,
+    result: Array<{ docId: string; docTitle: string }>,
+    processedDocIds: Set<string>,
+    currentDepth: number,
+    maxDepth: number
+  ): Promise<void> {
+    // 深度限制检查
+    if (currentDepth >= maxDepth) {
+      this.logger.debug(`达到最大递归深度 ${maxDepth}，停止递归`)
+      return
+    }
+
+    // 循环引用检测
+    if (processedDocIds.has(currentDocId)) {
+      this.logger.debug(`检测到循环引用，跳过文档: ${currentDocId}`)
+      return
+    }
+    processedDocIds.add(currentDocId)
+
     try {
       const { kernelApi } = useSiyuanApi(config)
 
-      // 获取文档内容
-      const docContent = await kernelApi.getBlockByID(docId)
-      if (!docContent || !docContent.data) {
-        return referencedDocs
+      // 使用 SQL 查询 refs 表获取当前文档引用的所有其他文档
+      // refs 表结构: def_block_root_id 是被引用块所属的文档ID，root_id 是引用所在文档的ID
+      const sql = `
+        SELECT DISTINCT def_block_root_id
+        FROM refs
+        WHERE root_id = '${currentDocId}'
+          AND def_block_root_id != '${currentDocId}'
+      `
+
+      const refResult = await kernelApi.sql(sql)
+      if (!refResult || refResult.length === 0) {
+        return
       }
 
-      // 提取所有引用的文档ID
-      // 在思源笔记中，引用通常以 [[docId]] 或 ((docId)) 的形式出现
-      const content = JSON.stringify(docContent.data)
-      const docIdRegex = /(?:\[\[|\(\()([a-f0-9-]+)(?:\]\]|\)\))/g
-      const matches = content.matchAll(docIdRegex)
+      // 提取引用的文档ID
+      const referencedDocIds = refResult
+        .map((row: any) => row.def_block_root_id)
+        .filter((id: string) => id && !processedDocIds.has(id))
 
-      const referencedDocIds = new Set<string>()
-      for (const match of matches) {
-        const referencedDocId = match[1]
-        if (referencedDocId && referencedDocId !== docId) {
-          referencedDocIds.add(referencedDocId)
-        }
-      }
-
-      // 获取引用文档的详细信息
+      // 获取引用文档的详细信息并递归处理
       for (const refDocId of referencedDocIds) {
         try {
           const refDocInfo = await kernelApi.getBlockByID(refDocId)
-          if (refDocInfo?.data?.box && refDocInfo.data.title) {
-            referencedDocs.push({
+          if (refDocInfo?.box) {
+            const docTitle = refDocInfo.content || refDocInfo.title || "Untitled Document"
+            result.push({
               docId: refDocId,
-              docTitle: refDocInfo.data.title,
+              docTitle: docTitle,
             })
+
+            // 递归获取该引用文档中的引用
+            await this.collectReferencedDocsRecursive(
+              refDocId,
+              config,
+              result,
+              processedDocIds,
+              currentDepth + 1,
+              maxDepth
+            )
           }
         } catch (error) {
           this.logger.warn(`无法获取引用文档 ${refDocId} 的信息:`, error)
         }
       }
     } catch (error) {
-      this.logger.error(`获取引用文档失败:`, error)
+      this.logger.error(`获取文档 ${currentDocId} 的引用失败:`, error)
     }
-
-    return referencedDocs
   }
 
   /**
