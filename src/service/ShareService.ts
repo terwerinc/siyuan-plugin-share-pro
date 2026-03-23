@@ -10,7 +10,12 @@
 import { showMessage } from "siyuan"
 import { Post } from "zhi-blog-api"
 import { ILogger, simpleLogger } from "zhi-lib-base"
-import { isDev, NULL_VALUE_FOR_SIYUAN_ATTR_REMOVE, SHARE_PRO_STORE_NAME } from "../Constants"
+import {
+  isDev,
+  NULL_VALUE_FOR_SIYUAN_ATTR_REMOVE,
+  SHARE_PRO_STORE_NAME,
+  DEFAULT_SHARE_REFERENCES_MAX_DEPTH,
+} from "../Constants"
 import { ServiceResponse, ShareApi } from "../api/share-api"
 import { useDataTable } from "../composables/useDataTable"
 import { useEmbedBlock } from "../composables/useEmbedBlock"
@@ -428,12 +433,15 @@ class ShareService implements IShareHistoryService {
   }
 
   /**
-   * 获取引用的文档列表（递归获取，最大深度3层）
+   * 获取引用的文档列表（递归获取）
+   *
+   * 最大递归深度由 DEFAULT_SHARE_REFERENCES_MAX_DEPTH 常量控制
+   * 当前为内部配置，暂不对用户开放，如需调整请修改 Constants.ts
    */
   private async getReferencedDocuments(
     docId: string,
     config: ShareProConfig,
-    maxDepth: number = 3
+    maxDepth: number = DEFAULT_SHARE_REFERENCES_MAX_DEPTH
   ): Promise<Array<{ docId: string; docTitle: string }>> {
     const allReferencedDocs: Array<{ docId: string; docTitle: string }> = []
     const processedDocIds = new Set<string>()
