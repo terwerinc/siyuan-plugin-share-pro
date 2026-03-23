@@ -10,7 +10,7 @@
 <script lang="ts">
   import copy from "copy-to-clipboard"
   import { showMessage } from "siyuan"
-  import { onDestroy, onMount } from "svelte"
+  import { onMount } from "svelte"
   import { Post } from "zhi-blog-api"
   import { simpleLogger } from "zhi-lib-base"
   import { SiyuanKernelApi } from "zhi-siyuan-api"
@@ -25,7 +25,6 @@
   import { ShareService } from "../../service/ShareService"
   import { AttrUtils } from "../../utils/AttrUtils"
   import { PasswordUtils } from "../../utils/PasswordUtils"
-  import type { ProgressState } from "../../utils/progress/progressStore"
   import { progressStore } from "../../utils/progress/progressStore"
   import { SettingKeys } from "../../utils/SettingKeys"
   import { icons } from "../../utils/svg"
@@ -308,17 +307,11 @@
   // ========================================
   let showErrorDetails = false
 
-  // 订阅 progressStore，获取当前批次的错误信息
-  let currentProgressState: ProgressState | null = null
-  const unsubscribeProgress = progressStore.subscribe((state) => {
-    currentProgressState = state
-  })
-
-  // 关键修复：文档级别的错误判断
-  // 使用 initiatorDocId（发起操作的文档ID）而不是 currentDocId（当前正在处理的文档ID）
-  // 这样可以正确显示子文档/引用文档的错误，同时保持文档隔离
+  // 直接使用 $progressStore，避免 subscribe 回调延迟
+  // $progressStore 是 Svelte 的响应式语法，会自动订阅并立即返回最新值
   $: hasError = (() => {
-    if (!currentProgressState || currentProgressState.status !== "error") {
+    const state = $progressStore
+    if (!state || state.status !== "error") {
       return false
     }
     // 非单文档模式不显示错误
@@ -327,14 +320,39 @@
     }
     // 关键：使用 initiatorDocId 判断当前文档是否是发起操作的文档
     // initiatorDocId 是用户点击"分享"按钮的文档ID，不会随处理进度变化
-    return currentProgressState.initiatorDocId === docId
+    return state.initiatorDocId === docId
   })()
 
   // 获取发起操作的文档的所有错误信息（用于错误详情弹窗）
   // 当 initiatorDocId 匹配时，显示所有相关错误（包括子文档/引用文档的错误）
-  $: currentDocErrors = currentProgressState?.initiatorDocId === docId ? currentProgressState.errors : []
-  $: currentDocResourceErrors =
-    currentProgressState?.initiatorDocId === docId ? currentProgressState.resourceErrors : []
+  $: currentDocErrors = $progressStore?.initiatorDocId === docId ? $progressStore.errors : []
+  $: currentDocResourceErrors = $progressStore?.initiatorDocId === docId ? $progressStore.resourceErrors : []
+
+  // 响应式错误消息 - 确保在 progressStore 变化时自动更新
+  $: errorMessage = (() => {
+    const state = $progressStore
+    let message = ""
+
+    const errors = state?.initiatorDocId === docId ? state.errors : []
+    const resourceErrors = state?.initiatorDocId === docId ? state.resourceErrors : []
+
+    if (errors.length > 0) {
+      message += "📄 " + pluginInstance.i18n["progressManager"]["documentErrors"] + ":\n"
+      errors.forEach((error) => {
+        message += `• ${error.docId}: ${String(error.error)}\n`
+      })
+    }
+
+    if (resourceErrors.length > 0) {
+      if (message) message += "\n"
+      message += "🖼️ " + pluginInstance.i18n["progressManager"]["resourceErrors"] + ":\n"
+      resourceErrors.forEach((error) => {
+        message += `• ${error.docId}: ${String(error.error)}\n`
+      })
+    }
+
+    return message || pluginInstance.i18n["shareUI"]["noErrorDetails"]
+  })()
 
   // 处理错误警告条点击
   const handleErrorBannerClick = () => {
@@ -351,29 +369,6 @@
     if (e) e.stopPropagation()
     // 关闭错误详情弹窗
     showErrorDetails = false
-  }
-
-  // 生成错误详情消息 - 只显示当前文档相关的错误
-  const generateErrorMessage = (): string => {
-    let message = ""
-
-    // 使用已过滤的当前文档错误信息
-    if (currentDocErrors.length > 0) {
-      message += "📄 " + pluginInstance.i18n["progressManager"]["documentErrors"] + ":\n"
-      currentDocErrors.forEach((error) => {
-        message += `• ${error.docId}: ${String(error.error)}\n`
-      })
-    }
-
-    if (currentDocResourceErrors.length > 0) {
-      if (message) message += "\n"
-      message += "🖼️ " + pluginInstance.i18n["progressManager"]["resourceErrors"] + ":\n"
-      currentDocResourceErrors.forEach((error) => {
-        message += `• ${error.docId}: ${String(error.error)}\n`
-      })
-    }
-
-    return message || pluginInstance.i18n["shareUI"]["noErrorDetails"]
   }
 
   const handleExpiresTime = async () => {
@@ -602,11 +597,6 @@
   onMount(async () => {
     await initPage()
   })
-
-  // 清理订阅
-  onDestroy(() => {
-    unsubscribeProgress()
-  })
 </script>
 
 <div id="share">
@@ -640,7 +630,7 @@
   <Confirm
     show={showErrorDetails}
     title={pluginInstance.i18n["shareUI"]["errorDetailsTitle"]}
-    message={generateErrorMessage()}
+    message={errorMessage}
     confirmText={pluginInstance.i18n["shareUI"]["clearError"]}
     cancelText={pluginInstance.i18n["cancel"]}
     onConfirm={() => {
@@ -746,6 +736,8 @@
                   <span class="dropdown-arrow">▼</span>
                 </button>
                 {#if formData.showUpdateMenu}
+                  <!-- svelte-ignore a11y-click-events-have-key-events -->
+                  <!-- svelte-ignore a11y-no-static-element-interactions -->
                   <div class="dropdown-menu" on:click|stopPropagation>
                     <div class="dropdown-item-wrapper">
                       <button type="button" class="dropdown-item" on:click|stopPropagation={() => handleReShare(false)}>

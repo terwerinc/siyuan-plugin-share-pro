@@ -15,16 +15,19 @@
 - [src/libs/components/Confirm.svelte](file://src/libs/components/Confirm.svelte)
 - [src/libs/components/ProgressManager.svelte](file://src/libs/components/ProgressManager.svelte)
 - [src/utils/progress/progressStore.ts](file://src/utils/progress/progressStore.ts)
+- [src/utils/progress/ProgressState.ts](file://src/utils/progress/ProgressState.ts)
+- [src/utils/progress/ProgressManager.ts](file://src/utils/progress/ProgressManager.ts)
 - [svelte.config.js](file://svelte.config.js)
 - [package.json](file://package.json)
 </cite>
 
 ## 更新摘要
 **变更内容**
-- 新增错误横幅组件和文档级别错误状态管理机制
-- 完善模态确认对话框的实现和使用
-- 增强键盘无障碍支持，包括错误横幅的键盘交互
-- 优化错误处理和用户交互体验
+- 新增ShareUI组件的operationState状态机，实现完整的操作状态管理
+- 引入更新分享下拉菜单系统，支持快速更新和完全更新两种模式
+- 增强错误处理机制，实现文档级别的错误状态隔离
+- 完善错误横幅组件和错误详情弹窗的交互体验
+- 优化操作遮罩层和加载状态的显示逻辑
 
 ## 目录
 1. [简介](#简介)
@@ -94,7 +97,7 @@ IncrementalShareUI --> IncShareService
 - [src/newUI.ts:35-122](file://src/newUI.ts#L35-L122)
 - [src/invoke/widgetInvoke.ts:17-76](file://src/invoke/widgetInvoke.ts#L17-L76)
 - [src/libs/pages/ShareSetting.svelte:10-118](file://src/libs/pages/ShareSetting.svelte#L10-L118)
-- [src/libs/pages/ShareUI.svelte:10-1683](file://src/libs/pages/ShareUI.svelte#L10-L1683)
+- [src/libs/pages/ShareUI.svelte:10-1696](file://src/libs/pages/ShareUI.svelte#L10-L1696)
 - [src/libs/pages/IncrementalShareUI.svelte:10-127](file://src/libs/pages/IncrementalShareUI.svelte#L10-L127)
 - [src/libs/pages/ShareManage.svelte:9-38](file://src/libs/pages/ShareManage.svelte#L9-L38)
 
@@ -115,7 +118,7 @@ IncrementalShareUI --> IncShareService
   - NewUI：根据VIP状态决定展示新版UI或设置菜单，并挂载对应Svelte组件
 - 页面组件
   - ShareSetting：设置界面，内含基础、个性化、文档、SEO、增量分享、黑名单等多标签页
-  - ShareUI：单文档分享界面，三层配置架构（用户偏好/文档级设置/分享选项），支持分享/取消/重新分享/密码更新等，**新增错误横幅组件和模态确认对话框**
+  - ShareUI：单文档分享界面，三层配置架构（用户偏好/文档级设置/分享选项），支持分享/取消/重新分享/密码更新等，**新增operationState状态机、下拉菜单系统、增强的错误处理机制**
   - IncrementalShareUI：增量分享界面，支持搜索、分页、选择、统计、打开分享管理与黑名单管理
   - ShareManage：分享管理界面，表格展示分享记录，支持取消、设为主页、查看、跳转、复制标题等
 - 通用组件
@@ -129,12 +132,12 @@ IncrementalShareUI --> IncShareService
 - [src/topbar.ts:26-98](file://src/topbar.ts#L26-L98)
 - [src/newUI.ts:35-122](file://src/newUI.ts#L35-L122)
 - [src/libs/pages/ShareSetting.svelte:10-118](file://src/libs/pages/ShareSetting.svelte#L10-L118)
-- [src/libs/pages/ShareUI.svelte:10-1683](file://src/libs/pages/ShareUI.svelte#L10-L1683)
+- [src/libs/pages/ShareUI.svelte:10-1696](file://src/libs/pages/ShareUI.svelte#L10-L1696)
 - [src/libs/pages/IncrementalShareUI.svelte:10-127](file://src/libs/pages/IncrementalShareUI.svelte#L10-L127)
 - [src/libs/pages/ShareManage.svelte:9-38](file://src/libs/pages/ShareManage.svelte#L9-L38)
 - [src/libs/components/tab/Tab.svelte:10-45](file://src/libs/components/tab/Tab.svelte#L10-L45)
 - [src/libs/components/Confirm.svelte:1-218](file://src/libs/components/Confirm.svelte#L1-L218)
-- [src/libs/components/ProgressManager.svelte:1-532](file://src/libs/components/ProgressManager.svelte#L1-L532)
+- [src/libs/components/ProgressManager.svelte:1-534](file://src/libs/components/ProgressManager.svelte#L1-L534)
 
 ## 架构总览
 Svelte组件通过属性(props)向下传递，通过事件派发向上反馈，配合服务层实现状态同步与异步操作处理。整体采用"插件入口 -> Topbar/菜单 -> 页面组件 -> 服务层"的调用链路，通用组件作为横切能力被多个页面复用。
@@ -159,8 +162,8 @@ Page-->>User : 响应式更新界面
 **图表来源**
 - [src/topbar.ts:41-98](file://src/topbar.ts#L41-L98)
 - [src/newUI.ts:53-122](file://src/newUI.ts#L53-L122)
-- [src/libs/pages/ShareUI.svelte:141-216](file://src/libs/pages/ShareUI.svelte#L141-L216)
-- [src/libs/components/ProgressManager.svelte:20-40](file://src/libs/components/ProgressManager.svelte#L20-L40)
+- [src/libs/pages/ShareUI.svelte:159-234](file://src/libs/pages/ShareUI.svelte#L159-L234)
+- [src/libs/components/ProgressManager.svelte:35-46](file://src/libs/components/ProgressManager.svelte#L35-L46)
 
 ## 详细组件分析
 
@@ -208,6 +211,10 @@ ShareSetting --> Tab : "渲染"
   - 用户偏好（全局）：密码显示偏好、全局子文档分享、增量分享配置
   - 文档级设置：文档树/大纲开关与层级、有效期、是否分享子文档/引用文档
   - 分享选项（敏感）：密码开关与密码值
+- **新增状态管理增强**
+  - **operationState状态机**：完整的操作状态管理，包括idle、sharing、canceling、shared、error五种状态
+  - **下拉菜单系统**：更新分享功能的下拉菜单，支持快速更新和完全更新两种模式
+  - **增强错误处理**：文档级别的错误状态隔离，通过initiatorDocId实现精确的错误显示
 - 数据流与状态
   - onMount触发初始化，分别加载全局配置、文档设置、分享状态与链接
   - 通过formData集中管理表单数据与操作状态机，响应式更新UI
@@ -219,6 +226,7 @@ ShareSetting --> Tab : "渲染"
   - **错误横幅组件**：实时显示当前文档的错误状态，支持键盘交互（Enter键激活）
   - **模态确认对话框**：使用Confirm组件实现子文档/引用文档变更确认、错误详情查看
   - **文档级别错误状态管理**：独立管理每个文档的错误状态，避免相互影响
+  - **操作遮罩层**：在分享/取消过程中显示遮罩层和加载动画
 - 通用组件集成
   - Confirm：子文档/引用文档变更确认、错误详情确认
   - ProgressManager：全局进度展示与自动关闭
@@ -249,18 +257,18 @@ UpdateUI --> Ready
 ```
 
 **图表来源**
-- [src/libs/pages/ShareUI.svelte:482-556](file://src/libs/pages/ShareUI.svelte#L482-L556)
-- [src/libs/pages/ShareUI.svelte:141-216](file://src/libs/pages/ShareUI.svelte#L141-L216)
-- [src/libs/pages/ShareUI.svelte:278-332](file://src/libs/pages/ShareUI.svelte#L278-L332)
-- [src/libs/pages/ShareUI.svelte:346-400](file://src/libs/pages/ShareUI.svelte#L346-L400)
-- [src/libs/pages/ShareUI.svelte:436-477](file://src/libs/pages/ShareUI.svelte#L436-L477)
+- [src/libs/pages/ShareUI.svelte:540-581](file://src/libs/pages/ShareUI.svelte#L540-L581)
+- [src/libs/pages/ShareUI.svelte:159-234](file://src/libs/pages/ShareUI.svelte#L159-L234)
+- [src/libs/pages/ShareUI.svelte:236-284](file://src/libs/pages/ShareUI.svelte#L236-L284)
+- [src/libs/pages/ShareUI.svelte:286-303](file://src/libs/pages/ShareUI.svelte#L286-L303)
+- [src/libs/pages/ShareUI.svelte:309-354](file://src/libs/pages/ShareUI.svelte#L309-L354)
 
 **章节来源**
-- [src/libs/pages/ShareUI.svelte:482-556](file://src/libs/pages/ShareUI.svelte#L482-L556)
-- [src/libs/pages/ShareUI.svelte:141-216](file://src/libs/pages/ShareUI.svelte#L141-L216)
-- [src/libs/pages/ShareUI.svelte:278-332](file://src/libs/pages/ShareUI.svelte#L278-L332)
-- [src/libs/pages/ShareUI.svelte:346-400](file://src/libs/pages/ShareUI.svelte#L346-L400)
-- [src/libs/pages/ShareUI.svelte:436-477](file://src/libs/pages/ShareUI.svelte#L436-L477)
+- [src/libs/pages/ShareUI.svelte:121-130](file://src/libs/pages/ShareUI.svelte#L121-L130)
+- [src/libs/pages/ShareUI.svelte:159-234](file://src/libs/pages/ShareUI.svelte#L159-L234)
+- [src/libs/pages/ShareUI.svelte:236-284](file://src/libs/pages/ShareUI.svelte#L236-L284)
+- [src/libs/pages/ShareUI.svelte:286-303](file://src/libs/pages/ShareUI.svelte#L286-L303)
+- [src/libs/pages/ShareUI.svelte:309-354](file://src/libs/pages/ShareUI.svelte#L309-L354)
 
 ### IncrementalShareUI 增量分享界面
 - 功能要点
@@ -371,12 +379,12 @@ class ProgressManager {
 **图表来源**
 - [src/libs/components/tab/Tab.svelte:10-45](file://src/libs/components/tab/Tab.svelte#L10-L45)
 - [src/libs/components/Confirm.svelte:1-218](file://src/libs/components/Confirm.svelte#L1-L218)
-- [src/libs/components/ProgressManager.svelte:1-532](file://src/libs/components/ProgressManager.svelte#L1-L532)
+- [src/libs/components/ProgressManager.svelte:1-534](file://src/libs/components/ProgressManager.svelte#L1-L534)
 
 **章节来源**
 - [src/libs/components/tab/Tab.svelte:10-45](file://src/libs/components/tab/Tab.svelte#L10-L45)
 - [src/libs/components/Confirm.svelte:1-218](file://src/libs/components/Confirm.svelte#L1-L218)
-- [src/libs/components/ProgressManager.svelte:1-532](file://src/libs/components/ProgressManager.svelte#L1-L532)
+- [src/libs/components/ProgressManager.svelte:1-534](file://src/libs/components/ProgressManager.svelte#L1-L534)
 
 ### 错误状态管理系统
 - **设计目标**
@@ -390,6 +398,9 @@ class ProgressManager {
   - 进度管理器检测到错误时，将错误状态保存到errorStore
   - ShareUI订阅错误状态，当存在错误时显示错误横幅
   - 用户点击错误横幅查看详细错误信息，或点击"我知道了"关闭并清除错误状态
+- **文档级别隔离**
+  - 使用initiatorDocId（发起操作的文档ID）而非currentDocId（当前正在处理的文档ID）
+  - 确保错误横幅只显示与当前文档相关的错误，避免混淆
 
 ```mermaid
 flowchart TD
@@ -405,14 +416,52 @@ ClearError --> HideBanner["隐藏错误横幅"]
 ```
 
 **图表来源**
-- [src/libs/components/ProgressManager.svelte:92-115](file://src/libs/components/ProgressManager.svelte#L92-L115)
-- [src/libs/pages/ShareUI.svelte:358-386](file://src/libs/pages/ShareUI.svelte#L358-L386)
-- [src/utils/progress/progressStore.ts:38-74](file://src/utils/progress/progressStore.ts#L38-L74)
+- [src/libs/components/ProgressManager.svelte:35-46](file://src/libs/components/ProgressManager.svelte#L35-L46)
+- [src/libs/pages/ShareUI.svelte:309-354](file://src/libs/pages/ShareUI.svelte#L309-L354)
+- [src/utils/progress/progressStore.ts:15-22](file://src/utils/progress/progressStore.ts#L15-L22)
 
 **章节来源**
-- [src/libs/components/ProgressManager.svelte:92-115](file://src/libs/components/ProgressManager.svelte#L92-L115)
-- [src/libs/pages/ShareUI.svelte:358-386](file://src/libs/pages/ShareUI.svelte#L358-L386)
-- [src/utils/progress/progressStore.ts:38-74](file://src/utils/progress/progressStore.ts#L38-L74)
+- [src/libs/components/ProgressManager.svelte:35-46](file://src/libs/components/ProgressManager.svelte#L35-L46)
+- [src/libs/pages/ShareUI.svelte:309-354](file://src/libs/pages/ShareUI.svelte#L309-L354)
+- [src/utils/progress/progressStore.ts:15-22](file://src/utils/progress/progressStore.ts#L15-L22)
+
+### operationState状态机详解
+- **状态定义**
+  - idle：空闲状态，等待用户操作
+  - sharing：正在分享状态，防止重复点击
+  - canceling：正在取消状态，防止重复点击
+  - shared：已分享状态，允许取消和更新
+  - error：错误状态，显示错误信息和横幅
+- **状态转换**
+  - 用户点击分享按钮 → sharing状态
+  - 分享成功 → shared状态，显示成功消息
+  - 分享失败 → error状态，显示错误消息
+  - 用户点击取消按钮 → canceling状态
+  - 取消成功 → idle状态
+  - 取消失败 → error状态
+- **防重复点击机制**
+  - 在sharing或canceling状态下禁用操作按钮
+  - 通过状态机确保操作的原子性和一致性
+
+**章节来源**
+- [src/libs/pages/ShareUI.svelte:121-127](file://src/libs/pages/ShareUI.svelte#L121-L127)
+- [src/libs/pages/ShareUI.svelte:159-234](file://src/libs/pages/ShareUI.svelte#L159-L234)
+- [src/libs/pages/ShareUI.svelte:236-284](file://src/libs/pages/ShareUI.svelte#L236-L284)
+
+### 下拉菜单系统
+- **功能设计**
+  - 快速更新：仅更新必要的文档，保持现有配置不变
+  - 完全更新：强制重新生成所有内容，适用于重大变更
+  - 菜单状态管理：通过showUpdateMenu控制菜单显示/隐藏
+- **用户体验**
+  - 下拉箭头旋转指示菜单状态
+  - 悬停显示提示信息，提升可用性
+  - 危险操作（完全更新）使用红色标识
+
+**章节来源**
+- [src/libs/pages/ShareUI.svelte:128-141](file://src/libs/pages/ShareUI.svelte#L128-L141)
+- [src/libs/pages/ShareUI.svelte:749-782](file://src/libs/pages/ShareUI.svelte#L749-L782)
+- [src/libs/pages/ShareUI.svelte:1621-1695](file://src/libs/pages/ShareUI.svelte#L1621-L1695)
 
 ## 依赖关系分析
 - 组件耦合
@@ -420,6 +469,7 @@ ClearError --> HideBanner["隐藏错误横幅"]
   - 页面组件依赖服务层（ShareService/SettingService/IncrementalShareService/WidgetInvoke）
   - 服务层依赖插件实例与配置（ShareProConfig）
   - **新增**：ShareUI依赖错误状态管理（errorStore、progressStore）
+  - **新增**：ShareUI依赖operationState状态机
 - 外部依赖
   - Svelte生态（vite-preprocess、customElement）
   - 第三方库（@sveltejs/svelte-virtual-list、copy-to-clipboard、eventemitter3等）
@@ -430,6 +480,7 @@ ShareUI --> Confirm
 ShareUI --> ProgressMgr
 ShareUI --> errorStore
 ShareUI --> progressStore
+ShareUI --> operationState
 ShareSetting --> Tab
 ShareManage --> Tab
 ShareUI --> ShareService
@@ -443,7 +494,7 @@ NewUI --> ShareManage
 ```
 
 **图表来源**
-- [src/libs/pages/ShareUI.svelte:30-32](file://src/libs/pages/ShareUI.svelte#L30-L32)
+- [src/libs/pages/ShareUI.svelte:32-34](file://src/libs/pages/ShareUI.svelte#L32-L34)
 - [src/libs/pages/ShareSetting.svelte:15-23](file://src/libs/pages/ShareSetting.svelte#L15-L23)
 - [src/libs/pages/ShareManage.svelte:21](file://src/libs/pages/ShareManage.svelte#L21)
 - [src/invoke/widgetInvoke.ts:17-76](file://src/invoke/widgetInvoke.ts#L17-L76)
@@ -459,12 +510,14 @@ NewUI --> ShareManage
   - 使用Svelte内置响应式更新，避免不必要的重渲染
   - 通过条件渲染（如单文档模式下的特定区域）减少DOM节点
   - **错误状态优化**：错误横幅仅在存在错误时渲染，避免不必要的DOM开销
+  - **状态机优化**：operationState状态机避免重复操作和竞态条件
 - 异步与节流
   - 分页加载与总数统计分离，避免阻塞首屏
   - 操作状态机防止重复点击导致的并发请求
 - 进度管理
   - ProgressManager订阅进度状态，自动关闭策略降低UI干扰
   - **错误状态持久化**：错误状态在进度管理器关闭后仍可查看，避免重复错误信息丢失
+  - **文档级别隔离**：通过initiatorDocId实现错误状态的精确隔离
 - 虚拟列表
   - 增量分享界面使用虚拟列表组件，提升长列表性能
 
@@ -475,6 +528,7 @@ NewUI --> ShareManage
 - 分享/取消失败
   - 查看ShareUI中的异常捕获与消息提示
   - 检查分享状态机与服务层返回码
+  - **新增**：检查operationState状态是否正确转换
 - 增量分享无数据
   - 核对上次分享时间戳与黑名单配置
   - 检查kernelApi与分页加载逻辑
@@ -485,24 +539,32 @@ NewUI --> ShareManage
   - 检查errorStore是否正确更新错误状态
   - 确认ShareUI是否正确订阅错误状态
   - 验证错误横幅的显示逻辑和键盘交互
+  - **新增**：检查initiatorDocId是否正确传递和匹配
 - **模态确认对话框问题**
   - 检查Confirm组件的show属性绑定
   - 验证Esc键和外部点击关闭功能
   - 确认onConfirm/onCancel回调正确执行
+- **状态机问题**
+  - **新增**：检查operationState状态转换逻辑
+  - 验证防重复点击机制是否正常工作
+  - 确认状态机在异常情况下能够正确恢复
 
 **章节来源**
 - [src/index.ts:73-95](file://src/index.ts#L73-L95)
-- [src/libs/pages/ShareUI.svelte:173-215](file://src/libs/pages/ShareUI.svelte#L173-L215)
+- [src/libs/pages/ShareUI.svelte:159-234](file://src/libs/pages/ShareUI.svelte#L159-L234)
 - [src/libs/pages/IncrementalShareUI.svelte:146-187](file://src/libs/pages/IncrementalShareUI.svelte#L146-L187)
-- [src/libs/components/ProgressManager.svelte:20-40](file://src/libs/components/ProgressManager.svelte#L20-L40)
+- [src/libs/components/ProgressManager.svelte:35-46](file://src/libs/components/ProgressManager.svelte#L35-L46)
 
 ## 结论
 该UI组件架构以Svelte为核心，结合插件入口、Topbar/菜单、页面组件与通用组件形成清晰的分层体系。通过三层配置架构与状态机驱动，实现了单文档分享的精细化控制；通过Tab/Confirm/ProgressManager等通用组件提升了复用性与一致性；通过服务层与进度状态的集成，确保了异步操作的可观测与可控。
 
 **最新更新**：
+- **状态管理增强**：新增operationState状态机，实现完整的操作状态管理
+- **下拉菜单系统**：更新分享功能的下拉菜单，支持快速更新和完全更新两种模式
 - **错误状态管理**：新增文档级别的错误状态管理机制，提供实时错误显示和持久化功能
 - **模态确认对话框**：统一使用Confirm组件实现各种确认场景，提升用户体验一致性
 - **键盘无障碍支持**：为关键交互元素添加键盘支持，提升可访问性
 - **错误横幅组件**：提供直观的错误状态提示，支持快速查看和处理
+- **操作遮罩层**：在异步操作期间提供视觉反馈和用户体验保障
 
 建议在后续迭代中持续完善国际化、无障碍与性能监控，进一步提升用户体验与稳定性。

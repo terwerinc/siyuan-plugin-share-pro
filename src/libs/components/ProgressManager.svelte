@@ -89,9 +89,8 @@
   // 自动关闭处理
   function handleCloseAuto() {
     isVisible = false
-    currentBatch = null
-    ProgressManager.clearBatch()
     clearAutoCloseTimer()
+    // 不清空 progressStore，保留错误信息供 ShareUI 使用
   }
 
   // 手动关闭处理
@@ -99,11 +98,10 @@
     // 阻止事件冒泡，避免影响 ShareUI
     if (e) e.stopPropagation()
 
-    // 关键设计：错误信息保留在 progressStore 中，直到下一次操作或组件销毁
-    // 这样 ShareUI 可以直接从 progressStore 获取错误信息，实现文档级别的错误隔离
+    // 关键修复：只隐藏弹窗，不清空 progressStore
+    // 这样 ShareUI 可以从 progressStore 获取错误信息显示详情
+    // progressStore 会在下一次操作开始时被覆盖
     isVisible = false
-    currentBatch = null
-    ProgressManager.clearBatch()
     clearAutoCloseTimer()
   }
 
