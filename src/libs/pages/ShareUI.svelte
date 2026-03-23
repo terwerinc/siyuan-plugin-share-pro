@@ -25,8 +25,8 @@
   import { ShareService } from "../../service/ShareService"
   import { AttrUtils } from "../../utils/AttrUtils"
   import { PasswordUtils } from "../../utils/PasswordUtils"
-  import type { ErrorState, ProgressState } from "../../utils/progress/progressStore"
-  import { errorStore, progressStore } from "../../utils/progress/progressStore"
+  import type { ProgressState } from "../../utils/progress/progressStore"
+  import { progressStore } from "../../utils/progress/progressStore"
   import { SettingKeys } from "../../utils/SettingKeys"
   import { icons } from "../../utils/svg"
   import Confirm from "../components/Confirm.svelte"
@@ -343,14 +343,38 @@
     onCancel: () => {},
   }
 
-  // 大厂设计：错误状态管理
-  let errorState: ErrorState = { hasError: false, errors: [], resourceErrors: [], timestamp: 0, operationName: "" }
+  // ========================================
+  // 错误状态管理 - 文档级别隔离
+  // 关键设计：错误 banner 只显示发起操作的文档的错误
+  // ========================================
   let showErrorDetails = false
 
-  // 订阅错误状态
-  const unsubscribeError = errorStore.subscribe((state) => {
-    errorState = state
+  // 订阅 progressStore，获取当前批次的错误信息
+  let currentProgressState: ProgressState | null = null
+  const unsubscribeProgress = progressStore.subscribe((state) => {
+    currentProgressState = state
   })
+
+  // 关键修复：文档级别的错误判断
+  // 使用 initiatorDocId（发起操作的文档ID）而不是 currentDocId（当前正在处理的文档ID）
+  // 这样可以正确显示子文档/引用文档的错误，同时保持文档隔离
+  $: hasError = (() => {
+    if (!currentProgressState || currentProgressState.status !== "error") {
+      return false
+    }
+    // 非单文档模式不显示错误
+    if (!isSingleDocMode || !docId) {
+      return false
+    }
+    // 关键：使用 initiatorDocId 判断当前文档是否是发起操作的文档
+    // initiatorDocId 是用户点击"分享"按钮的文档ID，不会随处理进度变化
+    return currentProgressState.initiatorDocId === docId
+  })()
+
+  // 获取发起操作的文档的所有错误信息（用于错误详情弹窗）
+  // 当 initiatorDocId 匹配时，显示所有相关错误（包括子文档/引用文档的错误）
+  $: currentDocErrors = currentProgressState?.initiatorDocId === docId ? currentProgressState.errors : []
+  $: currentDocResourceErrors = currentProgressState?.initiatorDocId === docId ? currentProgressState.resourceErrors : []
 
   // 处理错误警告条点击
   const handleErrorBannerClick = () => {
@@ -362,38 +386,29 @@
     showErrorDetails = false
   }
 
-  // 清除错误状态
+  // 清除错误状态 - 关闭进度弹窗即可，无需额外操作
   const handleDismissError = (e?: Event) => {
     if (e) e.stopPropagation()
-    errorStore.set({ hasError: false, errors: [], resourceErrors: [], timestamp: 0, operationName: "" })
+    // 关闭错误详情弹窗
+    showErrorDetails = false
   }
 
-  // 生成错误详情消息 - 从 progressStore 获取最新的错误信息
+  // 生成错误详情消息 - 只显示当前文档相关的错误
   const generateErrorMessage = (): string => {
     let message = ""
 
-    // 从 progressStore 获取当前 batch 的错误信息
-    let currentBatch: ProgressState | null = null
-    const unsubscribe = progressStore.subscribe((state) => {
-      currentBatch = state
-    })
-    unsubscribe()
-
-    if (!currentBatch) {
-      return pluginInstance.i18n["shareUI"]["noErrorDetails"]
-    }
-
-    if (currentBatch.errors.length > 0) {
+    // 使用已过滤的当前文档错误信息
+    if (currentDocErrors.length > 0) {
       message += "📄 " + pluginInstance.i18n["progressManager"]["documentErrors"] + ":\n"
-      currentBatch.errors.forEach((error) => {
+      currentDocErrors.forEach((error) => {
         message += `• ${error.docId}: ${String(error.error)}\n`
       })
     }
 
-    if (currentBatch.resourceErrors.length > 0) {
+    if (currentDocResourceErrors.length > 0) {
       if (message) message += "\n"
       message += "🖼️ " + pluginInstance.i18n["progressManager"]["resourceErrors"] + ":\n"
-      currentBatch.resourceErrors.forEach((error) => {
+      currentDocResourceErrors.forEach((error) => {
         message += `• ${error.docId}: ${String(error.error)}\n`
       })
     }
@@ -676,15 +691,15 @@
 
   // 清理订阅
   onDestroy(() => {
-    unsubscribeError()
+    unsubscribeProgress()
   })
 </script>
 
 <div id="share">
-  <ProgressManager {pluginInstance} />
+  <ProgressManager {pluginInstance} {docId} />
 
-  <!-- 大厂设计：错误状态警告条 - 参考阿里云/字节设计规范 -->
-  {#if errorState.hasError}
+  <!-- 错误状态警告条 - 直接使用 progressStore，天然实现文档隔离 -->
+  {#if hasError}
     <div
       class="error-banner"
       on:click={handleErrorBannerClick}
@@ -1492,6 +1507,44 @@
     .subdocument-preview-section
       margin-top 12px
       border-top 1px solid var(--b3-theme-surface-light)
+
+    .progress-section
+      margin-top 12px
+      padding 12px
+      background-color var(--b3-theme-surface-light)
+      border-radius 4px
+
+    .progress-bar
+      width 100%
+      height 8px
+      background-color var(--b3-theme-surface)
+      border-radius 4px
+      overflow hidden
+
+    .progress-fill
+      height 100%
+      background-color var(--b3-theme-primary)
+      transition width 0.3s ease
+
+    .progress-text
+      margin-top 4px
+      font-size 12px
+      color var(--b3-theme-on-surface)
+      text-align center
+
+    .cancel-btn
+      margin-top 8px
+      padding 4px 12px
+      font-size 12px
+      background-color var(--b3-theme-error)
+      color white
+      border none
+      border-radius 3px
+      cursor pointer
+      transition all 0.2s ease
+
+      //&:hover
+      //  background-color darken(var(--b3-theme-error), 10%)
 
     /* 暗色模式 */
     html[data-theme-mode="dark"] #share

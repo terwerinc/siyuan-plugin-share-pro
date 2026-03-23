@@ -8,8 +8,11 @@ import { RESOURCE_EVENTS, resourceEventEmitter } from "./ResourceEventEmitter"
 export class ProgressManager {
   /**
    * Start a new batch operation
+   * @param operationName 操作名称
+   * @param count 总数
+   * @param initiatorDocId 发起操作的文档ID - 用于文档级别的错误隔离
    */
-  static startBatch(operationName: string, count: number) {
+  static startBatch(operationName: string, count: number, initiatorDocId: string = "") {
     const id = `progress_${Date.now()}`
     const newState: ProgressState = {
       id,
@@ -18,6 +21,7 @@ export class ProgressManager {
       completed: 0,
       percentage: 0,
       status: "processing",
+      initiatorDocId, // 发起操作的文档ID
       currentDocId: "",
       currentDocTitle: "",
       errors: [],

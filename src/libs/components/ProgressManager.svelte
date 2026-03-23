@@ -3,10 +3,11 @@
   import { onDestroy, onMount } from "svelte"
   import ShareProPlugin from "../../index"
   import { ProgressManager } from "../../utils/progress/ProgressManager"
-  import { errorStore, progressStore } from "../../utils/progress/progressStore"
+  import { progressStore } from "../../utils/progress/progressStore"
 
   // Props
   export let pluginInstance: ShareProPlugin
+  export let docId: string = "" // 当前文档ID，用于文档级别隔离
 
   // Local state
   let currentBatch = null
@@ -14,8 +15,19 @@
   let autoCloseTimer = null
   let countdown = 5
 
-  // 是否有错误（用于显示"我知道了"按钮）
-  $: hasErrors = currentBatch && (currentBatch.errors.length > 0 || currentBatch.resourceErrors.length > 0)
+  // 文档级别的错误过滤
+  // 关键修复：使用 initiatorDocId（发起操作的文档ID）而不是 currentDocId（当前正在处理的文档ID）
+  // initiatorDocId 是用户点击"分享"按钮的文档ID，不会随处理进度变化
+  $: isCurrentDocOperation = (() => {
+    if (!currentBatch || !docId) return false
+    // 关键：使用 initiatorDocId 判断当前文档是否是发起操作的文档
+    return currentBatch.initiatorDocId === docId
+  })()
+
+  // 当 initiatorDocId 匹配时，显示所有相关错误（包括子文档/引用文档的错误）
+  $: currentDocErrors = isCurrentDocOperation ? currentBatch?.errors || [] : []
+  $: currentDocResourceErrors = isCurrentDocOperation ? currentBatch?.resourceErrors || [] : []
+  $: hasErrors = currentDocErrors.length > 0 || currentDocResourceErrors.length > 0
 
   // Subscribe to progress store
   let unsubscribe: () => void
@@ -23,10 +35,11 @@
   onMount(() => {
     unsubscribe = progressStore.subscribe((value) => {
       currentBatch = value
-      isVisible = !!value
+      // 关键修复：只有当操作与当前文档相关时才显示
+      isVisible = !!value && (isCurrentDocOperation || !docId)
 
       // 当有新的进度状态时，重置自动关闭计时器
-      if (value) {
+      if (value && isVisible) {
         resetAutoCloseTimer()
       }
     })
@@ -47,11 +60,11 @@
     clearAutoCloseTimer()
 
     // 只有在成功且无错误的情况下才启用自动关闭
+    // 使用文档级别的错误判断
     const shouldAutoClose =
       currentBatch &&
       currentBatch.status === "success" &&
-      currentBatch.errors.length === 0 &&
-      currentBatch.resourceErrors.length === 0 &&
+      !hasErrors &&
       !currentBatch.isResourceProcessing
 
     if (shouldAutoClose) {
@@ -89,17 +102,8 @@
     // 阻止事件冒泡，避免影响 ShareUI
     if (e) e.stopPropagation()
 
-    // 大厂设计：关闭前保存错误状态，方便用户后续查看
-    if (currentBatch && (currentBatch.errors.length > 0 || currentBatch.resourceErrors.length > 0)) {
-      errorStore.set({
-        hasError: true,
-        errors: currentBatch.errors,
-        resourceErrors: currentBatch.resourceErrors,
-        timestamp: Date.now(),
-        operationName: currentBatch.operationName,
-      })
-    }
-
+    // 关键设计：错误信息保留在 progressStore 中，直到下一次操作或组件销毁
+    // 这样 ShareUI 可以直接从 progressStore 获取错误信息，实现文档级别的错误隔离
     isVisible = false
     currentBatch = null
     ProgressManager.clearBatch()
@@ -221,17 +225,17 @@
         </div>
       {/if}
 
-      <!-- Error details display -->
-      {#if currentBatch && (currentBatch.errors.length > 0 || currentBatch.resourceErrors.length > 0)}
+      <!-- Error details display - 文档级别，只显示当前文档的错误 -->
+      {#if hasErrors}
         <div class="error-details">
           <div class="error-header">
             {pluginInstance.i18n["progressManager"]["errorsDetected"]}
           </div>
-          {#if currentBatch.errors.length > 0}
+          {#if currentDocErrors.length > 0}
             <div class="document-errors">
               <span class="error-type">📄 {pluginInstance.i18n["progressManager"]["documentErrors"]}:</span>
               <ul class="error-list">
-                {#each currentBatch.errors as error, index}
+                {#each currentDocErrors as error, index}
                   <li class="error-item" title={error.error}>
                     {error.docId.substring(0, 8)}...: {String(error.error).substring(0, 50)}...
                   </li>
@@ -239,11 +243,11 @@
               </ul>
             </div>
           {/if}
-          {#if currentBatch.resourceErrors.length > 0}
+          {#if currentDocResourceErrors.length > 0}
             <div class="resource-errors">
               <span class="error-type">🖼️ {pluginInstance.i18n["progressManager"]["resourceErrors"]}:</span>
               <ul class="error-list">
-                {#each currentBatch.resourceErrors as error, index}
+                {#each currentDocResourceErrors as error, index}
                   <li class="error-item" title={error.error}>
                     {error.docId.substring(0, 8)}...: {String(error.error).substring(0, 50)}...
                   </li>

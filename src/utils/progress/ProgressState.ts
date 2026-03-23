@@ -8,6 +8,10 @@ export interface ProgressState {
   completed: number
   percentage: number
   status: "idle" | "processing" | "success" | "error" | "canceled"
+  // 发起操作的文档ID - 用于文档级别的错误隔离
+  // 这是用户点击"分享"按钮的文档ID，而不是当前正在处理的文档ID
+  initiatorDocId: string
+  // 当前正在处理的文档ID - 会随着处理进度变化
   currentDocId: string
   currentDocTitle: string
   errors: Array<{ docId: string; error: any }>

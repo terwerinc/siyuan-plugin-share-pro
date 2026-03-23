@@ -14,9 +14,17 @@
 - [src/libs/components/tab/Tab.svelte](file://src/libs/components/tab/Tab.svelte)
 - [src/libs/components/Confirm.svelte](file://src/libs/components/Confirm.svelte)
 - [src/libs/components/ProgressManager.svelte](file://src/libs/components/ProgressManager.svelte)
+- [src/utils/progress/progressStore.ts](file://src/utils/progress/progressStore.ts)
 - [svelte.config.js](file://svelte.config.js)
 - [package.json](file://package.json)
 </cite>
+
+## 更新摘要
+**变更内容**
+- 新增错误横幅组件和文档级别错误状态管理机制
+- 完善模态确认对话框的实现和使用
+- 增强键盘无障碍支持，包括错误横幅的键盘交互
+- 优化错误处理和用户交互体验
 
 ## 目录
 1. [简介](#简介)
@@ -33,7 +41,7 @@
 本文件系统性梳理思源笔记分享专业版的UI组件架构，重点阐述基于Svelte的组件设计理念、层次结构与状态管理模式；详解三大页面组件的功能分工：设置界面、增量分享界面、分享管理界面；总结通用组件的复用机制、属性传递与事件处理模式；说明组件间通信、数据绑定与响应式更新策略；并给出UI与服务层集成、状态同步与异步处理的最佳实践。
 
 ## 项目结构
-项目采用“插件入口 + Svelte页面 + 通用组件 + 服务层”的分层组织方式：
+项目采用"插件入口 + Svelte页面 + 通用组件 + 服务层"的分层组织方式：
 - 插件入口负责初始化、菜单与Topbar挂载、对话框渲染
 - 页面组件负责具体业务场景的UI与交互
 - 通用组件提供可复用的UI能力（标签页、确认弹窗、进度管理等）
@@ -86,7 +94,7 @@ IncrementalShareUI --> IncShareService
 - [src/newUI.ts:35-122](file://src/newUI.ts#L35-L122)
 - [src/invoke/widgetInvoke.ts:17-76](file://src/invoke/widgetInvoke.ts#L17-L76)
 - [src/libs/pages/ShareSetting.svelte:10-118](file://src/libs/pages/ShareSetting.svelte#L10-L118)
-- [src/libs/pages/ShareUI.svelte:10-556](file://src/libs/pages/ShareUI.svelte#L10-L556)
+- [src/libs/pages/ShareUI.svelte:10-1683](file://src/libs/pages/ShareUI.svelte#L10-L1683)
 - [src/libs/pages/IncrementalShareUI.svelte:10-127](file://src/libs/pages/IncrementalShareUI.svelte#L10-L127)
 - [src/libs/pages/ShareManage.svelte:9-38](file://src/libs/pages/ShareManage.svelte#L9-L38)
 
@@ -107,12 +115,12 @@ IncrementalShareUI --> IncShareService
   - NewUI：根据VIP状态决定展示新版UI或设置菜单，并挂载对应Svelte组件
 - 页面组件
   - ShareSetting：设置界面，内含基础、个性化、文档、SEO、增量分享、黑名单等多标签页
-  - ShareUI：单文档分享界面，三层配置架构（用户偏好/文档级设置/分享选项），支持分享/取消/重新分享/密码更新等
+  - ShareUI：单文档分享界面，三层配置架构（用户偏好/文档级设置/分享选项），支持分享/取消/重新分享/密码更新等，**新增错误横幅组件和模态确认对话框**
   - IncrementalShareUI：增量分享界面，支持搜索、分页、选择、统计、打开分享管理与黑名单管理
   - ShareManage：分享管理界面，表格展示分享记录，支持取消、设为主页、查看、跳转、复制标题等
 - 通用组件
   - Tab：可复用标签页容器，支持垂直/水平布局与动态切换
-  - Confirm：可复用确认弹窗，支持Esc关闭、外部点击关闭、动画过渡
+  - Confirm：可复用确认弹窗，支持Esc关闭、外部点击关闭、动画过渡、键盘无障碍支持
   - ProgressManager：全局进度管理器，订阅进度状态，支持自动关闭与手动取消
 
 **章节来源**
@@ -121,15 +129,15 @@ IncrementalShareUI --> IncShareService
 - [src/topbar.ts:26-98](file://src/topbar.ts#L26-L98)
 - [src/newUI.ts:35-122](file://src/newUI.ts#L35-L122)
 - [src/libs/pages/ShareSetting.svelte:10-118](file://src/libs/pages/ShareSetting.svelte#L10-L118)
-- [src/libs/pages/ShareUI.svelte:10-556](file://src/libs/pages/ShareUI.svelte#L10-L556)
+- [src/libs/pages/ShareUI.svelte:10-1683](file://src/libs/pages/ShareUI.svelte#L10-L1683)
 - [src/libs/pages/IncrementalShareUI.svelte:10-127](file://src/libs/pages/IncrementalShareUI.svelte#L10-L127)
 - [src/libs/pages/ShareManage.svelte:9-38](file://src/libs/pages/ShareManage.svelte#L9-L38)
 - [src/libs/components/tab/Tab.svelte:10-45](file://src/libs/components/tab/Tab.svelte#L10-L45)
-- [src/libs/components/Confirm.svelte:1-70](file://src/libs/components/Confirm.svelte#L1-L70)
-- [src/libs/components/ProgressManager.svelte:1-102](file://src/libs/components/ProgressManager.svelte#L1-L102)
+- [src/libs/components/Confirm.svelte:1-218](file://src/libs/components/Confirm.svelte#L1-L218)
+- [src/libs/components/ProgressManager.svelte:1-532](file://src/libs/components/ProgressManager.svelte#L1-L532)
 
 ## 架构总览
-Svelte组件通过属性(props)向下传递，通过事件派发向上反馈，配合服务层实现状态同步与异步操作处理。整体采用“插件入口 -> Topbar/菜单 -> 页面组件 -> 服务层”的调用链路，通用组件作为横切能力被多个页面复用。
+Svelte组件通过属性(props)向下传递，通过事件派发向上反馈，配合服务层实现状态同步与异步操作处理。整体采用"插件入口 -> Topbar/菜单 -> 页面组件 -> 服务层"的调用链路，通用组件作为横切能力被多个页面复用。
 
 ```mermaid
 sequenceDiagram
@@ -207,8 +215,12 @@ ShareSetting --> Tab : "渲染"
   - 分享/取消/重新分享：防重复点击、状态机驱动、异常捕获与消息提示
   - 子文档/引用文档变更：带确认弹窗的变更流程，必要时触发重新分享
   - 密码更新：仅在已分享状态下允许更新
+- **新增功能**
+  - **错误横幅组件**：实时显示当前文档的错误状态，支持键盘交互（Enter键激活）
+  - **模态确认对话框**：使用Confirm组件实现子文档/引用文档变更确认、错误详情查看
+  - **文档级别错误状态管理**：独立管理每个文档的错误状态，避免相互影响
 - 通用组件集成
-  - Confirm：子文档/引用文档变更确认
+  - Confirm：子文档/引用文档变更确认、错误详情确认
   - ProgressManager：全局进度展示与自动关闭
 
 ```mermaid
@@ -217,7 +229,10 @@ Start(["onMount初始化"]) --> LoadCfg["加载全局配置(appConfig)"]
 LoadCfg --> LoadDoc["加载文档级设置(docId属性)"]
 LoadDoc --> LoadShare["查询分享状态与链接"]
 LoadShare --> Ready["准备就绪"]
-Ready --> Action{"用户操作"}
+Ready --> ErrorCheck{"检查错误状态"}
+ErrorCheck --> |有错误| ShowErrorBanner["显示错误横幅"]
+ErrorCheck --> |无错误| Action{"用户操作"}
+ShowErrorBanner --> Action
 Action --> |开始分享| Share["创建分享(含密码/有效期)"]
 Action --> |取消分享| Cancel["取消分享"]
 Action --> |重新分享| ReShare["更新分享(含密码/有效期)"]
@@ -320,8 +335,10 @@ ShareManage --> Tab : "bench表格"
   - 通过createEventDispatcher派发tabChange事件，支持垂直/水平布局
 - Confirm
   - 通过props接收标题、消息、确认/取消回调，支持Esc与外部点击关闭
+  - **新增键盘无障碍支持**：支持Esc键关闭，提供aria-label属性
 - ProgressManager
   - 订阅progressStore，自动关闭策略与错误展示，支持手动取消
+  - **错误状态持久化**：关闭前将错误状态保存到errorStore，便于用户后续查看
 
 ```mermaid
 classDiagram
@@ -337,6 +354,8 @@ class Confirm {
 +show
 +onConfirm()
 +onCancel()
++handleKeyDown()
++handleOutsideClick()
 }
 class ProgressManager {
 +pluginInstance
@@ -345,24 +364,62 @@ class ProgressManager {
 +unsubscribe()
 +handleClose()
 +handleCancel()
++handleAcknowledgeError()
 }
 ```
 
 **图表来源**
 - [src/libs/components/tab/Tab.svelte:10-45](file://src/libs/components/tab/Tab.svelte#L10-L45)
-- [src/libs/components/Confirm.svelte:1-70](file://src/libs/components/Confirm.svelte#L1-70)
-- [src/libs/components/ProgressManager.svelte:1-102](file://src/libs/components/ProgressManager.svelte#L1-L102)
+- [src/libs/components/Confirm.svelte:1-218](file://src/libs/components/Confirm.svelte#L1-L218)
+- [src/libs/components/ProgressManager.svelte:1-532](file://src/libs/components/ProgressManager.svelte#L1-L532)
 
 **章节来源**
 - [src/libs/components/tab/Tab.svelte:10-45](file://src/libs/components/tab/Tab.svelte#L10-L45)
-- [src/libs/components/Confirm.svelte:1-70](file://src/libs/components/Confirm.svelte#L1-L70)
-- [src/libs/components/ProgressManager.svelte:1-102](file://src/libs/components/ProgressManager.svelte#L1-L102)
+- [src/libs/components/Confirm.svelte:1-218](file://src/libs/components/Confirm.svelte#L1-L218)
+- [src/libs/components/ProgressManager.svelte:1-532](file://src/libs/components/ProgressManager.svelte#L1-L532)
+
+### 错误状态管理系统
+- **设计目标**
+  - 实现文档级别的错误状态管理，避免不同文档之间的错误状态相互影响
+  - 提供实时的错误状态显示和持久化机制
+- **核心组件**
+  - **错误横幅**：在ShareUI顶部显示当前文档的错误状态，支持点击和键盘交互
+  - **错误详情弹窗**：使用Confirm组件实现详细的错误信息展示
+  - **错误状态存储**：通过progressStore和errorStore实现全局错误状态管理
+- **交互流程**
+  - 进度管理器检测到错误时，将错误状态保存到errorStore
+  - ShareUI订阅错误状态，当存在错误时显示错误横幅
+  - 用户点击错误横幅查看详细错误信息，或点击"我知道了"关闭并清除错误状态
+
+```mermaid
+flowchart TD
+ProgressMgr["ProgressManager"] --> ErrorStore["errorStore"]
+ErrorStore --> ShareUI["ShareUI订阅"]
+ShareUI --> ErrorBanner["错误横幅显示"]
+ErrorBanner --> UserAction{"用户操作"}
+UserAction --> |点击| ShowDetails["显示错误详情弹窗"]
+UserAction --> |键盘Enter| ShowDetails
+ShowDetails --> Acknowledge["用户确认"]
+Acknowledge --> ClearError["清除错误状态"]
+ClearError --> HideBanner["隐藏错误横幅"]
+```
+
+**图表来源**
+- [src/libs/components/ProgressManager.svelte:92-115](file://src/libs/components/ProgressManager.svelte#L92-L115)
+- [src/libs/pages/ShareUI.svelte:358-386](file://src/libs/pages/ShareUI.svelte#L358-L386)
+- [src/utils/progress/progressStore.ts:38-74](file://src/utils/progress/progressStore.ts#L38-L74)
+
+**章节来源**
+- [src/libs/components/ProgressManager.svelte:92-115](file://src/libs/components/ProgressManager.svelte#L92-L115)
+- [src/libs/pages/ShareUI.svelte:358-386](file://src/libs/pages/ShareUI.svelte#L358-L386)
+- [src/utils/progress/progressStore.ts:38-74](file://src/utils/progress/progressStore.ts#L38-L74)
 
 ## 依赖关系分析
 - 组件耦合
   - 页面组件依赖通用组件（Tab/Confirm/ProgressManager）
   - 页面组件依赖服务层（ShareService/SettingService/IncrementalShareService/WidgetInvoke）
   - 服务层依赖插件实例与配置（ShareProConfig）
+  - **新增**：ShareUI依赖错误状态管理（errorStore、progressStore）
 - 外部依赖
   - Svelte生态（vite-preprocess、customElement）
   - 第三方库（@sveltejs/svelte-virtual-list、copy-to-clipboard、eventemitter3等）
@@ -371,6 +428,8 @@ class ProgressManager {
 graph LR
 ShareUI --> Confirm
 ShareUI --> ProgressMgr
+ShareUI --> errorStore
+ShareUI --> progressStore
 ShareSetting --> Tab
 ShareManage --> Tab
 ShareUI --> ShareService
@@ -399,15 +458,15 @@ NewUI --> ShareManage
 - 渲染优化
   - 使用Svelte内置响应式更新，避免不必要的重渲染
   - 通过条件渲染（如单文档模式下的特定区域）减少DOM节点
+  - **错误状态优化**：错误横幅仅在存在错误时渲染，避免不必要的DOM开销
 - 异步与节流
   - 分页加载与总数统计分离，避免阻塞首屏
   - 操作状态机防止重复点击导致的并发请求
 - 进度管理
   - ProgressManager订阅进度状态，自动关闭策略降低UI干扰
+  - **错误状态持久化**：错误状态在进度管理器关闭后仍可查看，避免重复错误信息丢失
 - 虚拟列表
   - 增量分享界面使用虚拟列表组件，提升长列表性能
-
-[本节为通用指导，无需特定文件引用]
 
 ## 故障排查指南
 - 设置对话框无法打开
@@ -422,6 +481,14 @@ NewUI --> ShareManage
 - 进度管理不显示
   - 确认progressStore是否有状态推送
   - 检查ProgressManager订阅与自动关闭计时器
+- **错误状态问题**
+  - 检查errorStore是否正确更新错误状态
+  - 确认ShareUI是否正确订阅错误状态
+  - 验证错误横幅的显示逻辑和键盘交互
+- **模态确认对话框问题**
+  - 检查Confirm组件的show属性绑定
+  - 验证Esc键和外部点击关闭功能
+  - 确认onConfirm/onCancel回调正确执行
 
 **章节来源**
 - [src/index.ts:73-95](file://src/index.ts#L73-L95)
@@ -430,4 +497,12 @@ NewUI --> ShareManage
 - [src/libs/components/ProgressManager.svelte:20-40](file://src/libs/components/ProgressManager.svelte#L20-L40)
 
 ## 结论
-该UI组件架构以Svelte为核心，结合插件入口、Topbar/菜单、页面组件与通用组件形成清晰的分层体系。通过三层配置架构与状态机驱动，实现了单文档分享的精细化控制；通过Tab/Confirm/ProgressManager等通用组件提升了复用性与一致性；通过服务层与进度状态的集成，确保了异步操作的可观测与可控。建议在后续迭代中持续完善国际化、无障碍与性能监控，进一步提升用户体验与稳定性。
+该UI组件架构以Svelte为核心，结合插件入口、Topbar/菜单、页面组件与通用组件形成清晰的分层体系。通过三层配置架构与状态机驱动，实现了单文档分享的精细化控制；通过Tab/Confirm/ProgressManager等通用组件提升了复用性与一致性；通过服务层与进度状态的集成，确保了异步操作的可观测与可控。
+
+**最新更新**：
+- **错误状态管理**：新增文档级别的错误状态管理机制，提供实时错误显示和持久化功能
+- **模态确认对话框**：统一使用Confirm组件实现各种确认场景，提升用户体验一致性
+- **键盘无障碍支持**：为关键交互元素添加键盘支持，提升可访问性
+- **错误横幅组件**：提供直观的错误状态提示，支持快速查看和处理
+
+建议在后续迭代中持续完善国际化、无障碍与性能监控，进一步提升用户体验与稳定性。

@@ -301,9 +301,12 @@ class ShareService implements IShareHistoryService {
       return
     }
 
+    // 关键：记录发起操作的文档ID（列表首位的文档）
+    const initiatorDocId = documentsToShare[0].docId
     const progressId = ProgressManager.startBatch(
       this.pluginInstance.i18n["progressManager"]["sharingDocuments"].replace("[param1]", total.toString()),
-      total
+      total,
+      initiatorDocId // 传入发起操作的文档ID，用于文档级别的错误隔离
     )
 
     let completedCount = 0
@@ -550,12 +553,15 @@ class ShareService implements IShareHistoryService {
   private async cancelMultipleDocuments(
     documentsToCancel: Array<{ docId: string; settings: Partial<SingleDocSetting>; options: Partial<ShareOptions> }>
   ): Promise<void> {
+    // 关键：记录发起操作的文档ID（列表首位的文档）
+    const initiatorDocId = documentsToCancel[0].docId
     const progressId = ProgressManager.startBatch(
       this.pluginInstance.i18n["progressManager"]["cancelingDocuments"].replace(
         "[param1]",
         documentsToCancel.length.toString()
       ),
-      documentsToCancel.length
+      documentsToCancel.length,
+      initiatorDocId // 传入发起操作的文档ID，用于文档级别的错误隔离
     )
 
     let completedCount = 0
