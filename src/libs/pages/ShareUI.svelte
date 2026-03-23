@@ -266,83 +266,6 @@
     }
   }
 
-  // Confirm modal state
-  let showSubdocumentConfirm = false
-  let subdocumentConfirmConfig = {
-    title: "",
-    message: "",
-    onConfirm: () => {},
-    onCancel: () => {},
-  }
-
-  /**
-   * 处理子文档分享选项变化
-   */
-  const handleSubdocumentShareChange = async (event) => {
-    if (!isSingleDocMode) {
-      logger.warn("handleSubdocumentShareChange called in non-single-doc mode, ignored")
-      return
-    }
-
-    const newChecked = event.target.checked
-    const oldChecked = formData.singleDocSetting.shareSubdocuments
-
-    // 如果值没有变化，直接返回
-    if (newChecked === oldChecked) {
-      return
-    }
-
-    // 如果文档未分享，直接更新配置
-    if (!formData.shared) {
-      formData.singleDocSetting.shareSubdocuments = newChecked
-      return
-    }
-
-    // 文档已分享的情况
-    if (oldChecked && !newChecked) {
-      // 从启用变为禁用 - 需要确认是否取消已分享的子文档
-      subdocumentConfirmConfig = {
-        title: pluginInstance.i18n["tipTitle"],
-        message: pluginInstance.i18n["cs"]["confirmCancelSubdocuments"],
-        onConfirm: async () => {
-          // 用户确认 - 更新配置并重新分享
-          formData.singleDocSetting.shareSubdocuments = newChecked
-          await handleReShare()
-        },
-        onCancel: () => {
-          // 用户取消 - 恢复原状态
-          event.target.checked = oldChecked
-        },
-      }
-      showSubdocumentConfirm = true
-    } else if (!oldChecked && newChecked) {
-      // 从禁用变为启用 - 需要确认是否更新分享以包含子文档
-      subdocumentConfirmConfig = {
-        title: pluginInstance.i18n["tipTitle"],
-        message: pluginInstance.i18n["cs"]["confirmAddSubdocuments"],
-        onConfirm: async () => {
-          // 用户确认 - 更新配置并重新分享
-          formData.singleDocSetting.shareSubdocuments = newChecked
-          await handleReShare()
-        },
-        onCancel: () => {
-          // 用户取消 - 恢复原状态
-          event.target.checked = oldChecked
-        },
-      }
-      showSubdocumentConfirm = true
-    }
-  }
-
-  // Confirm modal state for references
-  let showReferenceConfirm = false
-  let referenceConfirmConfig = {
-    title: "",
-    message: "",
-    onConfirm: () => {},
-    onCancel: () => {},
-  }
-
   // ========================================
   // 错误状态管理 - 文档级别隔离
   // 关键设计：错误 banner 只显示发起操作的文档的错误
@@ -415,65 +338,6 @@
     }
 
     return message || pluginInstance.i18n["shareUI"]["noErrorDetails"]
-  }
-
-  /**
-   * 处理引用文档分享选项变化
-   */
-  const handleReferenceShareChange = async (event) => {
-    if (!isSingleDocMode) {
-      logger.warn("handleReferenceShareChange called in non-single-doc mode, ignored")
-      return
-    }
-
-    const newChecked = event.target.checked
-    const oldChecked = formData.singleDocSetting.shareReferences
-
-    // 如果值没有变化，直接返回
-    if (newChecked === oldChecked) {
-      return
-    }
-
-    // 如果文档未分享，直接更新配置
-    if (!formData.shared) {
-      formData.singleDocSetting.shareReferences = newChecked
-      return
-    }
-
-    // 文档已分享的情况
-    if (oldChecked && !newChecked) {
-      // 从启用变为禁用 - 需要确认是否取消已分享的引用文档
-      referenceConfirmConfig = {
-        title: pluginInstance.i18n["tipTitle"],
-        message: pluginInstance.i18n["cs"]["confirmCancelReferences"],
-        onConfirm: async () => {
-          // 用户确认 - 更新配置并重新分享
-          formData.singleDocSetting.shareReferences = newChecked
-          await handleReShare()
-        },
-        onCancel: () => {
-          // 用户取消 - 恢复原状态
-          event.target.checked = oldChecked
-        },
-      }
-      showReferenceConfirm = true
-    } else if (!oldChecked && newChecked) {
-      // 从禁用变为启用 - 需要确认是否更新分享以包含引用文档
-      referenceConfirmConfig = {
-        title: pluginInstance.i18n["tipTitle"],
-        message: pluginInstance.i18n["cs"]["confirmAddReferences"],
-        onConfirm: async () => {
-          // 用户确认 - 更新配置并重新分享
-          formData.singleDocSetting.shareReferences = newChecked
-          await handleReShare()
-        },
-        onCancel: () => {
-          // 用户取消 - 恢复原状态
-          event.target.checked = oldChecked
-        },
-      }
-      showReferenceConfirm = true
-    }
   }
 
   const handleExpiresTime = async () => {
@@ -737,32 +601,6 @@
     onCancel={handleCloseErrorDetails}
   />
 
-  <Confirm
-    show={showSubdocumentConfirm}
-    title={subdocumentConfirmConfig.title}
-    message={subdocumentConfirmConfig.message}
-    onConfirm={() => {
-      subdocumentConfirmConfig.onConfirm()
-      showSubdocumentConfirm = false
-    }}
-    onCancel={() => {
-      subdocumentConfirmConfig.onCancel()
-      showSubdocumentConfirm = false
-    }}
-  />
-  <Confirm
-    show={showReferenceConfirm}
-    title={referenceConfirmConfig.title}
-    message={referenceConfirmConfig.message}
-    onConfirm={() => {
-      referenceConfirmConfig.onConfirm()
-      showReferenceConfirm = false
-    }}
-    onCancel={() => {
-      referenceConfirmConfig.onCancel()
-      showReferenceConfirm = false
-    }}
-  />
   <!-- 操作遮罩层 -->
   {#if formData.operationState.status === "sharing" || formData.operationState.status === "canceling"}
     <div class="operation-overlay">
@@ -903,8 +741,7 @@
           <label class="compact-switch">
             <input
               type="checkbox"
-              checked={formData.singleDocSetting.shareSubdocuments}
-              on:change={(e) => handleSubdocumentShareChange(e)}
+              bind:checked={formData.singleDocSetting.shareSubdocuments}
               title={formData.singleDocSetting.shareSubdocuments
                 ? pluginInstance.i18n["cs"]["shareSubdocumentsDisabled"]
                 : pluginInstance.i18n["cs"]["shareSubdocumentsEnabled"]}
@@ -916,8 +753,7 @@
           <label class="compact-switch">
             <input
               type="checkbox"
-              checked={formData.singleDocSetting.shareReferences}
-              on:change={(e) => handleReferenceShareChange(e)}
+              bind:checked={formData.singleDocSetting.shareReferences}
               title={formData.singleDocSetting.shareReferences
                 ? pluginInstance.i18n["cs"]["shareReferencesDisabled"]
                 : pluginInstance.i18n["cs"]["shareReferencesEnabled"]}

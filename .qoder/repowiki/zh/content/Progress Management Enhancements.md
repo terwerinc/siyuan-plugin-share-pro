@@ -8,10 +8,12 @@
 - [ResourceEventEmitter.ts](file://src/utils/progress/ResourceEventEmitter.ts)
 - [progressStore.ts](file://src/utils/progress/progressStore.ts)
 - [ShareUI.svelte](file://src/libs/pages/ShareUI.svelte)
+- [IncrementalShareUI.svelte](file://src/libs/pages/IncrementalShareUI.svelte)
 - [IncrementalShareService.ts](file://src/service/IncrementalShareService.ts)
 - [ShareQueueService.ts](file://src/service/ShareQueueService.ts)
 - [ShareHistory.ts](file://src/models/ShareHistory.ts)
 - [ShareHistoryCache.ts](file://src/utils/ShareHistoryCache.ts)
+- [ShareOptions.ts](file://src/models/ShareOptions.ts)
 - [share-queue.d.ts](file://src/types/share-queue.d.ts)
 - [share-history.d.ts](file://src/types/share-history.d.ts)
 - [useSiyuanApi.ts](file://src/composables/useSiyuanApi.ts)
@@ -27,6 +29,8 @@
 - 在ProgressManager.svelte中实现了跳过文档的UI显示功能
 - 增强了批量分享结果的统计信息，包括跳过文档数量的显示
 - 国际化支持中新增了"已跳过"的翻译键值
+- 在ShareOptions模型中新增了skipMsg和skipBatchMsg属性，用于控制消息显示
+- 在ShareService.ts中增强了批量处理逻辑以跟踪和显示跳过的文档
 
 ## 目录
 1. [简介](#简介)
@@ -65,6 +69,7 @@
 - **完善的错误状态持久化系统**
 - **跳过计数功能和增量检测优化**
 - **批量分享结果的完整统计信息**
+- **消息显示控制机制（skipMsg和skipBatchMsg）**
 
 ## 项目结构
 
@@ -78,10 +83,12 @@ PS[ProgressState<br/>进度状态接口]
 RES[ResourceEventEmitter<br/>资源事件发射器]
 PStore[progressStore<br/>进度存储]
 SKIPPED[跳过计数功能<br/>增量检测优化]
+ENDPOINT[消息显示控制<br/>skipMsg/skipBatchMsg]
 end
 subgraph "UI组件层"
 PMSvelte[ProgressManager.svelte<br/>进度管理UI组件]
 ShareUI[ShareUI.svelte<br/>分享界面组件]
+IncrementalUI[IncrementalShareUI.svelte<br/>增量分享UI组件]
 ErrorBanner[错误横幅组件]
 ModalDialog[模态对话框组件]
 SkippedIndicator[跳过指示器]
@@ -96,14 +103,17 @@ SH[ShareHistory<br/>分享历史]
 SHC[ShareHistoryCache<br/>历史缓存]
 TQ[share-queue.d.ts<br/>队列类型定义]
 TH[share-history.d.ts<br/>历史类型定义]
+SO[ShareOptions<br/>分享选项模型]
 end
 PM --> PStore
 PM --> RES
 PM --> SKIPPED
+PM --> ENDPOINT
 ISS --> PM
 ISS --> SQS
 ISS --> SS
 SS --> PM
+SS --> SO
 SQS --> TQ
 ISS --> SH
 SH --> SHC
@@ -111,6 +121,7 @@ PMSvelte --> PM
 PMSvelte --> SkippedIndicator
 ShareUI --> PM
 ShareUI --> PStore
+IncrementalUI --> PM
 ErrorBanner --> PStore
 ModalDialog --> PMSvelte
 ```
@@ -120,12 +131,14 @@ ModalDialog --> PMSvelte
 - [ProgressManager.svelte:1-536](file://src/libs/components/ProgressManager.svelte#L1-L536)
 - [ShareService.ts:360-397](file://src/service/ShareService.ts#L360-L397)
 - [IncrementalShareService.ts:1-691](file://src/service/IncrementalShareService.ts#L1-L691)
+- [ShareOptions.ts:1-39](file://src/models/ShareOptions.ts#L1-L39)
 
 **章节来源**
 - [ProgressManager.ts:1-275](file://src/utils/progress/ProgressManager.ts#L1-L275)
 - [ProgressManager.svelte:1-536](file://src/libs/components/ProgressManager.svelte#L1-L536)
 - [ShareService.ts:360-397](file://src/service/ShareService.ts#L360-L397)
 - [IncrementalShareService.ts:1-691](file://src/service/IncrementalShareService.ts#L1-L691)
+- [ShareOptions.ts:1-39](file://src/models/ShareOptions.ts#L1-L39)
 
 ## 核心组件
 
@@ -142,6 +155,7 @@ ProgressManager 是整个进度管理系统的核心控制器，负责协调各�
 - **新增：智能状态协调机制**
 - **新增：initiatorDocId字段支持**
 - **新增：跳过计数功能管理**
+- **新增：消息显示控制机制**
 
 **关键特性**：
 - 支持文档级别和资源级别的双重进度跟踪
@@ -152,6 +166,7 @@ ProgressManager 是整个进度管理系统的核心控制器，负责协调各�
 - **新增：资源事件监听和状态同步**
 - **新增：文档级别的错误隔离支持**
 - **新增：跳过文档的计数和状态管理**
+- **新增：批量操作的消息显示控制**
 
 ### 进度状态管理
 
@@ -173,6 +188,7 @@ ProgressState 定义了完整的进度状态接口，涵盖了所有需要跟踪
 - **文档级别错误隔离**：错误状态与发起文档绑定，实现精确的错误显示
 - **智能错误关联**：错误信息自动关联到正确的文档实例
 - **跳过计数功能**：支持增量检测场景下的文档跳过统计
+- **消息显示控制**：支持skipMsg和skipBatchMsg属性控制消息显示
 
 ### 资源事件发射器
 
@@ -268,6 +284,7 @@ class ShareService {
 +flattenDocumentsForSharing()
 +handleResourceErrorForSingleDoc()
 +addSkipped() : 新增跳过计数功能
++handleOne() : 增强的单文档处理
 }
 class ShareQueueService {
 -logger : Logger
@@ -289,9 +306,16 @@ class ProgressManager {
 +markDocumentsCompleted()
 +addSkipped() : 新增跳过计数功能
 }
+class ShareOptions {
++passwordEnabled : boolean
++password : string
++skipMsg : boolean
++skipBatchMsg : boolean
+}
 ShareService --> ShareQueueService : 使用
 ShareService --> ProgressManager : 协调
 ShareService --> ResourceEventEmitter : 监听资源错误
+ShareService --> ShareOptions : 使用消息控制
 ShareQueueService --> ShareHistory : 管理
 ```
 
@@ -299,6 +323,7 @@ ShareQueueService --> ShareHistory : 管理
 - [ShareService.ts:360-397](file://src/service/ShareService.ts#L360-L397)
 - [ShareQueueService.ts:24-33](file://src/service/ShareQueueService.ts#L24-L33)
 - [ProgressManager.ts:15-171](file://src/utils/progress/ProgressManager.ts#L15-L171)
+- [ShareOptions.ts:16-35](file://src/models/ShareOptions.ts#L16-L35)
 
 #### 并发处理机制
 
@@ -496,6 +521,37 @@ if (result?.skipped) {
 - [ShareService.ts:365-377](file://src/service/ShareService.ts#L365-L377)
 - [zh_CN.json:391](file://src/i18n/zh_CN.json#L391)
 - [en_US.json:387](file://src/i18n/en_US.json#L387)
+
+### 消息显示控制机制
+
+系统新增了消息显示控制机制，通过ShareOptions模型的skipMsg和skipBatchMsg属性来控制消息的显示：
+
+**ShareOptions模型更新**：
+```typescript
+class ShareOptions {
+  public passwordEnabled?: boolean
+  public password?: string
+  /**
+   * 是否跳过单文档提示消息（handleOne 层级）
+   * 批量操作时设为 true，避免 toast 爆炸
+   */
+  public skipMsg?: boolean
+  /**
+   * 是否跳过批量汇总提示消息（createShare/batchProcessDocuments 层级）
+   * 增量分享服务调用时设为 true，由上层统一显示汇总
+   */
+  public skipBatchMsg?: boolean
+}
+```
+
+**使用场景**：
+- **skipMsg**: 控制单个文档处理时的消息显示，批量操作时通常设为true
+- **skipBatchMsg**: 控制批量操作完成后的汇总消息显示，增量分享时通常设为true
+
+**章节来源**
+- [ShareOptions.ts:16-35](file://src/models/ShareOptions.ts#L16-L35)
+- [ShareService.ts:357-359](file://src/service/ShareService.ts#L357-L359)
+- [ShareService.ts:389-394](file://src/service/ShareService.ts#L389-L394)
 
 ## 文档级别错误隔离
 
@@ -787,6 +843,8 @@ PStore[progressStore]
 ErrorBanner[错误横幅组件]
 ModalDialog[模态对话框组件]
 SkippedIndicator[跳过指示器]
+ShareOptions[ShareOptions模型]
+IncrementalUI[IncrementalShareUI.svelte]
 end
 ProgressUtils --> Svelte
 ProgressUtils --> EventEmitter
@@ -803,8 +861,10 @@ ShareUI --> PM
 ShareUI --> PStore
 ISS --> ServiceLayer
 ISS --> PM
+ISS --> IncrementalUI
 SS --> ServiceLayer
 SS --> PM
+SS --> ShareOptions
 SQS --> ServiceLayer
 SHC --> ModelLayer
 ErrorBanner --> PStore
@@ -815,17 +875,21 @@ ModalDialog --> PMSvelte
 - [ProgressManager.ts:1-4](file://src/utils/progress/ProgressManager.ts#L1-L4)
 - [ProgressManager.svelte:1-10](file://src/libs/components/ProgressManager.svelte#L1-L10)
 - [ShareUI.svelte:1-35](file://src/libs/pages/ShareUI.svelte#L1-L35)
+- [IncrementalShareUI.svelte:1-35](file://src/libs/pages/IncrementalShareUI.svelte#L1-L35)
 - [IncrementalShareService.ts:10-25](file://src/service/IncrementalShareService.ts#L10-L25)
 - [ShareService.ts:10-37](file://src/service/ShareService.ts#L10-L37)
 - [ShareQueueService.ts:10-16](file://src/service/ShareQueueService.ts#L10-L16)
+- [ShareOptions.ts:16-35](file://src/models/ShareOptions.ts#L16-L35)
 
 **章节来源**
 - [ProgressManager.ts:1-4](file://src/utils/progress/ProgressManager.ts#L1-L4)
 - [ProgressManager.svelte:1-10](file://src/libs/components/ProgressManager.svelte#L1-L10)
 - [ShareUI.svelte:1-35](file://src/libs/pages/ShareUI.svelte#L1-L35)
+- [IncrementalShareUI.svelte:1-35](file://src/libs/pages/IncrementalShareUI.svelte#L1-L35)
 - [IncrementalShareService.ts:10-25](file://src/service/IncrementalShareService.ts#L10-L25)
 - [ShareService.ts:10-37](file://src/service/ShareService.ts#L10-L37)
 - [ShareQueueService.ts:10-16](file://src/service/ShareQueueService.ts#L10-L16)
+- [ShareOptions.ts:16-35](file://src/models/ShareOptions.ts#L16-L35)
 
 ## 性能考虑
 
@@ -840,6 +904,7 @@ ModalDialog --> PMSvelte
 - 异步操作的合理调度
 - **新增：错误状态的智能清理**
 - **新增：跳过计数状态的内存优化**
+- **新增：消息显示控制的性能优化**
 
 ### 并发控制
 
@@ -851,6 +916,7 @@ ModalDialog --> PMSvelte
 - 队列任务并发数：根据队列状态动态调整
 - **新增：UI组件的智能渲染优化**
 - **新增：跳过计数状态的快速更新**
+- **新增：消息显示控制的异步处理**
 
 ### 缓存策略
 
@@ -862,6 +928,7 @@ ModalDialog --> PMSvelte
 - 远程API：按需查询
 - **新增：错误状态缓存**
 - **新增：跳过计数状态缓存**
+- **新增：消息显示控制状态缓存**
 
 ## 故障排除指南
 
@@ -873,6 +940,7 @@ ModalDialog --> PMSvelte
 3. 确认队列状态的正确流转
 4. **新增：检查initiatorDocId字段的正确传递**
 5. **新增：验证跳过计数功能的正常工作**
+6. **新增：检查消息显示控制属性的正确设置**
 
 **内存泄漏排查**：
 1. 确认事件监听器的清理机制
@@ -880,6 +948,7 @@ ModalDialog --> PMSvelte
 3. 验证异步操作的正确清理
 4. **新增：检查错误状态存储的清理**
 5. **新增：验证跳过计数状态的内存释放**
+6. **新增：验证消息显示控制状态的清理**
 
 **性能问题定位**：
 1. 监控并发数的合理性
@@ -887,6 +956,7 @@ ModalDialog --> PMSvelte
 3. 分析API调用频率
 4. **新增：检查UI组件的渲染性能**
 5. **新增：验证跳过计数状态的更新频率**
+6. **新增：验证消息显示控制的性能影响**
 
 ### 错误处理机制
 
@@ -897,6 +967,7 @@ ModalDialog --> PMSvelte
 - 资源级别错误：资源处理异常
 - 系统级别错误：框架或基础设施问题
 - **新增：跳过计数错误：跳过功能异常**
+- **新增：消息显示控制错误：消息显示异常**
 
 **恢复策略**：
 - 自动重试机制
@@ -905,6 +976,7 @@ ModalDialog --> PMSvelte
 - **新增：错误状态持久化和恢复**
 - **新增：initiatorDocId的错误关联**
 - **新增：跳过计数状态的异常处理**
+- **新增：消息显示控制的异常处理**
 
 **章节来源**
 - [ProgressManager.ts:131-140](file://src/utils/progress/ProgressManager.ts#L131-L140)
@@ -927,6 +999,7 @@ ModalDialog --> PMSvelte
 - **新增：完善的错误状态持久化系统**
 - **新增：跳过计数功能和增量检测优化**
 - **新增：批量分享结果的完整统计信息**
+- **新增：消息显示控制机制（skipMsg和skipBatchMsg）**
 
 **用户体验提升**：
 - 实时进度反馈和状态展示
@@ -941,6 +1014,7 @@ ModalDialog --> PMSvelte
 - **新增：沉浸式模态对话框**
 - **新增：跳过文档的可视化反馈**
 - **新增：增量检测的性能优化**
+- **新增：消息显示控制的用户体验优化**
 
 **扩展性**：
 - 插件化的组件设计
@@ -951,6 +1025,7 @@ ModalDialog --> PMSvelte
 - **新增：样式设计的专业化**
 - **新增：文档级别的错误隔离**
 - **新增：跳过计数功能的可扩展性**
+- **新增：消息显示控制的可配置性**
 
 **新增功能总结**：
 - **跳过计数功能**：实现了增量检测场景下的文档跳过统计
@@ -958,5 +1033,7 @@ ModalDialog --> PMSvelte
 - **智能状态管理**：跳过文档同样计入进度统计，保持准确性
 - **性能优化**：避免重复处理未变更的文档，提高整体效率
 - **用户体验增强**：让用户清楚地了解哪些文档被跳过了
+- **消息显示控制**：通过skipMsg和skipBatchMsg属性精确控制消息显示
+- **批量统计增强**：在批量操作完成后显示跳过文档的统计信息
 
 该系统为大规模文档分享操作提供了可靠的技术支撑，是现代前端应用中进度管理的最佳实践案例。新增的状态处理功能、错误横幅、模态对话框、错误状态持久化机制以及跳过计数功能使其在同类产品中具有显著优势，达到了付费软件的专业标准。initiatorDocId字段的引入和跳过计数功能的实现更是体现了系统在用户体验和性能优化方面的深度思考，为用户提供了更加精准、高效和友好的文档分享体验。

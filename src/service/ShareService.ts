@@ -20,12 +20,7 @@ import { ServiceResponse, ShareApi } from "../api/share-api"
 import { useDataTable } from "../composables/useDataTable"
 import { useEmbedBlock } from "../composables/useEmbedBlock"
 import { useFold } from "../composables/useFold"
-import {
-  convertSiyuanDateToTimestamp,
-  getSubdocCount,
-  getSubdocsPaged,
-  useSiyuanApi,
-} from "../composables/useSiyuanApi"
+import { getSubdocCount, getSubdocsPaged, useSiyuanApi } from "../composables/useSiyuanApi"
 import ShareProPlugin from "../index"
 import { ShareOptions } from "../models/ShareOptions"
 import { ShareProConfig } from "../models/ShareProConfig"
@@ -264,7 +259,7 @@ class ShareService implements IShareHistoryService {
       this.addLog(this.pluginInstance.i18n["shareService"]["getPost"], "info")
 
       // ===== 微观增量检测（内置行为，不可关闭）=====
-      const currentModifiedTime = post?.dateUpdated ? convertSiyuanDateToTimestamp(post.dateUpdated) : Date.now()
+      const currentModifiedTime = post?.dateUpdated ? new Date(post.dateUpdated).getTime() : Date.now()
       const history = await this.localShareHistory.getHistoryByDocId(docId)
 
       // 首次分享或有变更时继续
@@ -995,7 +990,8 @@ class ShareService implements IShareHistoryService {
     sPost.attrs = post.attrs
     sPost.title = post.title
     sPost.editorDom = post.editorDom
-    sPost.dateUpdated = new Date()
+    sPost.dateUpdated = post.dateUpdated
+    sPost.dateCreated = post.dateCreated
     sPost.mt_keywords = post.mt_keywords
     sPost.categories = post.categories
     sPost.shortDesc = post.shortDesc
