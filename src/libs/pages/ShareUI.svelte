@@ -25,8 +25,8 @@
   import { ShareService } from "../../service/ShareService"
   import { AttrUtils } from "../../utils/AttrUtils"
   import { PasswordUtils } from "../../utils/PasswordUtils"
-  import type { ErrorState } from "../../utils/progress/progressStore"
-  import { errorStore } from "../../utils/progress/progressStore"
+  import type { ErrorState, ProgressState } from "../../utils/progress/progressStore"
+  import { errorStore, progressStore } from "../../utils/progress/progressStore"
   import { SettingKeys } from "../../utils/SettingKeys"
   import { icons } from "../../utils/svg"
   import Confirm from "../components/Confirm.svelte"
@@ -368,21 +368,32 @@
     errorStore.set({ hasError: false, errors: [], resourceErrors: [], timestamp: 0, operationName: "" })
   }
 
-  // 生成错误详情消息
+  // 生成错误详情消息 - 从 progressStore 获取最新的错误信息
   const generateErrorMessage = (): string => {
     let message = ""
 
-    if (errorState.errors.length > 0) {
+    // 从 progressStore 获取当前 batch 的错误信息
+    let currentBatch: ProgressState | null = null
+    const unsubscribe = progressStore.subscribe((state) => {
+      currentBatch = state
+    })
+    unsubscribe()
+
+    if (!currentBatch) {
+      return pluginInstance.i18n["shareUI"]["noErrorDetails"]
+    }
+
+    if (currentBatch.errors.length > 0) {
       message += "📄 " + pluginInstance.i18n["progressManager"]["documentErrors"] + ":\n"
-      errorState.errors.forEach((error) => {
+      currentBatch.errors.forEach((error) => {
         message += `• ${error.docId}: ${String(error.error)}\n`
       })
     }
 
-    if (errorState.resourceErrors.length > 0) {
+    if (currentBatch.resourceErrors.length > 0) {
       if (message) message += "\n"
       message += "🖼️ " + pluginInstance.i18n["progressManager"]["resourceErrors"] + ":\n"
-      errorState.resourceErrors.forEach((error) => {
+      currentBatch.resourceErrors.forEach((error) => {
         message += `• ${error.docId}: ${String(error.error)}\n`
       })
     }

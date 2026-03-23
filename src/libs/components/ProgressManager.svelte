@@ -415,14 +415,6 @@
     width 100%
     text-align left
 
-  .resource-label
-    font-weight 600
-    color rgba(255, 255, 255, 0.9)
-
-  .resource-count
-    font-weight 500
-    color #fa8c16
-
   .resource-bar
     height 4px
     background-color rgba(255, 255, 255, 0.2)
@@ -524,8 +516,8 @@
       background-color #cf1322
       transform translateY(0)
 
-  /* Dark mode support */
-  html[data-theme-mode="dark"] &
+  /* Dark mode support - using :global to avoid unused selector warning */
+  :global(html[data-theme-mode="dark"]) &
     background-color rgba(24, 24, 28, 0.95)
     border-color rgba(255, 255, 255, 0.2)
     backdrop-filter blur(16px)
