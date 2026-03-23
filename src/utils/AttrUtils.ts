@@ -7,12 +7,12 @@
  *  of this license document, but changing it is not allowed.
  */
 
+import { NULL_VALUE_FOR_SIYUAN_ATTR_REMOVE } from "../Constants"
 import ShareProPlugin from "../index"
+import { SingleDocSetting } from "../models/SingleDocSetting"
 import { ApiUtils } from "./ApiUtils"
 import { SettingKeys } from "./SettingKeys"
-import { SingleDocSetting } from "../models/SingleDocSetting"
 import { isEmptyString } from "./utils"
-import { NULL_VALUE_FOR_SIYUAN_ATTR_REMOVE } from "../Constants"
 
 /**
  * 通用属性读取
