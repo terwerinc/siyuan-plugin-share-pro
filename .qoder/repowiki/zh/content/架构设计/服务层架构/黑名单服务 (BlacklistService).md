@@ -5,13 +5,23 @@
 - [ShareBlacklist.ts](file://src/models/ShareBlacklist.ts)
 - [LocalBlacklistService.ts](file://src/service/LocalBlacklistService.ts)
 - [BlacklistApiService.ts](file://src/service/BlacklistApiService.ts)
+- [BlacklistSetting.svelte](file://src/libs/pages/setting/BlacklistSetting.svelte)
 - [share-blacklist.d.ts](file://src/types/share-blacklist.d.ts)
 - [blacklist-api.d.ts](file://src/types/blacklist-api.d.ts)
 - [SettingKeys.ts](file://src/utils/SettingKeys.ts)
 - [Constants.ts](file://src/Constants.ts)
 - [IncrementalShareService.ts](file://src/service/IncrementalShareService.ts)
 - [share-api.ts](file://src/api/share-api.ts)
+- [zh_CN.json](file://src/i18n/zh_CN.json)
+- [en_US.json](file://src/i18n/en_US.json)
 </cite>
+
+## 更新摘要
+**变更内容**
+- 更新了 LocalBlacklistService 的 removeItem 方法签名，增加类型参数支持
+- 新增 BlacklistSetting.svelte 的全选/取消全选功能实现
+- 改进了表单验证和可访问性支持
+- 增强了批量操作的用户体验
 
 ## 目录
 1. [简介](#简介)
@@ -33,11 +43,13 @@
 - 黑名单的导入导出功能、批量操作支持、性能优化策略（索引、缓存）
 - 使用示例：如何添加/移除黑名单项、批量处理黑名单文档、监控黑名单效果
 - 黑名单与分享服务的集成方式和拦截机制
+- **新增**：全选/取消全选功能、改进的表单验证和可访问性支持
 
 ## 项目结构
 黑名单服务相关代码主要分布在以下模块：
 - 数据模型层：定义黑名单项、配置与接口
 - 服务层：本地黑名单服务、黑名单API服务
+- 用户界面层：黑名单设置页面，支持全选/取消全选
 - 集成层：与增量分享服务的集成点
 - 工具层：常量与设置键定义
 
@@ -52,9 +64,12 @@ subgraph "服务层"
 S1["LocalBlacklistService.ts<br/>本地黑名单服务实现"]
 S2["BlacklistApiService.ts<br/>黑名单API封装"]
 end
+subgraph "用户界面层"
+U1["BlacklistSetting.svelte<br/>黑名单设置页面<br/>全选/取消全选功能"]
+end
 subgraph "工具层"
-U1["SettingKeys.ts<br/>属性键定义"]
-U2["Constants.ts<br/>常量定义"]
+T1["SettingKeys.ts<br/>属性键定义"]
+T2["Constants.ts<br/>常量定义"]
 end
 subgraph "集成层"
 I1["IncrementalShareService.ts<br/>增量分享服务"]
@@ -63,17 +78,19 @@ end
 M1 --> S1
 M2 --> S1
 M3 --> I2
-U1 --> S1
-U2 --> S1
-S1 --> I1
+T1 --> S1
+T2 --> S1
+S1 --> U1
 S2 --> S1
 I2 --> I1
+U1 --> S1
 ```
 
 **图表来源**
 - [ShareBlacklist.ts:1-99](file://src/models/ShareBlacklist.ts#L1-L99)
-- [LocalBlacklistService.ts:1-658](file://src/service/LocalBlacklistService.ts#L1-L658)
+- [LocalBlacklistService.ts:1-655](file://src/service/LocalBlacklistService.ts#L1-L655)
 - [BlacklistApiService.ts:1-76](file://src/service/BlacklistApiService.ts#L1-L76)
+- [BlacklistSetting.svelte:1-797](file://src/libs/pages/setting/BlacklistSetting.svelte#L1-L797)
 - [share-blacklist.d.ts:1-114](file://src/types/share-blacklist.d.ts#L1-L114)
 - [blacklist-api.d.ts:1-99](file://src/types/blacklist-api.d.ts#L1-L99)
 - [SettingKeys.ts:1-75](file://src/utils/SettingKeys.ts#L1-L75)
@@ -83,8 +100,9 @@ I2 --> I1
 
 **章节来源**
 - [ShareBlacklist.ts:1-99](file://src/models/ShareBlacklist.ts#L1-L99)
-- [LocalBlacklistService.ts:1-658](file://src/service/LocalBlacklistService.ts#L1-L658)
+- [LocalBlacklistService.ts:1-655](file://src/service/LocalBlacklistService.ts#L1-L655)
 - [BlacklistApiService.ts:1-76](file://src/service/BlacklistApiService.ts#L1-L76)
+- [BlacklistSetting.svelte:1-797](file://src/libs/pages/setting/BlacklistSetting.svelte#L1-L797)
 - [share-blacklist.d.ts:1-114](file://src/types/share-blacklist.d.ts#L1-L114)
 - [blacklist-api.d.ts:1-99](file://src/types/blacklist-api.d.ts#L1-L99)
 - [SettingKeys.ts:1-75](file://src/utils/SettingKeys.ts#L1-L75)
@@ -108,18 +126,25 @@ I2 --> I1
   - 定义服务端交互所需的请求与响应结构
   - 支持添加、删除、检查与列表查询
 
+- **新增**：黑名单设置界面
+  - 支持全选/取消全选功能
+  - 改进的表单验证和可访问性支持
+  - 实时搜索和筛选功能
+
 **章节来源**
 - [ShareBlacklist.ts:18-78](file://src/models/ShareBlacklist.ts#L18-L78)
 - [ShareBlacklist.ts:83-98](file://src/models/ShareBlacklist.ts#L83-L98)
 - [share-blacklist.d.ts:18-93](file://src/types/share-blacklist.d.ts#L18-L93)
 - [blacklist-api.d.ts:18-98](file://src/types/blacklist-api.d.ts#L18-L98)
+- [BlacklistSetting.svelte:270-286](file://src/libs/pages/setting/BlacklistSetting.svelte#L270-L286)
 
 ## 架构概览
-黑名单服务采用“本地存储 + 思源内核API”的混合架构：
+黑名单服务采用"本地存储 + 思源内核API"的混合架构：
 - 笔记本黑名单：持久化存储于插件配置中，便于全局生效与跨文档继承
 - 文档黑名单：通过文档属性标记，实现细粒度控制
 - 查询路径：本地服务统一聚合笔记本与文档黑名单，提供批量检查能力
 - 集成路径：增量分享服务在批量分享前调用黑名单检查，自动跳过命中项
+- **新增**：用户界面层提供全选/取消全选功能，提升批量操作效率
 
 ```mermaid
 sequenceDiagram
@@ -167,7 +192,7 @@ class LocalBlacklistService {
 +getItemsPaged(pageNum, pageSize, type, query) BlacklistItem[]
 +getItemsCount(type, query) number
 +addItem(item) void
-+removeItem(id) void
++removeItem(id, type) void
 +isInBlacklist(id) boolean
 +areInBlacklist(ids) Record
 +clearBlacklist() void
@@ -197,7 +222,7 @@ LocalBlacklistService --> BlacklistApiService : "封装API调用"
 ```
 
 **图表来源**
-- [LocalBlacklistService.ts:31-657](file://src/service/LocalBlacklistService.ts#L31-L657)
+- [LocalBlacklistService.ts:31-655](file://src/service/LocalBlacklistService.ts#L31-L655)
 - [BlacklistApiService.ts:22-75](file://src/service/BlacklistApiService.ts#L22-L75)
 
 #### 存储与同步机制
@@ -288,6 +313,38 @@ ISS-->>UI : 显示处理结果与提示
 **章节来源**
 - [IncrementalShareService.ts:286-364](file://src/service/IncrementalShareService.ts#L286-L364)
 
+### **新增**：黑名单设置界面增强功能
+
+#### 全选/取消全选功能
+BlacklistSetting.svelte 页面提供了直观的全选/取消全选功能，显著提升了批量操作效率：
+
+- **全选逻辑**：当所有可见项目都被选中时，复选框显示为全选状态
+- **取消全选**：点击全选复选框可取消所有项目的选中状态
+- **状态同步**：全选状态与每个项目的选择状态保持同步
+
+```mermaid
+stateDiagram-v2
+[*] --> 无项目
+无项目 --> 无全选状态
+无全选状态 --> 全选状态 : 点击全选复选框
+全选状态 --> 无全选状态 : 点击全选复选框
+全选状态 --> 部分选中 : 取消单个项目选择
+部分选中 --> 全选状态 : 选择剩余项目
+部分选中 --> 无全选状态 : 取消最后一个项目选择
+```
+
+**图表来源**
+- [BlacklistSetting.svelte:270-286](file://src/libs/pages/setting/BlacklistSetting.svelte#L270-L286)
+
+#### 改进的表单验证和可访问性支持
+- **必填字段验证**：名称和目标ID字段的实时验证
+- **可访问性改进**：使用适当的ARIA标签和键盘导航支持
+- **错误处理**：友好的错误消息和状态反馈
+
+**章节来源**
+- [BlacklistSetting.svelte:180-219](file://src/libs/pages/setting/BlacklistSetting.svelte#L180-L219)
+- [BlacklistSetting.svelte:270-286](file://src/libs/pages/setting/BlacklistSetting.svelte#L270-L286)
+
 ## 依赖关系分析
 - LocalBlacklistService 依赖：
   - SettingKeys：文档黑名单属性键
@@ -300,6 +357,10 @@ ISS-->>UI : 显示处理结果与提示
   - IncrementalShareService 通过 LocalBlacklistService 的批量检查接口集成黑名单
   - 通过分页检查降低一次性查询压力
 
+- **新增**：用户界面依赖
+  - BlacklistSetting.svelte 依赖 LocalBlacklistService 进行数据操作
+  - 国际化文件提供多语言支持
+
 ```mermaid
 graph LR
 LBS["LocalBlacklistService"] --> SK["SettingKeys"]
@@ -309,6 +370,8 @@ LBS --> SP["ShareProConfig"]
 LBS --> AU["ApiUtils"]
 ISS["IncrementalShareService"] --> LBS
 API["share-api.ts"] --> ISS
+BLS["BlacklistSetting.svelte"] --> LBS
+BLS --> I18N["国际化文件"]
 ```
 
 **图表来源**
@@ -317,6 +380,7 @@ API["share-api.ts"] --> ISS
 - [Constants.ts:15-19](file://src/Constants.ts#L15-L19)
 - [IncrementalShareService.ts:286-364](file://src/service/IncrementalShareService.ts#L286-L364)
 - [share-api.ts:224-228](file://src/api/share-api.ts#L224-L228)
+- [BlacklistSetting.svelte:102-105](file://src/libs/pages/setting/BlacklistSetting.svelte#L102-L105)
 
 **章节来源**
 - [LocalBlacklistService.ts:10-20](file://src/service/LocalBlacklistService.ts#L10-L20)
@@ -324,6 +388,7 @@ API["share-api.ts"] --> ISS
 - [Constants.ts:15-19](file://src/Constants.ts#L15-L19)
 - [IncrementalShareService.ts:286-364](file://src/service/IncrementalShareService.ts#L286-L364)
 - [share-api.ts:224-228](file://src/api/share-api.ts#L224-L228)
+- [BlacklistSetting.svelte:102-105](file://src/libs/pages/setting/BlacklistSetting.svelte#L102-L105)
 
 ## 性能考虑
 - 批量检查优化
@@ -336,11 +401,15 @@ API["share-api.ts"] --> ISS
   - 文档黑名单通过属性标记，写入成本低但读取需批量API调用
 - 并发与队列
   - 增量分享服务在检查后使用队列与并发控制，避免阻塞
+- **新增**：界面性能优化
+  - 全选功能使用 Set 数据结构，提高状态管理效率
+  - 防抖搜索减少不必要的API调用
 
 **章节来源**
 - [LocalBlacklistService.ts:221-249](file://src/service/LocalBlacklistService.ts#L221-L249)
 - [LocalBlacklistService.ts:50-118](file://src/service/LocalBlacklistService.ts#L50-L118)
 - [IncrementalShareService.ts:286-364](file://src/service/IncrementalShareService.ts#L286-L364)
+- [BlacklistSetting.svelte:270-286](file://src/libs/pages/setting/BlacklistSetting.svelte#L270-L286)
 
 ## 故障排查指南
 - 添加/移除失败
@@ -352,17 +421,32 @@ API["share-api.ts"] --> ISS
 - 性能问题
   - 减少一次性查询数量，使用分页与批量检查
   - 避免频繁清空文档黑名单（无法批量清空，需手动提供ID）
+- **新增**：界面操作问题
+  - 全选功能失效：检查 Set 数据结构的状态同步
+  - 表单验证错误：确认必填字段是否正确填写
+  - 可访问性问题：检查ARIA标签和键盘导航支持
 
 **章节来源**
 - [LocalBlacklistService.ts:170-202](file://src/service/LocalBlacklistService.ts#L170-L202)
 - [LocalBlacklistService.ts:591-626](file://src/service/LocalBlacklistService.ts#L591-L626)
 - [LocalBlacklistService.ts:508-534](file://src/service/LocalBlacklistService.ts#L508-L534)
+- [BlacklistSetting.svelte:180-219](file://src/libs/pages/setting/BlacklistSetting.svelte#L180-L219)
+- [BlacklistSetting.svelte:270-286](file://src/libs/pages/setting/BlacklistSetting.svelte#L270-L286)
 
 ## 结论
-黑名单服务通过“本地存储 + 内核API”的混合架构实现了灵活而高效的文档过滤能力。LocalBlacklistService 提供了完善的增删改查、批量检查与分页搜索能力，并与增量分享服务无缝集成，有效保障了分享流程的安全性与可控性。未来可在以下方面持续优化：
+黑名单服务通过"本地存储 + 内核API"的混合架构实现了灵活而高效的文档过滤能力。LocalBlacklistService 提供了完善的增删改查、批量检查与分页搜索能力，并与增量分享服务无缝集成，有效保障了分享流程的安全性与可控性。
+
+**最新改进**：
+- **全选/取消全选功能**：显著提升批量操作效率，支持大量黑名单项的快速管理
+- **增强的表单验证**：确保数据完整性，提供更好的用户体验
+- **可访问性支持**：改善键盘导航和屏幕阅读器支持
+- **改进的错误处理**：更友好的错误消息和状态反馈
+
+未来可在以下方面持续优化：
 - 引入文档黑名单的批量清空机制
 - 增加黑名单导入导出功能
 - 优化文档属性批量获取的性能
+- 扩展黑名单规则的匹配算法
 
 ## 附录
 
@@ -371,24 +455,39 @@ API["share-api.ts"] --> ISS
   - 笔记本：调用添加方法，选择类型为笔记本，填写笔记本ID与名称
   - 文档：调用添加方法，选择类型为文档，填写文档ID与标题
 - 移除黑名单项
+  - **更新**：现在支持通过 removeItem(id, type) 方法直接指定类型
   - 通过ID移除，服务会自动判断类型并执行对应操作
 - 批量处理
   - 使用批量检查接口一次性获取多个文档的黑名单状态
   - 在增量分享前进行预检查，自动跳过黑名单项
+  - **新增**：使用全选功能快速选择多个黑名单项进行批量删除
 - 监控效果
   - 查看增量分享结果中的跳过数量与详情
   - 通过分页查询与关键词搜索定位特定条目
+  - **新增**：利用改进的表单验证确保操作的准确性
 
 **章节来源**
 - [LocalBlacklistService.ts:168-202](file://src/service/LocalBlacklistService.ts#L168-L202)
 - [LocalBlacklistService.ts:221-249](file://src/service/LocalBlacklistService.ts#L221-L249)
 - [IncrementalShareService.ts:286-364](file://src/service/IncrementalShareService.ts#L286-L364)
+- [BlacklistSetting.svelte:270-286](file://src/libs/pages/setting/BlacklistSetting.svelte#L270-L286)
 
 ### 黑名单与分享服务的集成点
 - 增量分享服务在批量分享前调用黑名单检查
 - 对命中黑名单的文档进行跳过处理，并统计结果
 - 保持与服务端配置的同步，确保一致性
+- **新增**：用户界面提供直观的操作反馈和状态指示
 
 **章节来源**
 - [IncrementalShareService.ts:286-364](file://src/service/IncrementalShareService.ts#L286-L364)
 - [share-api.ts:224-228](file://src/api/share-api.ts#L224-L228)
+- [BlacklistSetting.svelte:102-105](file://src/libs/pages/setting/BlacklistSetting.svelte#L102-L105)
+
+### **新增**：全选/取消全选功能使用指南
+- **全选所有项目**：点击表格顶部的全选复选框
+- **取消全选**：再次点击全选复选框或取消单个项目选择
+- **批量删除**：选择多个项目后点击删除按钮
+- **状态指示**：全选复选框会根据选中状态自动更新
+
+**章节来源**
+- [BlacklistSetting.svelte:270-286](file://src/libs/pages/setting/BlacklistSetting.svelte#L270-L286)
