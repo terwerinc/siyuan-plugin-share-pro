@@ -1183,7 +1183,7 @@ class ShareService implements IShareHistoryService {
   private handleResourceErrorForSingleDoc(docId: string, error: any) {
     const errorMessage =
       this.pluginInstance.i18n["shareService"]["msgResourceError"] + (error?.message || String(error))
-    showMessage(errorMessage, 15000, "error")
+    showMessage(errorMessage, 5000, "error")
   }
 }
 

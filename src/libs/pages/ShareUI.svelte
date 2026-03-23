@@ -239,33 +239,48 @@
       return
     }
 
+    // 防止重复点击
+    if (formData.operationState.status === "sharing" || formData.operationState.status === "canceling") {
+      return
+    }
+
     // 关闭下拉菜单
     closeUpdateMenu()
 
-    // == 文档属性 ==
-    // 有效期
-    let expiredTime = Number(formData.singleDocSetting.expiresTime)
-    if (isNaN(expiredTime) || expiredTime < 0) {
-      expiredTime = 0
-    }
-    formData.singleDocSetting.expiresTime = expiredTime
+    try {
+      formData.operationState.status = "sharing"
 
-    // == 分享选项 ==
-    // 分享密码
-    const shareOptions: Partial<ShareOptions> = {}
-    if (formData.shareOptions.passwordEnabled) {
-      shareOptions.passwordEnabled = formData.shareOptions.passwordEnabled
-      shareOptions.password = formData.shareOptions.password
-    }
-    // 强制更新选项
-    if (forceUpdate) {
-      shareOptions.forceUpdate = true
-    }
+      // == 文档属性 ==
+      // 有效期
+      let expiredTime = Number(formData.singleDocSetting.expiresTime)
+      if (isNaN(expiredTime) || expiredTime < 0) {
+        expiredTime = 0
+      }
+      formData.singleDocSetting.expiresTime = expiredTime
 
-    // 重新分享
-    await shareService.createShare(docId, formData.singleDocSetting, shareOptions)
-    // 初始化
-    await initSingleDocMode()
+      // == 分享选项 ==
+      // 分享密码
+      const shareOptions: Partial<ShareOptions> = {}
+      if (formData.shareOptions.passwordEnabled) {
+        shareOptions.passwordEnabled = formData.shareOptions.passwordEnabled
+        shareOptions.password = formData.shareOptions.password
+      }
+      // 强制更新选项
+      if (forceUpdate) {
+        shareOptions.forceUpdate = true
+      }
+
+      // 重新分享
+      await shareService.createShare(docId, formData.singleDocSetting, shareOptions)
+      // 初始化
+      await initSingleDocMode()
+      formData.operationState.status = "shared"
+    } catch (e) {
+      formData.operationState.status = "error"
+      formData.operationState.error = e
+      console.error(e)
+      showMessage(pluginInstance.i18n["ui"]["shareSuccessError"] + e.toString(), 3000, "info")
+    }
   }
 
   const handlePasswordChange = async () => {
@@ -537,9 +552,9 @@
     formData.shared = docInfo.code === 0
     formData.shareData = docInfo?.data ? JSON.parse(docInfo.data) : null
 
-    // 提取上次分享时间（从本地历史记录获取，更准确）
+    // 提取上次分享时间（从本地历史记录获取，使用 shareTime 而非 docModifiedTime）
     const localHistory = await shareService.getLocalShareHistory(docId)
-    formData.lastShareTime = localHistory?.docModifiedTime || new Date().getTime()
+    formData.lastShareTime = localHistory?.shareTime || null
 
     // 生成分享链接
     const customDomain = cfg?.appConfig?.domain ?? "https://siyuan.wiki"
@@ -740,7 +755,11 @@
                     </div>
                     <div class="dropdown-divider" />
                     <div class="dropdown-item-wrapper">
-                      <button type="button" class="dropdown-item item-danger" on:click|stopPropagation={() => handleReShare(true)}>
+                      <button
+                        type="button"
+                        class="dropdown-item item-danger"
+                        on:click|stopPropagation={() => handleReShare(true)}
+                      >
                         {pluginInstance.i18n["ui"]["fullUpdate"]}
                       </button>
                       <div class="item-tip">{pluginInstance.i18n["ui"]["fullUpdateTip"]}</div>
