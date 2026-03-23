@@ -14,9 +14,9 @@
 
 # 用户推演优化清单
 
-- [ ] 文档大纲字数过多被遮挡，应该参考 https://www.mintlify.com/docs/quickstart
+- [X] 文档大纲字数过多被遮挡，应该参考 https://www.mintlify.com/docs/quickstart
 
-- [ ] 晚上的时候暗黑模式为你正确失败，导致页面无法查看
+- [X] 晚上的时候暗黑模式失败，导致页面无法查看
 
 - [ ] 黑名单功能 CRUD 有 bug
 

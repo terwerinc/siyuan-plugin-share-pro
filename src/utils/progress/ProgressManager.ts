@@ -1,6 +1,6 @@
 import { ProgressState } from "./ProgressState"
 import { progressStore } from "./progressStore"
-import { resourceEventEmitter, RESOURCE_EVENTS } from "./ResourceEventEmitter"
+import { RESOURCE_EVENTS, resourceEventEmitter } from "./ResourceEventEmitter"
 
 /**
  * ProgressManager utility class for managing batch operation progress
@@ -185,17 +185,23 @@ export class ProgressManager {
     progressStore.update((currentState) => {
       if (!currentState || currentState.id !== id) return currentState
 
-      const newState = {
+      // 如果文档已完成且没有资源在处理中，直接标记为完成
+      const shouldComplete = !currentState.isResourceProcessing && currentState.totalResources === 0
+
+      if (shouldComplete) {
+        const hasErrors = currentState.errors.length > 0 || currentState.resourceErrors.length > 0
+        return {
+          ...currentState,
+          documentsCompleted: true,
+          endTime: Date.now(),
+          status: hasErrors ? "error" : "success",
+        }
+      }
+
+      return {
         ...currentState,
         documentsCompleted: true,
       }
-
-      // Check if we can complete the batch immediately
-      if (!newState.isResourceProcessing) {
-        this.checkAndCompleteBatch(id)
-      }
-
-      return newState
     })
   }
 

@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { onMount, onDestroy } from "svelte"
   import { showMessage } from "siyuan"
+  import { onDestroy, onMount } from "svelte"
   import ShareProPlugin from "../../index"
   import { ProgressManager } from "../../utils/progress/ProgressManager"
   import { progressStore } from "../../utils/progress/progressStore"
@@ -102,8 +102,9 @@
 </script>
 
 {#if isVisible && currentBatch}
-  <div class="share-pro-progress-manager-overlay" on:click|stopPropagation>
-    <div class="share-pro-progress-manager-content">
+  <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
+  <div class="share-pro-progress-manager-overlay" on:click={handleClose}>
+    <div class="share-pro-progress-manager-content" on:click|stopPropagation>
       <!-- Header -->
       <div class="progress-header">
         <div class="progress-title">
