@@ -7,7 +7,6 @@
  *  of this license document, but changing it is not allowed.
  */
 
-
 /**
  * 文档级别设置
  *
