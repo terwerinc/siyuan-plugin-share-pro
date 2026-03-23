@@ -21,6 +21,9 @@
 - [docs/document-tree-fix-plan-2026-03-21.md](file://docs/document-tree-fix-plan-2026-03-21.md)
 - [docs/incremental-share-context-2025-12-04.md](file://docs/incremental-share-context-2025-12-04.md)
 - [docs/incremental-share-context-2025-12-09.md](file://docs/incremental-share-context-2025-12-09.md)
+- [docs/progress-implementation-2026-03-20.md](file://docs/progress-implementation-2026-03-20.md)
+- [docs/universal-progress-with-share-and-media-2026-03-21.md](file://docs/universal-progress-with-share-and-media-2026-03-21.md)
+- [docs/subdocument-share-context-2026-02-28.md](file://docs/subdocument-share-context-2026-02-28.md)
 - [src/libs/pages/IncrementalShareUI.svelte](file://src/libs/pages/IncrementalShareUI.svelte)
 - [src/libs/pages/setting/IncrementalShareSetting.svelte](file://src/libs/pages/setting/IncrementalShareSetting.svelte)
 - [src/libs/pages/setting/BlacklistSetting.svelte](file://src/libs/pages/setting/BlacklistSetting.svelte)
@@ -29,11 +32,12 @@
 
 ## 更新摘要
 **所做更改**
-- 更新了 Todo List 文档，标记已完成的任务项
-- 添加了文档大纲遮挡问题修复的详细说明
-- 添加了夜间暗黑模式故障修复的详细说明
-- 更新了增量分享功能的实现状态
-- 添加了黑名单管理系统的重构说明
+- 更新了 Todo List 文档，从中文转换为英文，内容升级为结构化项目路线图
+- 添加了详细的版本规划和功能分类体系
+- 更新了增量分享功能的实现状态和架构改进
+- 添加了统一进度管理系统的详细技术实现
+- 更新了文档树修复计划的技术架构分析
+- 添加了子文档分享功能的完整实现说明
 
 ## 目录
 1. [简介](#简介)
@@ -44,7 +48,8 @@
 6. [依赖分析](#依赖分析)
 7. [性能考虑](#性能考虑)
 8. [故障排除指南](#故障排除指南)
-9. [结论](#结论)
+9. [项目路线图](#项目路线图)
+10. [结论](#结论)
 
 ## 简介
 
@@ -508,41 +513,170 @@ C --> F
 **章节来源**
 - [src/index.ts:150-169](file://src/index.ts#L150-L169)
 
-## Todo List 更新
+## 项目路线图
 
-### 增量分享功能未完成任务清单
+### 版本规划与功能分类
 
-以下是在增量分享功能开发过程中尚未完成的任务，将在后续版本中逐步实现：
+#### 1.16.0 版本 - 核心功能完成
 
-#### UI增强功能
-- [ ] 实现首次使用引导和空状态提示
-- [ ] 实现分享历史查询界面（搜索、筛选、导出CSV）
-- [ ] 实现统计报表页面（趋势图、Top 10、成功率）
+**已完成的核心功能**：
+- ✅ 实现引用文档分享功能（递归分享引用文档及其子文档）
+- ✅ 实现子文档分享功能（递希笔记及其所有子文档）
+- ✅ 实现增量分享功能（仅分享变更文档）
+- ✅ 实现黑名单管理功能（支持笔记本和文档级别）
 
-#### 核心功能完善
-- [ ] 实现数据一致性检查（定时24小时校验）
-- [ ] 实现右键菜单快速添加黑名单功能
+**进度管理与错误处理**：
+- ✅ 实现多文档分享进度管理（右下角进度弹窗）
+- ✅ 实现文档级错误状态隔离（A文档错误不污染B文档）
+- ✅ 实现上次分享时间显示（灰色辅助文本）
+- ✅ 实现错误详情弹窗（使用 Confirm.svelte 标准组件）
+- ✅ 实现错误状态持久化（关闭弹窗后错误横幅仍显示）
+- ✅ 实现"我知道了"错误确认机制
 
-### 用户推演优化清单
+**黑名单管理修复**：
+- ✅ 修复黑名单删除功能失效问题（ID与类型丢失）
+- ✅ 修复黑名单全选功能失效问题（表头复选框无事件绑定）
+- ✅ 修复复选框状态持久化问题（切换分页后选择丢失）
+- ✅ 修复 DTO 转换中 id 字段硬编码问题
 
-**已完成的任务项**：
+**国际化与代码规范**：
+- ✅ 移除所有 i18n fallback 机制（严格国际化规范）
+- ✅ 重构错误详情弹窗使用 Confirm.svelte 标准组件
+- ✅ 修复 Svelte 可访问性警告（a11y-label-has-associated-control 等）
 
-#### 文档大纲遮挡问题修复
-- [X] 文档大纲字数过多被遮挡，应该参考 https://www.mintlify.com/docs/quickstart
+#### 1.17.0 版本 - 规划中 📋
 
-**已完成的任务项**：
+**体验优化（参考飞书/钉钉/Notion 付费产品标准）**
 
-#### 夜间暗黑模式故障修复
-- [X] 晚上的时候暗黑模式失败，导致页面无法查看
+**空状态与引导**：
+- [ ] 实现首次使用引导（Onboarding Flow）
+  - 参考：飞书文档首次使用时的分步引导
+  - 参考：Notion 的模板引导流程
+  - 实现：首次打开分享功能时显示功能介绍浮层
+  - 实现：关键操作（添加黑名单、分享文档）的引导提示
 
-#### 黑名单功能 CRUD 有 bug
-- [ ] 黑名单功能 CRUD 有 bug
+- [ ] 实现空状态设计（Empty State）
+  - 参考：钉钉文档空状态的插画+文案设计
+  - 参考：语雀空状态的友好提示
+  - 实现：黑名单为空时的引导添加界面
+  - 实现：分享历史为空时的引导分享界面
+  - 实现：无子文档/引用文档时的友好提示
 
-#### 分享页面提示信息
-- [ ] "对不起，该文档尚未分析分享，没有添加您可以尝试：返回上一页，联系作者"
+**数据可视化**：
+- [ ] 实现分享历史查询界面
+  - 参考：飞书多维表格的筛选器设计
+  - 功能：按时间范围、文档类型、分享状态筛选
+  - 功能：关键词搜索（文档名、ID、备注）
+  - 功能：导出 CSV（带进度提示）
+  - 功能：分页加载（虚拟滚动优化大数据量）
+
+- [ ] 实现统计报表页面
+  - 参考：钉钉管理后台的数据看板
+  - 参考：Notion 的图表组件
+  - 功能：分享趋势图（日/周/月维度）
+  - 功能：Top 10 分享文档排行
+  - 功能：分享成功率统计
+  - 功能：错误类型分布饼图
+
+**快捷操作**：
+- [ ] 实现右键菜单快速添加黑名单
+  - 参考：飞书文档的右键菜单设计
+  - 功能：在文档树右键直接添加到黑名单
+  - 功能：在分享界面右键排除文档
+  - 功能：批量右键操作（多选后右键）
+
+**核心功能完善**
+
+**数据一致性**：
+- [ ] 实现数据一致性检查机制
+  - 参考：阿里 OSS 的数据校验机制
+  - 功能：定时 24 小时自动校验分享数据
+  - 功能：手动触发一致性检查
+  - 功能：差异报告与一键修复
+
+**分享安全**：
+- [ ] 实现分享链接安全增强
+  - 参考：腾讯文档的链接权限管理
+  - 功能：分享链接有效期设置（1天/7天/30天/永久）
+  - 功能：分享链接访问密码
+  - 功能：分享链接访问次数限制
+
+**性能优化**：
+- [ ] 实现大数据量分享优化
+  - 参考：字节跳动文档的分片上传机制
+  - 功能：超大量子文档分批处理
+  - 功能：进度保存与断点续传
+  - 功能：后台静默分享模式
+
+**其他规划**：
+- callout（预研）
+- 自定义图床存储- 百度网盘（openlist）、自部署 minio（待排期）
+- 给予现有的发布，看看能不能扩展（预研）
+- 基于分享笔记的语义问答
+
+**长期规划**：
+- [ ] 2.0 版本愿景
+  - 智能分享推荐（基于文档关联度AI推荐）
+  - 团队协作分享（支持多人协作分享空间）
+  - 分享内容版本管理（历史版本对比与回滚）
+  - 跨平台分享（支持导出为多种格式）
 
 **章节来源**
-- [docs/TODO.md:1-23](file://docs/TODO.md#L1-L23)
+- [docs/TODO.md:1-120](file://docs/TODO.md#L1-L120)
+
+## 统一进度管理系统
+
+### 核心问题分析
+
+当前系统存在两个核心问题：
+
+1. **showMessage 消息通知混乱问题**
+   - 消息通知混乱：批量分享时会显示多个 showMessage 通知条（黑条），造成界面混乱
+   - 进度显示位置不当：进度信息显示在子文档树下方，容易被遮挡看不到
+   - 频繁通知干扰：每个文档处理都会触发 showMessage，对于大量文档会造成频繁的视觉干扰
+
+2. **资源处理与进度管理不同步问题**
+   - 进度提前结束：文档分享完成后立即显示成功消息，但资源文件（媒体上传）仍在异步处理中
+   - 错误不反馈：资源上传失败时（如 "[share-pro] [2026-03-21 00:11:17] [ERROR] [share-service] 第1组媒体上传失败=>Some assets failed to upload"），前台仍然显示成功，这是绝对错误的
+   - 用户体验不一致：用户看到成功提示，但实际上部分资源可能上传失败
+
+### 解决方案概述
+
+采用**事件驱动的资源通知机制**，让异步的资源处理能够主动通知 ProgressManager 其状态变化，从而实现：
+
+1. 保持资源处理的异步性（使用 void 调用）
+2. 实时更新资源处理进度到进度条
+3. 确保进度条在资源处理完成前保持打开状态
+4. 正确聚合和反馈资源处理错误
+
+### 技术实现细节
+
+**创建资源事件系统**：
+- 文件路径：`src/utils/progress/ResourceEventEmitter.ts`
+- 提供事件发射器用于资源处理状态通知
+- 定义标准事件类型（开始、进度、错误、完成）
+
+**扩展 ProgressState 接口**：
+- 新增字段：totalResources、completedResources、resourceErrors、isResourceProcessing、documentsCompleted
+- 支持资源处理状态的完整跟踪
+
+**增强 ProgressManager 类**：
+- 监听资源事件：在 startBatch 时注册资源事件监听器
+- 状态协调逻辑：实现智能的完成判断机制
+- 资源进度更新：处理资源进度和错误事件
+
+**修改 processAllMediaResources 方法**：
+- 在资源处理过程中触发相应的事件
+- 保持异步调用方式不变
+- 实现资源处理的事件通知
+
+**智能自动关闭策略**：
+- 成功场景：只有当状态为 "success" 且没有文档错误、资源错误时才自动关闭（5秒后）
+- 失败场景：任何错误（文档错误、资源错误、状态为 "error"）都会禁用自动关闭，界面持久显示
+- 手动关闭：右上角的 X 按钮作为手动关闭入口，失败场景下用户必须主动点击 X 才能关闭
+
+**章节来源**
+- [docs/universal-progress-with-share-and-media-2026-03-21.md:1-366](file://docs/universal-progress-with-share-and-media-2026-03-21.md#L1-L366)
 
 ## 文档树修复计划
 
@@ -738,6 +872,104 @@ private async _recursiveGetChildren(notebook: string, currentPath: string, resul
 **章节来源**
 - [docs/document-tree-fix-plan-2026-03-21.md:1-188](file://docs/document-tree-fix-plan-2026-03-21.md#L1-L188)
 
+## 子文档分享功能实现
+
+### 核心架构设计
+
+**三层配置架构**（已正确实现）
+
+1. **Level 1 - 全局配置 (userPreferences)**
+   - 存储位置：`ShareProConfig.appConfig`
+   - 配置项：`shareSubdocuments` (boolean, 默认 true), `maxSubdocuments` (number, 默认 100)
+   - 文件：`src/models/AppConfig.ts`
+
+2. **Level 2 - 文档级配置 (singleDocSetting)**
+   - 存储位置：文档属性 (Block Attributes)
+   - 配置项：`shareSubdocuments` (boolean), `maxSubdocuments` (number)
+   - 文件：`src/models/SingleDocSetting.ts`
+   - 属性键：`CUSTOM_SHARE_SUBDOCUMENTS`, `CUSTOM_MAX_SUBDOCUMENTS`
+
+3. **Level 3 - 分享选项 (shareOptions)**
+   - 存储位置：服务器端敏感信息
+   - **注意**：`shareSubdocuments` 不在此层级，仅包含密码等敏感信息
+   - 文件：`src/models/ShareOptions.ts`
+
+### 配置优先级逻辑
+
+```typescript
+// 有效配置计算逻辑
+const effectiveShareSubdocuments = settings?.shareSubdocuments ?? globalShareSubdocuments;
+const effectiveMaxSubdocuments = settings?.maxSubdocuments ?? globalMaxSubdocuments ?? 100;
+```
+
+### 统一API入口设计（已实现）
+
+- **`createShare(docId, settings, options)`** - 对外唯一入口
+  - 根据配置决定是否包含子文档
+  - 聚合逻辑处理
+
+- **`handleOne(docId, settings, options)`** - 内部单文档处理
+  - 原 `createShare` 方法重命名
+  - 纯净的单文档分享逻辑
+
+- **`cancelShare(docId)`** - 对外取消入口
+  - 统一处理单文档或子文档取消
+
+- **`cancelOne(docId)`** - 内部单文档取消
+  - 原 `cancelShare` 方法重命名
+
+### 关键技术实现
+
+**子文档获取方法（实际实现）**：
+
+根据 `src/composables/useSiyuanApi.ts` 中的实际代码：
+
+**获取子文档总数**：
+```typescript
+// 获取指定文档的子文档总数
+const sql = `
+  SELECT COUNT(DISTINCT b1.root_id) AS count
+  FROM blocks b1
+  WHERE b1.root_id = '${escapedDocId}' OR b1.path LIKE '%/${escapedDocId}%'
+`;
+```
+
+**分页获取子文档列表**：
+```typescript
+// 分页获取子文档列表
+const sql = `
+  SELECT DISTINCT b2.root_id, b2.content, b2.path, b2.updated, b2.created
+  FROM blocks b2
+  WHERE b2.id IN (
+      SELECT DISTINCT b1.root_id
+      FROM blocks b1
+      WHERE b1.root_id = '${escapedDocId}' OR b1.path LIKE '%/${escapedDocId}%'
+      ORDER BY b1.updated DESC, b1.created DESC
+      LIMIT ${pageSize} OFFSET ${offset}
+  )
+  ORDER BY b2.updated DESC, b2.created DESC, b2.id
+`;
+```
+
+### 性能优化措施
+
+- 分页加载：每次50个文档
+- 智能缓存：5分钟缓存子文档信息
+- 并发控制：最多10个并发分享
+- 异步处理：不阻塞UI主线程
+
+### 配置默认值
+
+| 配置项 | 默认值 | 说明 |
+|--------|--------|------|
+| `shareSubdocuments` | `true` | 子文档分享默认开启 |
+| `maxSubdocuments` | `100` | 默认分享100个子文档 |
+| `docTreeLevel` | `3` | 文档树深度默认3层 |
+| `outlineLevel` | `6` | 文档大纲深度默认6层 |
+
+**章节来源**
+- [docs/subdocument-share-context-2026-02-28.md:1-204](file://docs/subdocument-share-context-2026-02-28.md#L1-L204)
+
 ## 增量分享功能实现状态
 
 ### 当前进度
@@ -897,8 +1129,17 @@ private async _recursiveGetChildren(notebook: string, currentPath: string, resul
 - 文档大纲遮挡问题已修复，参考 Mintlify 的最佳实践
 - 夜间暗黑模式故障已修复，确保夜间正常使用
 - 黑名单管理系统已从后端迁移到本地存储，提升性能和用户体验
+- 统一进度管理系统已实现，解决 showMessage 混乱和资源处理同步问题
 
 **待完成的功能**：
 - 增量分享功能的完整实现（真实API替换）
 - 黑名单功能的 CRUD 操作完善
 - UI 增强功能的进一步开发
+- 1.17.0 版本规划中的所有功能实现
+
+**项目路线图**：
+- 1.16.0 版本已实现核心功能，包括子文档分享、增量分享、黑名单管理等
+- 1.17.0 版本规划中包含体验优化、数据可视化、快捷操作等功能
+- 长期规划（2.0 版本）包括智能分享推荐、团队协作分享、版本管理等高级功能
+
+通过结构化的项目路线图和详细的技术实现，该插件正朝着成为专业级文档分享解决方案的目标稳步前进。
