@@ -209,6 +209,14 @@
     "setHomeError": "首页设置失败=>",
     "actionSetAlready": "已设置"
   },
+  "shareUI": {
+    "errorBannerText": "存在分享错误，点击查看详情",
+    "viewDetails": "查看",
+    "dismissError": "忽略错误",
+    "errorDetailsTitle": "错误详情",
+    "clearError": "清除错误",
+    "noErrorDetails": "暂无错误详情"
+  },
   "ui": {
     "dataLoading": "数据加载中...",
     "msgIngError": "图片未处理或处理失败，建议等待或重新分享",
@@ -385,7 +393,9 @@
     "resourceErrors": "资源错误",
     "operationCompleted": "操作完成",
     "operationFailed": "操作失败",
-    "operationCanceled": "操作已取消"
+    "operationCanceled": "操作已取消",
+    "acknowledgeError": "我知道了",
+    "errorAcknowledged": "错误已记录，可随时查看详情"
   },
   "lastShareTime": {
     "label": "上次分享",

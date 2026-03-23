@@ -3,7 +3,7 @@
   import { onDestroy, onMount } from "svelte"
   import ShareProPlugin from "../../index"
   import { ProgressManager } from "../../utils/progress/ProgressManager"
-  import { progressStore } from "../../utils/progress/progressStore"
+  import { errorStore, progressStore } from "../../utils/progress/progressStore"
 
   // Props
   export let pluginInstance: ShareProPlugin
@@ -13,6 +13,9 @@
   let isVisible = false
   let autoCloseTimer = null
   let countdown = 5
+
+  // 是否有错误（用于显示"我知道了"按钮）
+  $: hasErrors = currentBatch && (currentBatch.errors.length > 0 || currentBatch.resourceErrors.length > 0)
 
   // Subscribe to progress store
   let unsubscribe: () => void
@@ -82,13 +85,33 @@
   }
 
   // 手动关闭处理
-  function handleClose(e) {
+  function handleClose(e?: Event) {
     // 阻止事件冒泡，避免影响 ShareUI
-    e.stopPropagation()
+    if (e) e.stopPropagation()
+
+    // 大厂设计：关闭前保存错误状态，方便用户后续查看
+    if (currentBatch && (currentBatch.errors.length > 0 || currentBatch.resourceErrors.length > 0)) {
+      errorStore.set({
+        hasError: true,
+        errors: currentBatch.errors,
+        resourceErrors: currentBatch.resourceErrors,
+        timestamp: Date.now(),
+        operationName: currentBatch.operationName,
+      })
+    }
+
     isVisible = false
     currentBatch = null
     ProgressManager.clearBatch()
     clearAutoCloseTimer()
+  }
+
+  // "我知道了"按钮处理
+  function handleAcknowledgeError(e) {
+    e.stopPropagation()
+    // 保存错误状态后关闭
+    handleClose()
+    showMessage(pluginInstance.i18n["progressManager"]["errorAcknowledged"], 3000, "info")
   }
 
   // Cancel batch handler
@@ -112,11 +135,11 @@
           {#if currentBatch.status === "processing"}
             {currentBatch.operationName}
           {:else if currentBatch.status === "success"}
-            {pluginInstance.i18n["progressManager"]["operationCompleted"] || "操作完成"}
+            {pluginInstance.i18n["progressManager"]["operationCompleted"]}
           {:else if currentBatch.status === "error"}
-            {pluginInstance.i18n["progressManager"]["operationFailed"] || "操作失败"}
+            {pluginInstance.i18n["progressManager"]["operationFailed"]}
           {:else if currentBatch.status === "canceled"}
-            {pluginInstance.i18n["progressManager"]["operationCanceled"] || "操作已取消"}
+            {pluginInstance.i18n["progressManager"]["operationCanceled"]}
           {:else}
             {currentBatch.operationName}
           {/if}
@@ -130,16 +153,16 @@
       <div class="progress-status">
         {#if currentBatch.status === "processing"}
           <span class="status-icon processing">⚡</span>
-          <span class="status-text">{pluginInstance.i18n["progressManager"]["progressRunning"] || "In Progress"}</span>
+          <span class="status-text">{pluginInstance.i18n["progressManager"]["progressRunning"]}</span>
         {:else if currentBatch.status === "success"}
           <span class="status-icon success">✓</span>
-          <span class="status-text">{pluginInstance.i18n["progressManager"]["progressSuccess"] || "Success"}</span>
+          <span class="status-text">{pluginInstance.i18n["progressManager"]["progressSuccess"]}</span>
         {:else if currentBatch.status === "error"}
           <span class="status-icon error">✗</span>
-          <span class="status-text">{pluginInstance.i18n["progressManager"]["progressError"] || "Error"}</span>
+          <span class="status-text">{pluginInstance.i18n["progressManager"]["progressError"]}</span>
         {:else if currentBatch.status === "canceled"}
           <span class="status-icon canceled">■</span>
-          <span class="status-text">{pluginInstance.i18n["progressManager"]["progressCanceled"] || "Canceled"}</span>
+          <span class="status-text">{pluginInstance.i18n["progressManager"]["progressCanceled"]}</span>
         {/if}
       </div>
 
@@ -179,10 +202,7 @@
       {#if currentBatch.documentsCompleted && currentBatch.isResourceProcessing}
         <div class="waiting-info">
           <span class="waiting-icon">⏳</span>
-          <span class="waiting-text"
-            >{pluginInstance.i18n["progressManager"]["waitingForResourceCompletion"] ||
-              "Waiting for resource processing to complete..."}</span
-          >
+          <span class="waiting-text">{pluginInstance.i18n["progressManager"]["waitingForResourceCompletion"]}</span>
         </div>
       {/if}
 
@@ -205,13 +225,11 @@
       {#if currentBatch && (currentBatch.errors.length > 0 || currentBatch.resourceErrors.length > 0)}
         <div class="error-details">
           <div class="error-header">
-            {pluginInstance.i18n["progressManager"]["errorsDetected"] || "Errors detected:"}
+            {pluginInstance.i18n["progressManager"]["errorsDetected"]}
           </div>
           {#if currentBatch.errors.length > 0}
             <div class="document-errors">
-              <span class="error-type"
-                >📄 {pluginInstance.i18n["progressManager"]["documentErrors"] || "Document errors"}:</span
-              >
+              <span class="error-type">📄 {pluginInstance.i18n["progressManager"]["documentErrors"]}:</span>
               <ul class="error-list">
                 {#each currentBatch.errors as error, index}
                   <li class="error-item" title={error.error}>
@@ -223,9 +241,7 @@
           {/if}
           {#if currentBatch.resourceErrors.length > 0}
             <div class="resource-errors">
-              <span class="error-type"
-                >🖼️ {pluginInstance.i18n["progressManager"]["resourceErrors"] || "Resource errors"}:</span
-              >
+              <span class="error-type">🖼️ {pluginInstance.i18n["progressManager"]["resourceErrors"]}:</span>
               <ul class="error-list">
                 {#each currentBatch.resourceErrors as error, index}
                   <li class="error-item" title={error.error}>
@@ -235,6 +251,13 @@
               </ul>
             </div>
           {/if}
+        </div>
+
+        <!-- 大厂设计：错误状态下显示"我知道了"按钮，给用户明确的关闭入口 -->
+        <div class="error-actions">
+          <button class="acknowledge-btn" on:click={handleAcknowledgeError}>
+            {pluginInstance.i18n["progressManager"]["acknowledgeError"]}
+          </button>
         </div>
       {/if}
     </div>
@@ -470,6 +493,36 @@
     &:hover
       background-color rgba(255, 255, 255, 0.2)
       color white
+
+  // 大厂设计：错误操作按钮区域
+  .error-actions
+    display flex
+    justify-content flex-end
+    margin-top 12px
+    padding-top 12px
+    border-top 1px solid rgba(245, 34, 45, 0.3)
+
+  // 大厂设计："我知道了"按钮样式（参考阿里云/字节设计规范）
+  .acknowledge-btn
+    padding 8px 20px
+    font-size 13px
+    font-weight 500
+    color white
+    background-color #f5222d
+    border none
+    border-radius 4px
+    cursor pointer
+    transition all 0.2s ease
+    box-shadow 0 2px 4px rgba(245, 34, 45, 0.3)
+
+    &:hover
+      background-color #ff4d4f
+      box-shadow 0 4px 8px rgba(245, 34, 45, 0.4)
+      transform translateY(-1px)
+
+    &:active
+      background-color #cf1322
+      transform translateY(0)
 
   /* Dark mode support */
   html[data-theme-mode="dark"] &

@@ -57,9 +57,11 @@ export class ProgressManager {
     const handleResourceError = (event: { docId: string; error: any }) => {
       progressStore.update((currentState) => {
         if (!currentState || currentState.id !== id) return currentState
+        // 关键修复：发生资源错误时立即更新状态为 error，确保标题正确显示
         return {
           ...currentState,
           resourceErrors: [...currentState.resourceErrors, { docId: event.docId, error: event.error }],
+          status: "error",
         }
       })
     }
@@ -132,9 +134,11 @@ export class ProgressManager {
     progressStore.update((currentState) => {
       if (!currentState || currentState.id !== id) return currentState
 
+      // 关键修复：添加文档错误时立即更新状态为 error，确保标题正确显示
       return {
         ...currentState,
         errors: [...currentState.errors, { docId, error }],
+        status: "error",
       }
     })
   }

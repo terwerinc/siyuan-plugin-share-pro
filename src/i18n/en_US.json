@@ -207,6 +207,14 @@
     "setHomeError": "Home page setting failed=>",
     "actionSetAlready": "Already set"
   },
+  "shareUI": {
+    "errorBannerText": "Share errors detected, click to view details",
+    "viewDetails": "View",
+    "dismissError": "Dismiss",
+    "errorDetailsTitle": "Error Details",
+    "clearError": "Clear Errors",
+    "noErrorDetails": "No error details available"
+  },
   "ui": {
     "dataLoading": "Loading...",
     "msgIngError": "The image has not been processed or the process failed, it is recommended to wait or reshare",
@@ -381,7 +389,9 @@
     "resourceErrors": "Resource errors",
     "operationCompleted": "Operation Completed",
     "operationFailed": "Operation Failed",
-    "operationCanceled": "Operation Canceled"
+    "operationCanceled": "Operation Canceled",
+    "acknowledgeError": "I Understand",
+    "errorAcknowledged": "Error recorded, you can view details anytime"
   },
   "lastShareTime": {
     "label": "Last shared",

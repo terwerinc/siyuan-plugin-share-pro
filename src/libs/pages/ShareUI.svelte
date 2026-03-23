@@ -10,7 +10,7 @@
 <script lang="ts">
   import copy from "copy-to-clipboard"
   import { showMessage } from "siyuan"
-  import { onMount } from "svelte"
+  import { onDestroy, onMount } from "svelte"
   import { Post } from "zhi-blog-api"
   import { simpleLogger } from "zhi-lib-base"
   import { SiyuanKernelApi } from "zhi-siyuan-api"
@@ -25,6 +25,8 @@
   import { ShareService } from "../../service/ShareService"
   import { AttrUtils } from "../../utils/AttrUtils"
   import { PasswordUtils } from "../../utils/PasswordUtils"
+  import type { ErrorState } from "../../utils/progress/progressStore"
+  import { errorStore } from "../../utils/progress/progressStore"
   import { SettingKeys } from "../../utils/SettingKeys"
   import { icons } from "../../utils/svg"
   import Confirm from "../components/Confirm.svelte"
@@ -300,10 +302,8 @@
     if (oldChecked && !newChecked) {
       // 从启用变为禁用 - 需要确认是否取消已分享的子文档
       subdocumentConfirmConfig = {
-        title: pluginInstance.i18n["tipTitle"] || "确认操作",
-        message:
-          pluginInstance.i18n["cs"]["confirmCancelSubdocuments"] ||
-          "您已分享了子文档，现在禁用子文档分享将取消已分享的子文档。是否继续？",
+        title: pluginInstance.i18n["tipTitle"],
+        message: pluginInstance.i18n["cs"]["confirmCancelSubdocuments"],
         onConfirm: async () => {
           // 用户确认 - 更新配置并重新分享
           formData.singleDocSetting.shareSubdocuments = newChecked
@@ -318,10 +318,8 @@
     } else if (!oldChecked && newChecked) {
       // 从禁用变为启用 - 需要确认是否更新分享以包含子文档
       subdocumentConfirmConfig = {
-        title: pluginInstance.i18n["tipTitle"] || "确认操作",
-        message:
-          pluginInstance.i18n["cs"]["confirmAddSubdocuments"] ||
-          "您已分享了文档，现在启用子文档分享将重新分享以包含所有子文档。是否继续？",
+        title: pluginInstance.i18n["tipTitle"],
+        message: pluginInstance.i18n["cs"]["confirmAddSubdocuments"],
         onConfirm: async () => {
           // 用户确认 - 更新配置并重新分享
           formData.singleDocSetting.shareSubdocuments = newChecked
@@ -343,6 +341,53 @@
     message: "",
     onConfirm: () => {},
     onCancel: () => {},
+  }
+
+  // 大厂设计：错误状态管理
+  let errorState: ErrorState = { hasError: false, errors: [], resourceErrors: [], timestamp: 0, operationName: "" }
+  let showErrorDetails = false
+
+  // 订阅错误状态
+  const unsubscribeError = errorStore.subscribe((state) => {
+    errorState = state
+  })
+
+  // 处理错误警告条点击
+  const handleErrorBannerClick = () => {
+    showErrorDetails = true
+  }
+
+  // 关闭错误详情
+  const handleCloseErrorDetails = () => {
+    showErrorDetails = false
+  }
+
+  // 清除错误状态
+  const handleDismissError = (e?: Event) => {
+    if (e) e.stopPropagation()
+    errorStore.set({ hasError: false, errors: [], resourceErrors: [], timestamp: 0, operationName: "" })
+  }
+
+  // 生成错误详情消息
+  const generateErrorMessage = (): string => {
+    let message = ""
+
+    if (errorState.errors.length > 0) {
+      message += "📄 " + pluginInstance.i18n["progressManager"]["documentErrors"] + ":\n"
+      errorState.errors.forEach((error) => {
+        message += `• ${error.docId}: ${String(error.error)}\n`
+      })
+    }
+
+    if (errorState.resourceErrors.length > 0) {
+      if (message) message += "\n"
+      message += "🖼️ " + pluginInstance.i18n["progressManager"]["resourceErrors"] + ":\n"
+      errorState.resourceErrors.forEach((error) => {
+        message += `• ${error.docId}: ${String(error.error)}\n`
+      })
+    }
+
+    return message || pluginInstance.i18n["shareUI"]["noErrorDetails"]
   }
 
   /**
@@ -372,10 +417,8 @@
     if (oldChecked && !newChecked) {
       // 从启用变为禁用 - 需要确认是否取消已分享的引用文档
       referenceConfirmConfig = {
-        title: pluginInstance.i18n["tipTitle"] || "确认操作",
-        message:
-          pluginInstance.i18n["cs"]["confirmCancelReferences"] ||
-          "您已分享了引用文档，现在禁用引用文档分享将取消已分享的引用文档。是否继续？",
+        title: pluginInstance.i18n["tipTitle"],
+        message: pluginInstance.i18n["cs"]["confirmCancelReferences"],
         onConfirm: async () => {
           // 用户确认 - 更新配置并重新分享
           formData.singleDocSetting.shareReferences = newChecked
@@ -390,10 +433,8 @@
     } else if (!oldChecked && newChecked) {
       // 从禁用变为启用 - 需要确认是否更新分享以包含引用文档
       referenceConfirmConfig = {
-        title: pluginInstance.i18n["tipTitle"] || "确认操作",
-        message:
-          pluginInstance.i18n["cs"]["confirmAddReferences"] ||
-          "您已分享了文档，现在启用引用文档分享将重新分享以包含所有引用文档。是否继续？",
+        title: pluginInstance.i18n["tipTitle"],
+        message: pluginInstance.i18n["cs"]["confirmAddReferences"],
         onConfirm: async () => {
           // 用户确认 - 更新配置并重新分享
           formData.singleDocSetting.shareReferences = newChecked
@@ -462,35 +503,29 @@
 
     // 小于1小时显示分钟
     if (minutes < 60) {
-      if (minutes < 1) return pluginInstance.i18n["lastShareTime"]["justNow"] || "刚刚"
-      return (pluginInstance.i18n["lastShareTime"]["minutesAgo"] || "[param1]分钟前").replace(
-        "[param1]",
-        minutes.toString()
-      )
+      if (minutes < 1) return pluginInstance.i18n["lastShareTime"]["justNow"]
+      return pluginInstance.i18n["lastShareTime"]["minutesAgo"].replace("[param1]", minutes.toString())
     }
 
     // 小于24小时显示小时
     if (hours < 24) {
-      return (pluginInstance.i18n["lastShareTime"]["hoursAgo"] || "[param1]小时前").replace(
-        "[param1]",
-        hours.toString()
-      )
+      return pluginInstance.i18n["lastShareTime"]["hoursAgo"].replace("[param1]", hours.toString())
     }
 
     // 昨天：显示"昨天 HH:mm"
     if (days === 1) {
-      const yesterdayLabel = pluginInstance.i18n["lastShareTime"]["yesterday"] || "昨天"
+      const yesterdayLabel = pluginInstance.i18n["lastShareTime"]["yesterday"]
       return `${yesterdayLabel} ${hoursStr}:${minutesStr}`
     }
 
     // 2-7天显示天数
     if (days < 7) {
-      return (pluginInstance.i18n["lastShareTime"]["daysAgo"] || "[param1]天前").replace("[param1]", days.toString())
+      return pluginInstance.i18n["lastShareTime"]["daysAgo"].replace("[param1]", days.toString())
     }
 
     // 7-30天显示"X天前"或具体日期（根据配置）
     if (days < 30) {
-      return (pluginInstance.i18n["lastShareTime"]["daysAgo"] || "[param1]天前").replace("[param1]", days.toString())
+      return pluginInstance.i18n["lastShareTime"]["daysAgo"].replace("[param1]", days.toString())
     }
 
     // 超过30天显示具体日期
@@ -627,10 +662,54 @@
   onMount(async () => {
     await initPage()
   })
+
+  // 清理订阅
+  onDestroy(() => {
+    unsubscribeError()
+  })
 </script>
 
 <div id="share">
   <ProgressManager {pluginInstance} />
+
+  <!-- 大厂设计：错误状态警告条 - 参考阿里云/字节设计规范 -->
+  {#if errorState.hasError}
+    <div
+      class="error-banner"
+      on:click={handleErrorBannerClick}
+      on:keydown={(e) => e.key === "Enter" && handleErrorBannerClick()}
+      role="button"
+      tabindex="0"
+    >
+      <span class="error-banner-icon">⚠️</span>
+      <span class="error-banner-text">
+        {pluginInstance.i18n["shareUI"]["errorBannerText"]}
+      </span>
+      <span class="error-banner-action">{pluginInstance.i18n["shareUI"]["viewDetails"]}</span>
+      <button
+        class="error-banner-close"
+        on:click|stopPropagation={handleDismissError}
+        title={pluginInstance.i18n["shareUI"]["dismissError"]}
+      >
+        ×
+      </button>
+    </div>
+  {/if}
+
+  <!-- 错误详情弹窗 - 使用 Confirm 组件实现 -->
+  <Confirm
+    show={showErrorDetails}
+    title={pluginInstance.i18n["shareUI"]["errorDetailsTitle"]}
+    message={generateErrorMessage()}
+    confirmText={pluginInstance.i18n["shareUI"]["clearError"]}
+    cancelText={pluginInstance.i18n["cancel"]}
+    onConfirm={() => {
+      handleCloseErrorDetails()
+      handleDismissError()
+    }}
+    onCancel={handleCloseErrorDetails}
+  />
+
   <Confirm
     show={showSubdocumentConfirm}
     title={subdocumentConfirmConfig.title}
@@ -688,9 +767,7 @@
             <div class="share-title">{formData.post.title}</div>
             {#if formData.shared && formData.lastShareTime}
               <div class="last-share-time" title={new Date(formData.lastShareTime).toLocaleString()}>
-                {pluginInstance.i18n["lastShareTime"]["label"] || "上次分享"}：{formatLastShareTime(
-                  formData.lastShareTime
-                )}
+                {pluginInstance.i18n["lastShareTime"]["label"]}：{formatLastShareTime(formData.lastShareTime)}
               </div>
             {/if}
           </div>
@@ -1047,6 +1124,74 @@
       &:hover
         opacity 1
         color var(--b3-theme-on-surface)
+
+    // 大厂设计：错误警告条样式（参考阿里云/字节设计规范）
+    .error-banner
+      display flex
+      align-items center
+      gap 8px
+      padding 10px 14px
+      margin-bottom 12px
+      background-color #fff2f0
+      border 1px solid #ffccc7
+      border-radius 6px
+      color #f5222d
+      font-size 13px
+      cursor pointer
+      transition all 0.2s ease
+      box-shadow 0 2px 8px rgba(245, 34, 45, 0.08)
+
+      &:hover
+        background-color #fff1f0
+        border-color #ffa39e
+        box-shadow 0 4px 12px rgba(245, 34, 45, 0.12)
+
+    .error-banner-icon
+      font-size 16px
+      flex-shrink 0
+
+    .error-banner-text
+      flex-grow 1
+      font-weight 500
+
+    .error-banner-action
+      color #f5222d
+      font-weight 600
+      text-decoration underline
+      text-underline-offset 2px
+      flex-shrink 0
+
+    .error-banner-close
+      background none
+      border none
+      color #f5222d
+      font-size 18px
+      cursor pointer
+      padding 0 4px
+      line-height 1
+      opacity 0.6
+      transition opacity 0.2s ease
+      flex-shrink 0
+
+      &:hover
+        opacity 1
+
+    // 暗色模式适配
+    html[data-theme-mode="dark"] #share
+      .error-banner
+        background-color rgba(245, 34, 45, 0.15)
+        border-color rgba(245, 34, 45, 0.3)
+        color #ff7875
+
+        &:hover
+          background-color rgba(245, 34, 45, 0.2)
+          border-color rgba(245, 34, 45, 0.4)
+
+      .error-banner-action
+        color #ff7875
+
+      .error-banner-close
+        color #ff7875
 
     .global-actions
       display flex
