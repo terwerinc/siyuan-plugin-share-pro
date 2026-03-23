@@ -89,6 +89,11 @@ class AttrUtils {
         isNumber: false,
       },
       {
+        objectKey: "shareReferences",
+        settingKey: SettingKeys.CUSTOM_SHARE_REFERENCES,
+        isNumber: false,
+      },
+      {
         objectKey: "maxSubdocuments",
         settingKey: SettingKeys.CUSTOM_MAX_SUBDOCUMENTS,
         isNumber: true,
@@ -166,6 +171,11 @@ class AttrUtils {
       {
         objectKey: "shareSubdocuments",
         settingKey: SettingKeys.CUSTOM_SHARE_SUBDOCUMENTS,
+        isNumber: false,
+      },
+      {
+        objectKey: "shareReferences",
+        settingKey: SettingKeys.CUSTOM_SHARE_REFERENCES,
         isNumber: false,
       },
       {
