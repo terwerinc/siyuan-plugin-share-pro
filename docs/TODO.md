@@ -93,12 +93,32 @@
   - 功能：进度保存与断点续传
   - 功能：后台静默分享模式
 
+### 自定义图床存储（1.17.0 核心功能）
+> 详细设计文档：[custom-storage-design-2026-03-23.md](./custom-storage-design-2026-03-23.md)
+
+#### 前端实现（本项目）
+- [ ] 创建类型定义文件 `src/types/storage-config.d.ts`
+- [ ] 修改 `ShareProConfig.ts` 添加 storageConfig 字段
+- [ ] 扩展 `ShareApi.ts` 添加存储管理 API 方法
+- [ ] 创建 `StorageService.ts` 存储管理服务
+- [ ] 开发 `StorageSetting.svelte` 存储设置界面
+- [ ] 实现存储健康检查机制
+- [ ] 实现文件大小限制校验（50MB）
+- [ ] 实现存储迁移进度 UI
+
+#### 后端实现（另一个项目）
+- [ ] 设计存储适配器接口 `StorageAdapter`
+- [ ] 实现 OpenList 适配器
+- [ ] 实现 RustFS 适配器
+- [ ] 实现存储迁移服务
+- [ ] 实现敏感信息加密存储
+- [ ] 实现健康检查 API
+
 ---
 
 ### 其他规划
 
 - callout（预研）
-- 自定义图床存储- 百度网盘（openlist）、自部署 minio（待排期）
 - 给予现有的发布，看看能不能扩展（预研）
 - 基于分享笔记的语义问答
 
