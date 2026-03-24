@@ -17,14 +17,15 @@
 - [src/utils/progress/progressStore.ts](file://src/utils/progress/progressStore.ts)
 - [src/utils/progress/ProgressState.ts](file://src/utils/progress/ProgressState.ts)
 - [src/utils/progress/ProgressManager.ts](file://src/utils/progress/ProgressManager.ts)
+- [src/i18n/zh_CN.json](file://src/i18n/zh_CN.json)
 - [svelte.config.js](file://svelte.config.js)
 - [package.json](file://package.json)
 </cite>
 
 ## 更新摘要
 **变更内容**
-- 新增ShareUI组件的operationState状态机，实现完整的操作状态管理
-- 引入更新分享下拉菜单系统，支持快速更新和完全更新两种模式
+- ShareUI组件新增operationState状态机，实现完整的操作状态管理
+- 新增更新分享下拉菜单系统，支持快速更新和完全更新两种模式
 - 增强错误处理机制，实现文档级别的错误状态隔离
 - 完善错误横幅组件和错误详情弹窗的交互体验
 - 优化操作遮罩层和加载状态的显示逻辑
@@ -97,7 +98,7 @@ IncrementalShareUI --> IncShareService
 - [src/newUI.ts:35-122](file://src/newUI.ts#L35-L122)
 - [src/invoke/widgetInvoke.ts:17-76](file://src/invoke/widgetInvoke.ts#L17-L76)
 - [src/libs/pages/ShareSetting.svelte:10-118](file://src/libs/pages/ShareSetting.svelte#L10-L118)
-- [src/libs/pages/ShareUI.svelte:10-1696](file://src/libs/pages/ShareUI.svelte#L10-L1696)
+- [src/libs/pages/ShareUI.svelte:10-1675](file://src/libs/pages/ShareUI.svelte#L10-L1675)
 - [src/libs/pages/IncrementalShareUI.svelte:10-127](file://src/libs/pages/IncrementalShareUI.svelte#L10-L127)
 - [src/libs/pages/ShareManage.svelte:9-38](file://src/libs/pages/ShareManage.svelte#L9-L38)
 
@@ -132,7 +133,7 @@ IncrementalShareUI --> IncShareService
 - [src/topbar.ts:26-98](file://src/topbar.ts#L26-L98)
 - [src/newUI.ts:35-122](file://src/newUI.ts#L35-L122)
 - [src/libs/pages/ShareSetting.svelte:10-118](file://src/libs/pages/ShareSetting.svelte#L10-L118)
-- [src/libs/pages/ShareUI.svelte:10-1696](file://src/libs/pages/ShareUI.svelte#L10-L1696)
+- [src/libs/pages/ShareUI.svelte:10-1675](file://src/libs/pages/ShareUI.svelte#L10-L1675)
 - [src/libs/pages/IncrementalShareUI.svelte:10-127](file://src/libs/pages/IncrementalShareUI.svelte#L10-L127)
 - [src/libs/pages/ShareManage.svelte:9-38](file://src/libs/pages/ShareManage.svelte#L9-L38)
 - [src/libs/components/tab/Tab.svelte:10-45](file://src/libs/components/tab/Tab.svelte#L10-L45)
@@ -257,18 +258,18 @@ UpdateUI --> Ready
 ```
 
 **图表来源**
-- [src/libs/pages/ShareUI.svelte:540-581](file://src/libs/pages/ShareUI.svelte#L540-L581)
-- [src/libs/pages/ShareUI.svelte:159-234](file://src/libs/pages/ShareUI.svelte#L159-L234)
-- [src/libs/pages/ShareUI.svelte:236-284](file://src/libs/pages/ShareUI.svelte#L236-L284)
-- [src/libs/pages/ShareUI.svelte:286-303](file://src/libs/pages/ShareUI.svelte#L286-L303)
-- [src/libs/pages/ShareUI.svelte:309-354](file://src/libs/pages/ShareUI.svelte#L309-L354)
+- [src/libs/pages/ShareUI.svelte:522-563](file://src/libs/pages/ShareUI.svelte#L522-L563)
+- [src/libs/pages/ShareUI.svelte:158-233](file://src/libs/pages/ShareUI.svelte#L158-L233)
+- [src/libs/pages/ShareUI.svelte:235-283](file://src/libs/pages/ShareUI.svelte#L235-L283)
+- [src/libs/pages/ShareUI.svelte:285-302](file://src/libs/pages/ShareUI.svelte#L285-L302)
+- [src/libs/pages/ShareUI.svelte:308-355](file://src/libs/pages/ShareUI.svelte#L308-L355)
 
 **章节来源**
-- [src/libs/pages/ShareUI.svelte:121-130](file://src/libs/pages/ShareUI.svelte#L121-L130)
-- [src/libs/pages/ShareUI.svelte:159-234](file://src/libs/pages/ShareUI.svelte#L159-L234)
-- [src/libs/pages/ShareUI.svelte:236-284](file://src/libs/pages/ShareUI.svelte#L236-L284)
-- [src/libs/pages/ShareUI.svelte:286-303](file://src/libs/pages/ShareUI.svelte#L286-L303)
-- [src/libs/pages/ShareUI.svelte:309-354](file://src/libs/pages/ShareUI.svelte#L309-L354)
+- [src/libs/pages/ShareUI.svelte:78-129](file://src/libs/pages/ShareUI.svelte#L78-L129)
+- [src/libs/pages/ShareUI.svelte:158-233](file://src/libs/pages/ShareUI.svelte#L158-L233)
+- [src/libs/pages/ShareUI.svelte:235-283](file://src/libs/pages/ShareUI.svelte#L235-L283)
+- [src/libs/pages/ShareUI.svelte:285-302](file://src/libs/pages/ShareUI.svelte#L285-L302)
+- [src/libs/pages/ShareUI.svelte:308-355](file://src/libs/pages/ShareUI.svelte#L308-L355)
 
 ### IncrementalShareUI 增量分享界面
 - 功能要点
@@ -417,12 +418,12 @@ ClearError --> HideBanner["隐藏错误横幅"]
 
 **图表来源**
 - [src/libs/components/ProgressManager.svelte:35-46](file://src/libs/components/ProgressManager.svelte#L35-L46)
-- [src/libs/pages/ShareUI.svelte:309-354](file://src/libs/pages/ShareUI.svelte#L309-L354)
+- [src/libs/pages/ShareUI.svelte:308-355](file://src/libs/pages/ShareUI.svelte#L308-L355)
 - [src/utils/progress/progressStore.ts:15-22](file://src/utils/progress/progressStore.ts#L15-L22)
 
 **章节来源**
 - [src/libs/components/ProgressManager.svelte:35-46](file://src/libs/components/ProgressManager.svelte#L35-L46)
-- [src/libs/pages/ShareUI.svelte:309-354](file://src/libs/pages/ShareUI.svelte#L309-L354)
+- [src/libs/pages/ShareUI.svelte:308-355](file://src/libs/pages/ShareUI.svelte#L308-L355)
 - [src/utils/progress/progressStore.ts:15-22](file://src/utils/progress/progressStore.ts#L15-L22)
 
 ### operationState状态机详解
@@ -444,9 +445,9 @@ ClearError --> HideBanner["隐藏错误横幅"]
   - 通过状态机确保操作的原子性和一致性
 
 **章节来源**
-- [src/libs/pages/ShareUI.svelte:121-127](file://src/libs/pages/ShareUI.svelte#L121-L127)
-- [src/libs/pages/ShareUI.svelte:159-234](file://src/libs/pages/ShareUI.svelte#L159-L234)
-- [src/libs/pages/ShareUI.svelte:236-284](file://src/libs/pages/ShareUI.svelte#L236-L284)
+- [src/libs/pages/ShareUI.svelte:120-125](file://src/libs/pages/ShareUI.svelte#L120-L125)
+- [src/libs/pages/ShareUI.svelte:158-233](file://src/libs/pages/ShareUI.svelte#L158-L233)
+- [src/libs/pages/ShareUI.svelte:235-283](file://src/libs/pages/ShareUI.svelte#L235-L283)
 
 ### 下拉菜单系统
 - **功能设计**
@@ -459,9 +460,9 @@ ClearError --> HideBanner["隐藏错误横幅"]
   - 危险操作（完全更新）使用红色标识
 
 **章节来源**
-- [src/libs/pages/ShareUI.svelte:128-141](file://src/libs/pages/ShareUI.svelte#L128-L141)
-- [src/libs/pages/ShareUI.svelte:749-782](file://src/libs/pages/ShareUI.svelte#L749-L782)
-- [src/libs/pages/ShareUI.svelte:1621-1695](file://src/libs/pages/ShareUI.svelte#L1621-L1695)
+- [src/libs/pages/ShareUI.svelte:127-140](file://src/libs/pages/ShareUI.svelte#L127-L140)
+- [src/libs/pages/ShareUI.svelte:726-782](file://src/libs/pages/ShareUI.svelte#L726-L782)
+- [src/libs/pages/ShareUI.svelte:1562-1675](file://src/libs/pages/ShareUI.svelte#L1562-L1675)
 
 ## 依赖关系分析
 - 组件耦合
@@ -494,7 +495,7 @@ NewUI --> ShareManage
 ```
 
 **图表来源**
-- [src/libs/pages/ShareUI.svelte:32-34](file://src/libs/pages/ShareUI.svelte#L32-L34)
+- [src/libs/pages/ShareUI.svelte:31-33](file://src/libs/pages/ShareUI.svelte#L31-L33)
 - [src/libs/pages/ShareSetting.svelte:15-23](file://src/libs/pages/ShareSetting.svelte#L15-L23)
 - [src/libs/pages/ShareManage.svelte:21](file://src/libs/pages/ShareManage.svelte#L21)
 - [src/invoke/widgetInvoke.ts:17-76](file://src/invoke/widgetInvoke.ts#L17-L76)
@@ -551,7 +552,7 @@ NewUI --> ShareManage
 
 **章节来源**
 - [src/index.ts:73-95](file://src/index.ts#L73-L95)
-- [src/libs/pages/ShareUI.svelte:159-234](file://src/libs/pages/ShareUI.svelte#L159-L234)
+- [src/libs/pages/ShareUI.svelte:158-233](file://src/libs/pages/ShareUI.svelte#L158-L233)
 - [src/libs/pages/IncrementalShareUI.svelte:146-187](file://src/libs/pages/IncrementalShareUI.svelte#L146-L187)
 - [src/libs/components/ProgressManager.svelte:35-46](file://src/libs/components/ProgressManager.svelte#L35-L46)
 
