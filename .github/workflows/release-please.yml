@@ -42,7 +42,7 @@ jobs:
       # Install pnpm
       - name: Install pnpm
         if: ${{ steps.release.outputs.release_created }}
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
         id: pnpm-install
         with:
           version: 10.32.1
