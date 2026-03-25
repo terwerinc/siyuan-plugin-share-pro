@@ -6,7 +6,9 @@
       "Bash(git checkout:*)",
       "Bash(mkdir:*)",
       "Bash(pnpm install:*)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebSearch"
     ]
   }
 }
