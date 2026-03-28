@@ -647,6 +647,7 @@
   {#if formData.operationState.status === "sharing" || formData.operationState.status === "canceling"}
     <div class="operation-overlay">
       <div class="overlay-content">
+        <!-- svelte-ignore element_invalid_self_closing_tag -->
         <div class="loading-spinner-large" />
         <div class="overlay-message">
           {#if formData.operationState.status === "sharing"}

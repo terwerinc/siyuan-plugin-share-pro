@@ -24,7 +24,9 @@
 
 ## 更新摘要
 **变更内容**
-- 在ProgressManager和ProgressState中新增了跳过计数功能，能够跟踪被跳过的文档并在进度显示中提供相应的视觉反馈
+- ShareUI组件错误处理系统从传统订阅模式重构为使用Svelte reactive语法（$progressStore），实现真正的文档级别错误隔离和实时错误状态更新
+- ProgressManager组件增强了自动关闭逻辑，保留错误信息以便用户查看
+- 新增了跳过计数功能，能够跟踪被跳过的文档并在进度显示中提供相应的视觉反馈
 - 新增了addSkipped方法，用于处理增量检测时跳过未变更文档的场景
 - 在ProgressManager.svelte中实现了跳过文档的UI显示功能
 - 增强了批量分享结果的统计信息，包括跳过文档数量的显示
@@ -56,6 +58,8 @@
 
 **新增功能**：本次更新最重要的增强是新增了跳过计数功能，能够在增量检测过程中跟踪被跳过的文档数量，并在进度界面中提供相应的视觉反馈。这一功能特别适用于增量分享场景，当检测到文档未发生变更时，系统会自动跳过这些文档，从而提高分享效率。
 
+**关键架构变更**：ShareUI组件错误处理系统从传统的订阅模式重构为使用Svelte reactive语法（$progressStore），实现了真正的文档级别错误隔离和实时错误状态更新。这种重构避免了subscribe回调延迟，确保错误状态的即时响应。
+
 系统的核心特性包括：
 - 实时进度跟踪和状态管理
 - 资源处理的细粒度监控
@@ -70,6 +74,7 @@
 - **跳过计数功能和增量检测优化**
 - **批量分享结果的完整统计信息**
 - **消息显示控制机制（skipMsg和skipBatchMsg）**
+- **Svelte响应式语法的错误处理系统**
 
 ## 项目结构
 
@@ -128,14 +133,14 @@ ModalDialog --> PMSvelte
 
 **图表来源**
 - [ProgressManager.ts:1-275](file://src/utils/progress/ProgressManager.ts#L1-L275)
-- [ProgressManager.svelte:1-536](file://src/libs/components/ProgressManager.svelte#L1-L536)
+- [ProgressManager.svelte:1-534](file://src/libs/components/ProgressManager.svelte#L1-L534)
 - [ShareService.ts:360-397](file://src/service/ShareService.ts#L360-L397)
 - [IncrementalShareService.ts:1-691](file://src/service/IncrementalShareService.ts#L1-L691)
 - [ShareOptions.ts:1-39](file://src/models/ShareOptions.ts#L1-L39)
 
 **章节来源**
 - [ProgressManager.ts:1-275](file://src/utils/progress/ProgressManager.ts#L1-L275)
-- [ProgressManager.svelte:1-536](file://src/libs/components/ProgressManager.svelte#L1-L536)
+- [ProgressManager.svelte:1-534](file://src/libs/components/ProgressManager.svelte#L1-L534)
 - [ShareService.ts:360-397](file://src/service/ShareService.ts#L360-L397)
 - [IncrementalShareService.ts:1-691](file://src/service/IncrementalShareService.ts#L1-L691)
 - [ShareOptions.ts:1-39](file://src/models/ShareOptions.ts#L1-L39)
@@ -252,7 +257,7 @@ SS->>PM : checkAndCompleteBatch()
 PM->>PM : 标记批次完成
 PM->>RES : 清理事件监听器
 PMSvelte->>PStore : 订阅进度状态
-ShareUI->>PStore : 订阅进度状态
+ShareUI->>PStore : 使用$progressStore响应式语法
 PMSvelte->>PMSvelte : 条件渲染不同标题
 PMSvelte->>PMSvelte : 显示跳过计数和文档状态
 PMSvelte->>PMSvelte : 智能自动关闭逻辑
@@ -626,6 +631,49 @@ CheckDocId --> |是| DisplayError[显示错误详情]
 - [ShareUI.svelte:361-378](file://src/libs/pages/ShareUI.svelte#L361-L378)
 - [ProgressManager.svelte:18-31](file://src/libs/components/ProgressManager.svelte#L18-L31)
 
+### Svelte响应式错误处理系统
+
+**关键架构变更**：ShareUI组件错误处理系统从传统的订阅模式重构为使用Svelte reactive语法（$progressStore），实现了真正的文档级别错误隔离和实时错误状态更新。
+
+**传统订阅模式的问题**：
+- 订阅回调存在延迟
+- 状态更新不够即时
+- 复杂的订阅管理逻辑
+
+**Svelte响应式语法的优势**：
+- **即时更新**：$progressStore会自动订阅并立即返回最新值
+- **简化代码**：避免了复杂的subscribe回调逻辑
+- **文档级别隔离**：通过initiatorDocId实现精确的错误关联
+- **实时错误状态**：错误状态变化时自动更新UI
+
+**实现细节**：
+```svelte
+// 直接使用 $progressStore，避免 subscribe 回调延迟
+// $progressStore 是 Svelte 的响应式语法，会自动订阅并立即返回最新值
+$: hasError = (() => {
+  const state = $progressStore
+  if (!state || state.status !== "error") {
+    return false
+  }
+  // 非单文档模式不显示错误
+  if (!isSingleDocMode || !docId) {
+    return false
+  }
+  // 关键：使用 initiatorDocId 判断当前文档是否是发起操作的文档
+  // initiatorDocId 是用户点击"分享"按钮的文档ID，不会随处理进度变化
+  return state.initiatorDocId === docId
+})()
+
+// 获取发起操作的文档的所有错误信息（用于错误详情弹窗）
+// 当 initiatorDocId 匹配时，显示所有相关错误（包括子文档/引用文档的错误）
+$: currentDocErrors = $progressStore?.initiatorDocId === docId ? $progressStore.errors : []
+$: currentDocResourceErrors = $progressStore?.initiatorDocId === docId ? $progressStore.resourceErrors : []
+```
+
+**章节来源**
+- [ShareUI.svelte:309-329](file://src/libs/pages/ShareUI.svelte#L309-L329)
+- [ShareUI.svelte:331-355](file://src/libs/pages/ShareUI.svelte#L331-L355)
+
 ## 状态处理增强功能
 
 ### 条件渲染标题系统
@@ -735,6 +783,41 @@ ContinueTimer --> CheckBatch
 - [ProgressManager.svelte:221-225](file://src/libs/components/ProgressManager.svelte#L221-L225)
 - [ProgressManager.svelte:58-64](file://src/libs/components/ProgressManager.svelte#L58-L64)
 
+### 错误状态保留机制
+
+**关键改进**：ProgressManager组件增强了自动关闭逻辑，保留错误信息以便用户查看。
+
+**改进内容**：
+- **不清理progressStore**：自动关闭时不清空progressStore
+- **错误信息持久化**：错误状态在下一次操作开始时才会被覆盖
+- **ShareUI继续访问**：ShareUI可以从progressStore获取错误信息显示详情
+- **防止数据丢失**：确保用户不会错过重要的错误信息
+
+**实现细节**：
+```javascript
+// 自动关闭处理
+function handleCloseAuto() {
+  isVisible = false
+  clearAutoCloseTimer()
+  // 不清空 progressStore，保留错误信息供 ShareUI 使用
+}
+
+// 手动关闭处理
+function handleClose(e) {
+  // 阻止事件冒泡，避免影响 ShareUI
+  if (e) e.stopPropagation()
+
+  // 关键修复：只隐藏弹窗，不清空 progressStore
+  // 这样 ShareUI 可以从 progressStore 获取错误信息显示详情
+  // progressStore 会在下一次操作开始时被覆盖
+  isVisible = false
+  clearAutoCloseTimer()
+}
+```
+
+**章节来源**
+- [ProgressManager.svelte:89-106](file://src/libs/components/ProgressManager.svelte#L89-L106)
+
 ## 错误处理机制增强
 
 ### "我知道了"按钮设计
@@ -811,7 +894,7 @@ ShowMessage --> Message
 - **动画过渡**：平滑的显示和隐藏动画
 
 **章节来源**
-- [ProgressManager.svelte:267-536](file://src/libs/components/ProgressManager.svelte#L267-L536)
+- [ProgressManager.svelte:267-534](file://src/libs/components/ProgressManager.svelte#L267-L534)
 
 ## 依赖关系分析
 
@@ -905,6 +988,7 @@ ModalDialog --> PMSvelte
 - **新增：错误状态的智能清理**
 - **新增：跳过计数状态的内存优化**
 - **新增：消息显示控制的性能优化**
+- **新增：Svelte响应式语法的性能优化**
 
 ### 并发控制
 
@@ -917,6 +1001,7 @@ ModalDialog --> PMSvelte
 - **新增：UI组件的智能渲染优化**
 - **新增：跳过计数状态的快速更新**
 - **新增：消息显示控制的异步处理**
+- **新增：响应式错误处理的性能优化**
 
 ### 缓存策略
 
@@ -929,6 +1014,7 @@ ModalDialog --> PMSvelte
 - **新增：错误状态缓存**
 - **新增：跳过计数状态缓存**
 - **新增：消息显示控制状态缓存**
+- **新增：响应式状态缓存**
 
 ## 故障排除指南
 
@@ -941,6 +1027,7 @@ ModalDialog --> PMSvelte
 4. **新增：检查initiatorDocId字段的正确传递**
 5. **新增：验证跳过计数功能的正常工作**
 6. **新增：检查消息显示控制属性的正确设置**
+7. **新增：验证Svelte响应式语法的正确使用**
 
 **内存泄漏排查**：
 1. 确认事件监听器的清理机制
@@ -949,6 +1036,7 @@ ModalDialog --> PMSvelte
 4. **新增：检查错误状态存储的清理**
 5. **新增：验证跳过计数状态的内存释放**
 6. **新增：验证消息显示控制状态的清理**
+7. **新增：验证响应式状态的内存管理**
 
 **性能问题定位**：
 1. 监控并发数的合理性
@@ -957,6 +1045,7 @@ ModalDialog --> PMSvelte
 4. **新增：检查UI组件的渲染性能**
 5. **新增：验证跳过计数状态的更新频率**
 6. **新增：验证消息显示控制的性能影响**
+7. **新增：验证响应式错误处理的性能开销**
 
 ### 错误处理机制
 
@@ -968,6 +1057,7 @@ ModalDialog --> PMSvelte
 - 系统级别错误：框架或基础设施问题
 - **新增：跳过计数错误：跳过功能异常**
 - **新增：消息显示控制错误：消息显示异常**
+- **新增：响应式错误处理错误：错误处理异常**
 
 **恢复策略**：
 - 自动重试机制
@@ -977,6 +1067,7 @@ ModalDialog --> PMSvelte
 - **新增：initiatorDocId的错误关联**
 - **新增：跳过计数状态的异常处理**
 - **新增：消息显示控制的异常处理**
+- **新增：响应式状态的异常处理**
 
 **章节来源**
 - [ProgressManager.ts:131-140](file://src/utils/progress/ProgressManager.ts#L131-L140)
@@ -1000,6 +1091,7 @@ ModalDialog --> PMSvelte
 - **新增：跳过计数功能和增量检测优化**
 - **新增：批量分享结果的完整统计信息**
 - **新增：消息显示控制机制（skipMsg和skipBatchMsg）**
+- **新增：Svelte响应式语法的错误处理系统**
 
 **用户体验提升**：
 - 实时进度反馈和状态展示
@@ -1015,6 +1107,7 @@ ModalDialog --> PMSvelte
 - **新增：跳过文档的可视化反馈**
 - **新增：增量检测的性能优化**
 - **新增：消息显示控制的用户体验优化**
+- **新增：响应式错误处理的即时更新**
 
 **扩展性**：
 - 插件化的组件设计
@@ -1026,6 +1119,7 @@ ModalDialog --> PMSvelte
 - **新增：文档级别的错误隔离**
 - **新增：跳过计数功能的可扩展性**
 - **新增：消息显示控制的可配置性**
+- **新增：响应式状态管理的可维护性**
 
 **新增功能总结**：
 - **跳过计数功能**：实现了增量检测场景下的文档跳过统计
@@ -1034,6 +1128,17 @@ ModalDialog --> PMSvelte
 - **性能优化**：避免重复处理未变更的文档，提高整体效率
 - **用户体验增强**：让用户清楚地了解哪些文档被跳过了
 - **消息显示控制**：通过skipMsg和skipBatchMsg属性精确控制消息显示
-- **批量统计增强**：在批量操作完成后显示跳过文档的统计信息
+- **批量统计增强**：在批量操作完成后显示跳过文档的统计信息**
+- **响应式错误处理**：通过$progressStore实现即时的错误状态更新
+- **文档级别错误隔离**：使用initiatorDocId实现精确的错误关联
+- **错误状态保留机制**：自动关闭时保留错误信息供用户查看
 
 该系统为大规模文档分享操作提供了可靠的技术支撑，是现代前端应用中进度管理的最佳实践案例。新增的状态处理功能、错误横幅、模态对话框、错误状态持久化机制以及跳过计数功能使其在同类产品中具有显著优势，达到了付费软件的专业标准。initiatorDocId字段的引入和跳过计数功能的实现更是体现了系统在用户体验和性能优化方面的深度思考，为用户提供了更加精准、高效和友好的文档分享体验。
+
+**关键架构创新**：
+- **Svelte响应式语法的应用**：从传统订阅模式转向响应式语法，实现了真正的文档级别错误隔离
+- **错误状态持久化**：自动关闭时保留错误信息，确保用户不会错过重要信息
+- **智能自动关闭逻辑**：结合跳过计数功能，提供更合理的自动关闭策略
+- **实时错误状态更新**：通过$progressStore实现即时的错误状态响应
+
+这些创新不仅提升了系统的性能和用户体验，更为后续的功能扩展奠定了坚实的基础。
