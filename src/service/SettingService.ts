@@ -11,6 +11,7 @@ import { ILogger, simpleLogger } from "zhi-lib-base"
 import { isDev } from "../Constants"
 import { ShareApi } from "../api/share-api"
 import ShareProPlugin from "../index"
+import { normalizeAppConfigForViewerContract } from "../utils/ViewerContractUtils"
 
 /**
  * 设置
@@ -27,11 +28,12 @@ class SettingService {
   }
 
   public async syncSetting(token: string, setting: any) {
-    return await this.shareApi.saveSetting(token, setting)
+    return await this.shareApi.saveSetting(token, normalizeAppConfigForViewerContract(setting))
   }
 
   public async getSettingByAuthor(author: string) {
-    return await this.shareApi.getSettingByAuthor(author)
+    const setting = await this.shareApi.getSettingByAuthor(author)
+    return normalizeAppConfigForViewerContract(setting)
   }
 }
 

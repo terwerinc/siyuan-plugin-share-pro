@@ -47,6 +47,14 @@ class SingleDocSetting {
   public outlineLevel?: number
 
   /**
+   * 是否启用 AI 助手
+   *
+   * @author terwer
+   * @since 1.16.0
+   */
+  public aiAssistantEnabled?: boolean
+
+  /**
    * 分享有效期（秒），0 表示永久有效
    *
    * @author terwer

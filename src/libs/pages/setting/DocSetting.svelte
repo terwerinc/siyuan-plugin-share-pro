@@ -35,6 +35,8 @@
   let outlineLevel = 6
   let shareSubdocuments = false
   let shareReferences = false
+  let aiAssistantEnabled = true
+  let postMetaEnabled = true
   let outlineLevelOptions = [
     {
       label: "h1",
@@ -94,6 +96,10 @@
     settingConfig.appConfig.shareSubdocuments = shareSubdocuments
     // 引用文档分享
     settingConfig.appConfig.shareReferences = shareReferences
+    // AI 助手
+    settingConfig.appConfig.aiAssistantEnabled = aiAssistantEnabled
+    // 信息栏
+    settingConfig.appConfig.postMetaEnabled = postMetaEnabled
     // 全局密码保护
     settingConfig.appConfig.passwordEnabled = passwordEnabled
     settingConfig.appConfig.showPassword = showPassword
@@ -117,6 +123,8 @@
     outlineLevel = sAppConfig?.outlineLevel ?? outlineLevel
     shareSubdocuments = sAppConfig?.shareSubdocuments ?? shareSubdocuments
     shareReferences = sAppConfig?.shareReferences ?? shareReferences
+    aiAssistantEnabled = sAppConfig?.aiAssistantEnabled ?? aiAssistantEnabled
+    postMetaEnabled = sAppConfig?.postMetaEnabled ?? postMetaEnabled
     passwordEnabled = sAppConfig?.passwordEnabled ?? passwordEnabled
     showPassword = sAppConfig?.showPassword ?? showPassword
   })
@@ -136,6 +144,20 @@
       <div class="b3-label__text form-item-tip">{pluginInstance.i18n.cs.shareReferencesTip}</div>
       <span class="fn__hr" />
       <input class="b3-switch fn__flex-center" id="shareReferences" type="checkbox" bind:checked={shareReferences} />
+    </div>
+
+    <div class="fn__block form-item">
+      {pluginInstance.i18n.cs.aiAssistant}
+      <div class="b3-label__text form-item-tip">{pluginInstance.i18n.cs.aiAssistantTip}</div>
+      <span class="fn__hr" />
+      <input class="b3-switch fn__flex-center" id="aiAssistantEnabled" type="checkbox" bind:checked={aiAssistantEnabled} />
+    </div>
+
+    <div class="fn__block form-item">
+      {pluginInstance.i18n.cs.postMeta}
+      <div class="b3-label__text form-item-tip">{pluginInstance.i18n.cs.postMetaTip}</div>
+      <span class="fn__hr" />
+      <input class="b3-switch fn__flex-center" id="postMetaEnabled" type="checkbox" bind:checked={postMetaEnabled} />
     </div>
 
     <div class="fn__block form-item">

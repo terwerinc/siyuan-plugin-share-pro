@@ -79,6 +79,11 @@ class AttrUtils {
         isNumber: true,
       },
       {
+        objectKey: "aiAssistantEnabled",
+        settingKey: SettingKeys.CUSTOM_AI_ASSISTANT_ENABLE,
+        isNumber: false,
+      },
+      {
         objectKey: "expiresTime",
         settingKey: SettingKeys.CUSTOM_EXPIRES,
         isNumber: false,
@@ -162,6 +167,11 @@ class AttrUtils {
         objectKey: "outlineLevel",
         settingKey: SettingKeys.CUSTOM_OUTLINE_LEVEL,
         isNumber: true,
+      },
+      {
+        objectKey: "aiAssistantEnabled",
+        settingKey: SettingKeys.CUSTOM_AI_ASSISTANT_ENABLE,
+        isNumber: false,
       },
       {
         objectKey: "expiresTime",

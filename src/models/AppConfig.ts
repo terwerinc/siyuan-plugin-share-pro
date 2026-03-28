@@ -55,6 +55,11 @@ interface AppConfig {
   passwordEnabled?: boolean
   showPassword?: boolean
 
+  // Viewer 兼容开关
+  // 缺失字段时必须兼容历史默认 true
+  aiAssistantEnabled?: boolean
+  postMetaEnabled?: boolean
+
   // 子文档分享功能
   // add by v1.16.0+
   // 专业版专属配置

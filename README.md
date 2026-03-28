@@ -4,6 +4,16 @@
 
 share your notes from siyuan-note with one click
 
+## Viewer Compatibility
+
+share-pro keeps the professional authoring side aligned with the existing viewer behavior.
+
+- AI assistant and info bar now have explicit global switches.
+- Historical default-on behavior is preserved for upgraded users.
+- Publishing remains compatible with the existing viewer contract.
+
+See [DEVELOPMENT.md](DEVELOPMENT.md) for the high-level development notes.
+
 ## Features
 
 [View feature introduction](https://siyuan.wiki/s/20250609174452-v3zltvg)

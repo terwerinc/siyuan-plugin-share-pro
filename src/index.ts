@@ -29,6 +29,7 @@ import { LocalBlacklistService } from "./service/LocalBlacklistService"
 import { SettingService } from "./service/SettingService"
 import { ShareService } from "./service/ShareService"
 import { initStatusBar } from "./statusBar"
+import { normalizeShareProConfigForViewerContract } from "./utils/ViewerContractUtils"
 
 export default class ShareProPlugin extends Plugin {
   private logger: ILogger
@@ -102,7 +103,7 @@ export default class ShareProPlugin extends Plugin {
    */
   public getDefaultCfg() {
     const latestServiceApiUrl = isDev ? SHARE_SERVICE_ENDPOINT_DEV : SHARE_SERVICE_ENDPOINT_PROD
-    return {
+    return normalizeShareProConfigForViewerContract({
       siyuanConfig: {
         apiUrl: DEFAULT_SIYUAN_API_URL,
         token: DEFAULT_SIYUAN_AUTH_TOKEN,
@@ -115,7 +116,7 @@ export default class ShareProPlugin extends Plugin {
         apiUrl: latestServiceApiUrl,
         token: "",
       },
-    } as any as ShareProConfig
+    } as any as ShareProConfig)
   }
 
   /**
@@ -134,6 +135,10 @@ export default class ShareProPlugin extends Plugin {
 
     if (typeof storeConfig !== "object") {
       storeConfig = defaultCfg as T
+    }
+
+    if (storeName === SHARE_PRO_STORE_NAME) {
+      return normalizeShareProConfigForViewerContract(storeConfig as unknown as ShareProConfig) as T
     }
 
     return storeConfig as T

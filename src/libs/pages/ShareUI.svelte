@@ -103,6 +103,7 @@
       docTreeLevel: 3, // 文档树层级
       outlineEnable: false, // 是否显示大纲
       outlineLevel: 6, // 大纲层级
+      aiAssistantEnabled: true, // 是否启用 AI 助手
       expiresTime: "", // 分享有效期
       shareSubdocuments: false, // 是否分享子文档
       shareReferences: false, // 是否分享引用文档
@@ -474,11 +475,12 @@
   // ========================================
 
   const loadSingleDocSetting = async (cfg: ShareProConfig) => {
-    // 文档级别优先级最高 - 仅用于UI显示，不影响实际分享逻辑
+    // 文档级别优先级最高，缺失时回退到全局默认值
     const docTreeEnable = await AttrUtils.getBool(pluginInstance, docId, SettingKeys.CUSTOM_DOC_TREE_ENABLE)
     const docTreeLevel = await AttrUtils.getInt(pluginInstance, docId, SettingKeys.CUSTOM_DOC_TREE_LEVEL)
     const outlineEnable = await AttrUtils.getBool(pluginInstance, docId, SettingKeys.CUSTOM_OUTLINE_ENABLE)
     const outlineLevel = await AttrUtils.getInt(pluginInstance, docId, SettingKeys.CUSTOM_OUTLINE_LEVEL)
+    const aiAssistantEnabled = await AttrUtils.getBool(pluginInstance, docId, SettingKeys.CUSTOM_AI_ASSISTANT_ENABLE)
     const shareSubdocuments = await AttrUtils.getBool(pluginInstance, docId, SettingKeys.CUSTOM_SHARE_SUBDOCUMENTS)
 
     // UI显示使用文档级设置，如果未设置则使用全局默认值
@@ -486,6 +488,7 @@
     formData.singleDocSetting.docTreeLevel = docTreeLevel ?? cfg.appConfig?.docTreeLevel ?? 3
     formData.singleDocSetting.outlineEnable = outlineEnable ?? cfg.appConfig?.outlineEnabled ?? false
     formData.singleDocSetting.outlineLevel = outlineLevel ?? cfg.appConfig?.outlineLevel ?? 6
+    formData.singleDocSetting.aiAssistantEnabled = aiAssistantEnabled ?? cfg.appConfig?.aiAssistantEnabled ?? true
     formData.singleDocSetting.shareSubdocuments = shareSubdocuments ?? cfg.appConfig?.shareSubdocuments ?? false
     // 引用文档分享
     const shareReferences = await AttrUtils.getBool(pluginInstance, docId, SettingKeys.CUSTOM_SHARE_REFERENCES)
@@ -855,6 +858,18 @@
                 : pluginInstance.i18n["cs"]["outlineEnabled"]}
             />
             <span class="compact-label">{pluginInstance.i18n["cs"]["outline"]}</span>
+          </label>
+
+          <!-- AI 助手 -->
+          <label class="compact-switch">
+            <input
+              type="checkbox"
+              bind:checked={formData.singleDocSetting.aiAssistantEnabled}
+              title={formData.singleDocSetting.aiAssistantEnabled
+                ? pluginInstance.i18n["cs"]["aiAssistantDisabled"]
+                : pluginInstance.i18n["cs"]["aiAssistantEnabled"]}
+            />
+            <span class="compact-label">{pluginInstance.i18n["cs"]["aiAssistant"]}</span>
           </label>
         </div>
       </div>
