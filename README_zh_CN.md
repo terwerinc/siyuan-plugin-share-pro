@@ -4,15 +4,12 @@
 
 一键分享您的思源笔记
 
-## Viewer 兼容说明
+更多说明见 [DEVELOPMENT.md](DEVELOPMENT.md)。
 
-share-pro 持续保证专业版创作端与现有 viewer 行为兼容。
+## 更新公告
 
-- AI 助手和信息栏提供了明确的全局开关。
-- 升级场景保持历史默认开启行为不变。
-- 发布结果继续兼容既有 viewer 契约。
-
-更多主干说明见 [DEVELOPMENT.md](DEVELOPMENT.md)。
+- [最新更新公告（v1.17.0，中文）](release-notes/v1.17.0/v1.17.0_zh_CN.md)
+- [公告归档](release-notes/README.md)
 
 ## 功能特性
 
