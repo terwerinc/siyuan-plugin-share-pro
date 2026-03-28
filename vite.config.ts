@@ -52,7 +52,7 @@ export default defineConfig({
           dest: "./",
         },
         {
-          src: "./src/i18n/**",
+          src: "./src/i18n/*.json",
           dest: "./i18n/",
         },
       ],
@@ -71,7 +71,7 @@ export default defineConfig({
   build: {
     // 输出路径
     outDir: distDir,
-    emptyOutDir: false,
+    emptyOutDir: true,
 
     // 构建后是否生成 source map 文件
     sourcemap: false,
