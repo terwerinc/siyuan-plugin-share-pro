@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.17.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.16.0...share-pro-v1.17.0) (2026-03-28)
+
+
+### Features
+
+* **viewer:** add AI assistant/info bar compatibility toggles ([0a147a2](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/0a147a2bf5807a6482e67c119d806dc310e4040b))
+
+
+### Bug Fixes
+
+* **incremental-share:** reset selection state and localize select all ([7e9d8d3](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/7e9d8d3937ed027c69b1902d5ccb9f20a4d09af1))
+
+
+### Code Refactoring
+
+* **settings:** unify ShareSetting into draft-based workspace ([0467b08](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/0467b08eb2a4f323ed2c426e1d96c13484f783b6))
+* **ShareUI:** migrate error handling to Svelte reactive syntax ([7ecdd5a](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/7ecdd5aaa69f746a3fa386aee50ed4c33f00d658))
+
 ## [1.16.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.15.3...share-pro-v1.16.0) (2026-03-23)
 ### Features
 * add openspec command files and update .gitignore ([dc09139](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/dc0913976d7f4df01d0de6f50323eb9247ab229c))
