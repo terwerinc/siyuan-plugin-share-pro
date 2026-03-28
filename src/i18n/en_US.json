@@ -317,6 +317,7 @@
     "estimatedTime": "Estimated Time",
     "estimatedSize": "Estimated Total Size",
     "firstLevelOnly": "First Level Only",
+    "selectAll": "Select all",
     "selectAllToggle": "Select/Cancel",
     "shareSelected": "Share Selected",
     "notebook": "Notebook",

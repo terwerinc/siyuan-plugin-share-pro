@@ -267,17 +267,24 @@
   const handleRefresh = async () => {
     // 重新加载配置
     cfg = await pluginInstance.safeLoad(SHARE_PRO_STORE_NAME)
+    resetSelectionState()
     // 重新加载文档
     await loadDocuments()
   }
 
+  const resetSelectionState = () => {
+    selectedDocs = new Set<string>()
+    selectAll = false
+  }
+
   const handleSelectAll = () => {
+    const nextSelectedDocs = new Set(selectedDocs)
     if (selectAll) {
-      filteredDocs.forEach((doc) => selectedDocs.add(doc.docId))
+      filteredDocs.forEach((doc) => nextSelectedDocs.add(doc.docId))
     } else {
-      filteredDocs.forEach((doc) => selectedDocs.delete(doc.docId))
+      filteredDocs.forEach((doc) => nextSelectedDocs.delete(doc.docId))
     }
-    selectedDocs = selectedDocs
+    selectedDocs = nextSelectedDocs
   }
 
   // 切换统计区域折叠状态
@@ -286,12 +293,13 @@
   }
 
   const toggleDocSelection = (docId: string) => {
-    if (selectedDocs.has(docId)) {
-      selectedDocs.delete(docId)
+    const nextSelectedDocs = new Set(selectedDocs)
+    if (nextSelectedDocs.has(docId)) {
+      nextSelectedDocs.delete(docId)
     } else {
-      selectedDocs.add(docId)
+      nextSelectedDocs.add(docId)
     }
-    selectedDocs = selectedDocs
+    selectedDocs = nextSelectedDocs
     selectAll = selectedDocs.size === filteredDocs.length && filteredDocs.length > 0
   }
 
@@ -316,6 +324,7 @@
       const result = await pluginInstance.incrementalShareService.bulkShareDocuments(selectedDocsArray)
 
       if (result.successCount > 0) {
+        resetSelectionState()
         // 消息重复了，保留内部的
         // showMessage(
         //   `${pluginInstance.i18n.incrementalShare.shareSuccess}: ${result.successCount} ${pluginInstance.i18n.incrementalShare.documents}`,
@@ -323,8 +332,6 @@
         //   "info"
         // )
         await loadDocuments()
-        selectedDocs.clear()
-        selectAll = false
       }
 
       // 消息重复了，保留内部的
