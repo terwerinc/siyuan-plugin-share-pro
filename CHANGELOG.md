@@ -1,25 +1,14 @@
 # Changelog
 
 ## [1.17.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.16.0...share-pro-v1.17.0) (2026-03-28)
-
-
 ### Features
-
-* **viewer:** add AI assistant/info bar compatibility toggles ([0a147a2](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/0a147a2bf5807a6482e67c119d806dc310e4040b))
-
-
+* **viewer:** add ai assistant/info bar compatibility toggles ([0a147a2](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/0a147a2bf5807a6482e67c119d806dc310e4040b))
 ### Bug Fixes
-
 * **incremental-share:** reset selection state and localize select all ([7e9d8d3](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/7e9d8d3937ed027c69b1902d5ccb9f20a4d09af1))
-
-
 ### Code Refactoring
-
-* **settings:** unify ShareSetting into draft-based workspace ([0467b08](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/0467b08eb2a4f323ed2c426e1d96c13484f783b6))
-* **ShareUI:** migrate error handling to Svelte reactive syntax ([7ecdd5a](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/7ecdd5aaa69f746a3fa386aee50ed4c33f00d658))
-
+* **settings:** unify sharesetting into draft-based workspace ([0467b08](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/0467b08eb2a4f323ed2c426e1d96c13484f783b6))
+* **shareui:** migrate error handling to svelte reactive syntax ([7ecdd5a](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/7ecdd5aaa69f746a3fa386aee50ed4c33f00d658))
 ## [1.16.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.15.3...share-pro-v1.16.0) (2026-03-23)
-### Features
 * add openspec command files and update .gitignore ([dc09139](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/dc0913976d7f4df01d0de6f50323eb9247ab229c))
 * add subdocument sharing implementation guide with detailed requirements and steps ([d4467f6](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/d4467f603c7f4c7e31366168d54a2cb79fe4b0fb))
 * **attrutils:** add sharereferences mapping for custom_share_references ([9beafef](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/9beafef7e743bf0b3a7e76ab2da885517248c7c4))
@@ -59,7 +48,6 @@
 * **subdocument:** add toggle to expand or collapse subdocument tree ([55f4b38](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/55f4b38a3b2ba8dfafd97894a4707cd39ba9da4e))
 * **subdocument:** implement subdocument tree preview with lazy loading and selection ([9b5ab2c](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/9b5ab2cc3e6ac77075d276ab0b55b90ff5190881))
 * **subdocument:** update default sharing settings and improve ui for no subdocuments ([8ec02b4](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/8ec02b4de87d00a5efdf6031262dfb86882b0a1a))
-### Bug Fixes
 * replace span with button for a11y and suppress warnings ([60542ae](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/60542ae0132e0c6507a81372f7f7f5dbcc46ebe8))
 * resolve dark mode failure and improve progress completion logic ([1d010f7](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/1d010f79fc0db1e8eccac630a6c052bcc40a40dc))
 * **service:** handle errors and return value properly in cancelone method ([bda44ea](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/bda44ea95ed89420ac0a3bb6750c33fbe22a328f))
@@ -68,7 +56,6 @@
 * **shareui:** use progressstore for error details instead of errorstate ([8cdf6fe](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/8cdf6feb12402506f3f84f7410c39c463c05b2be))
 * **subdocument:** adjust estimated time and storage calculations ([0885abb](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/0885abb7d535dc4c82c9ab2b5d0bef13d1fff8af))
 * **subdocument:** display no subdocuments message for empty state ([2e146d6](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/2e146d66d9b0554ce562a92a0709985717fb1441))
-### Code Refactoring
 * **share-ui:** remove unused progress styles, export progressstate ([cd97315](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/cd973150e37da04d007a89b20d04801f463de98a))
 * **share:** simplify subdocument sharing with flat retrieval strategy ([d421906](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/d421906056dbc749ba4e2c1da2c4261eed1c380d))
 * **subdocument-tree-preview:** replace functions with reactive variables ([b2a9c9b](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/b2a9c9b0dd867f79252224392c1fe343e71d96f2))
