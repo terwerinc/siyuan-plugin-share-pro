@@ -29,7 +29,7 @@
     "zhi-siyuan-api": "^2.35.1"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "^3.1.2",
+    "@sveltejs/vite-plugin-svelte": "^7.0.0",
     "@terwer/eslint-config-custom": "^1.3.6",
     "@tsconfig/svelte": "^5.0.8",
     "@types/minimist": "1.2.5",
