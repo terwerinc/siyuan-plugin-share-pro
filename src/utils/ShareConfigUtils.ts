@@ -37,6 +37,10 @@ const DefaultAppConfig: AppConfig = {
     enabled: true,
   },
 
+  // viewer 兼容开关默认开启
+  aiAssistantEnabled: true,
+  postMetaEnabled: true,
+
   // 子文档分享默认禁用
   shareSubdocuments: false,
 } as AppConfig

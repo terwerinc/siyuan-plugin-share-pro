@@ -4,6 +4,13 @@
 
 一键分享您的思源笔记
 
+更多说明见 [DEVELOPMENT.md](DEVELOPMENT.md)。
+
+## 更新公告
+
+- [最新更新公告（v1.17.0，中文）](release-notes/v1.17.0/v1.17.0_zh_CN.md)
+- [公告归档](release-notes/README.md)
+
 ## 功能特性
 
 [查看功能介绍](https://siyuan.wiki/s/20250609174452-v3zltvg)

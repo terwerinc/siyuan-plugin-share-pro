@@ -34,6 +34,7 @@ import { SettingKeys } from "../utils/SettingKeys"
 import { shareHistoryCache } from "../utils/ShareHistoryCache"
 import { ProgressManager } from "../utils/progress/ProgressManager"
 import { RESOURCE_EVENTS, resourceEventEmitter } from "../utils/progress/ResourceEventEmitter"
+import { applyViewerPostContract } from "../utils/ViewerContractUtils"
 import { LocalShareHistory } from "./LocalShareHistory"
 
 /**
@@ -75,12 +76,13 @@ class ShareService implements IShareHistoryService {
   public async createShare(docId: string, settings?: Partial<SingleDocSetting>, options?: Partial<ShareOptions>) {
     try {
       const config = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
-      const needBatchProcess = this.checkBatchProcessNeeded(settings, config)
+      const resolvedSettings = await this.resolveSingleDocSettings(docId, settings)
+      const needBatchProcess = this.checkBatchProcessNeeded(resolvedSettings, config)
 
       if (!needBatchProcess) {
-        await this.handleOne(docId, settings, options)
+        await this.handleOne(docId, resolvedSettings, options)
       } else {
-        const documentsToShare = await this.flattenDocumentsForSharing(docId, settings, options, config)
+        const documentsToShare = await this.flattenDocumentsForSharing(docId, resolvedSettings, options, config)
         await this.batchProcessDocuments(documentsToShare, 10, options)
       }
     } catch (error) {
@@ -295,7 +297,7 @@ class ShareService implements IShareHistoryService {
       const sPost = this.buildSharePost(
         post,
         cfg,
-        docId,
+        settings,
         await getEmbedBlocks(post.editorDom, docId),
         await getDataViews(post.editorDom),
         await getFoldBlocks(post.editorDom)
@@ -991,7 +993,7 @@ class ShareService implements IShareHistoryService {
   private buildSharePost(
     post: any,
     cfg: ShareProConfig,
-    docId: string,
+    settings: Partial<SingleDocSetting> | undefined,
     embedBlocks: any,
     dataViews: any,
     foldBlocks: any
@@ -1014,7 +1016,33 @@ class ShareService implements IShareHistoryService {
     sPost.embedBlocks = embedBlocks
     sPost.dataViews = dataViews
     sPost.foldBlocks = foldBlocks
-    return sPost
+
+    return applyViewerPostContract(sPost as any, settings, post, cfg.appConfig)
+  }
+
+  private async resolveSingleDocSettings(
+    docId: string,
+    inputSettings?: Partial<SingleDocSetting>
+  ): Promise<Partial<SingleDocSetting>> {
+    const { kernelApi } = await ApiUtils.getSiyuanKernelApi(this.pluginInstance)
+    const docAttrs = await kernelApi.getBlockAttrs(docId)
+    const storedSettings = AttrUtils.fromAttrs(docAttrs)
+
+    if (!inputSettings) {
+      return storedSettings
+    }
+
+    const resolvedSettings: Partial<SingleDocSetting> = {
+      ...storedSettings,
+    }
+
+    Object.entries(inputSettings).forEach(([key, value]) => {
+      if (typeof value !== "undefined") {
+        resolvedSettings[key as keyof SingleDocSetting] = value as never
+      }
+    })
+
+    return resolvedSettings
   }
 
   /**

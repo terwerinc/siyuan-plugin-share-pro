@@ -4,6 +4,13 @@
 
 share your notes from siyuan-note with one click
 
+See [DEVELOPMENT.md](DEVELOPMENT.md) for the high-level development notes.
+
+## Release Notes
+
+- [Latest release notes (v1.17.0, English)](release-notes/v1.17.0/v1.17.0.md)
+- [Release notes archive](release-notes/README.md)
+
 ## Features
 
 [View feature introduction](https://siyuan.wiki/s/20250609174452-v3zltvg)

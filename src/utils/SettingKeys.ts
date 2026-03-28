@@ -45,6 +45,11 @@ enum SettingKeys {
   CUSTOM_OUTLINE_LEVEL = "custom-outline-level",
 
   /**
+   * 是否开启 AI 助手
+   */
+  CUSTOM_AI_ASSISTANT_ENABLE = "custom-ai-assistant-enable",
+
+  /**
    * 过期时间
    */
   CUSTOM_EXPIRES = "custom-expires",
