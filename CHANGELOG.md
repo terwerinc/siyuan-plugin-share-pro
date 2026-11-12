@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.17.2](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.17.1...share-pro-v1.17.2) (2026-11-12)
+
+
+### Bug Fixes
+
+* **build:** flatten plugin locale assets ([b1fda38](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/b1fda38e726dae83ca022206f0145ea14551e3a6))
+* **share:** preserve document context and partial upload results ([ad9d2f4](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/ad9d2f4a875844f3984d958f9605e4a55d371ce8))
+
 ## [1.17.1](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.17.0...share-pro-v1.17.1) (2026-03-28)
 ### Bug Fixes
 * restrict i18n copy to json files and enable emptyoutdir ([9a5451e](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/9a5451e0fa018f6812604a7cff8f56b2a258703b))
