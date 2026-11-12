@@ -54,6 +54,8 @@ export default defineConfig({
         {
           src: "./src/i18n/*.json",
           dest: "./i18n/",
+          // static-copy v4 preserves source directories unless explicitly flattened.
+          rename: { stripBase: true },
         },
       ],
     }),
