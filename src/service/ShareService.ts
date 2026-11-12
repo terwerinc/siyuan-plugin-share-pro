@@ -595,6 +595,7 @@ class ShareService implements IShareHistoryService {
   private async cancelOne(docId: string) {
     try {
       const ret = await this.shareApi.deleteDoc(docId)
+      if (ret.code !== 0) return ret
       await this.updateSingleDocSettings(docId, false, {})
 
       try {
@@ -760,15 +761,17 @@ class ShareService implements IShareHistoryService {
 
       this.addLog(this.pluginInstance.i18n["shareService"]["msgBatchResult"] + JSON.stringify(uploadResult), "info")
 
+      const counts = this.getUploadCounts(uploadResult, processedParams.length)
+      successCount += counts.successCount
+      errorCount += counts.failCount
+
       if (uploadResult.code === 0) {
-        successCount += processedParams.length
         const msgCurrentMediaSuccessWithParam = this.pluginInstance.i18n["shareService"][
           "msgCurrentMediaSuccess"
         ].replace("[param1]", i + 1)
         this.addLog(msgCurrentMediaSuccessWithParam, "info")
         if (progressCallback) progressCallback(processedParams.length)
       } else {
-        errorCount += processedParams.length
         const rtnMsg = uploadResult.msg || (uploadResult as any).message
         const errMsg =
           this.pluginInstance.i18n["shareService"]["msgCurrentMediaError"].replace("[param1]", i + 1) + rtnMsg
@@ -868,20 +871,36 @@ class ShareService implements IShareHistoryService {
         hasNext,
       })
 
+      const counts = this.getUploadCounts(uploadResult, processedParams.length)
+      successCount += counts.successCount
+      errorCount += counts.failCount
+
       if (uploadResult.code === 0) {
-        successCount += processedParams.length
         if (progressCallback) progressCallback(processedParams.length)
       } else {
-        errorCount += processedParams.length
-        if (progressCallback) progressCallback(processedParams.length, uploadResult.msg)
+        if (progressCallback) progressCallback(processedParams.length, uploadResult.msg || (uploadResult as any).message)
       }
     }
 
-    const successPicWithParam = this.pluginInstance.i18n["shareService"]["successDataViewMedia"]
+    const successPicWithParam = this.pluginInstance.i18n["shareService"]["successDataViewMediaCount"]
       .replace("[param1]", totalCount)
       .replace("[param2]", successCount)
       .replace("[param3]", errorCount)
     this.addLog(successPicWithParam, "info")
+  }
+
+  /** 服务端提供完整分项计数时按资源统计；旧版响应继续按批次状态回退。 */
+  private getUploadCounts(result: any, attempted: number) {
+    if (
+      Number.isInteger(result.successCount) && result.successCount >= 0 &&
+      Number.isInteger(result.failCount) && result.failCount >= 0 &&
+      result.successCount + result.failCount === attempted
+    ) {
+      return { successCount: result.successCount, failCount: result.failCount }
+    }
+    return result.code === 0
+      ? { successCount: attempted, failCount: 0 }
+      : { successCount: 0, failCount: attempted }
   }
 
   /**
