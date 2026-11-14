@@ -17,7 +17,8 @@
     "syncVersion": "python scripts/version.py",
     "parseChangelog": "python scripts/parse_changelog.py",
     "prepareRelease": "pnpm syncVersion && pnpm parseChangelog",
-    "package": "python scripts/package.py"
+    "package": "python scripts/package.py",
+    "test:run": "vitest run"
   },
   "dependencies": {
     "@sveltejs/svelte-virtual-list": "^3.0.1",
@@ -47,7 +48,7 @@
     "vite-plugin-node-polyfills": "^0.25.0",
     "vite-plugin-static-copy": "^4.0.0",
     "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "^4.1.1"
+    "vitest": "0.34.6"
   },
   "packageManager": "pnpm@10.32.1"
 }

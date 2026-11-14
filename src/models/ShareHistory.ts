@@ -45,6 +45,9 @@ export interface ShareHistoryItem {
    * 文档修改时间戳（用于变更检测）
    */
   docModifiedTime: number
+
+  /** Actual sharing API that accepted this result; absent in historical records. Never stores credentials. */
+  serviceApiUrl?: string
 }
 
 /**

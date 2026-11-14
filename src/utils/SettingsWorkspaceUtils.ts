@@ -16,6 +16,7 @@ import {
   SHARE_SERVICE_ENDPOINT_DEV,
   SHARE_SERVICE_ENDPOINT_PROD,
 } from "../Constants"
+import { normalizeServiceApiUrl } from "./ServiceAccessUtils"
 import { AppConfig } from "../models/AppConfig"
 import { ShareProConfig } from "../models/ShareProConfig"
 import { DefaultAppConfig, versionMap } from "./ShareConfigUtils"
@@ -24,6 +25,8 @@ import { normalizeShareProConfigForViewerContract } from "./ViewerContractUtils"
 type SettingsWorkspaceSectionId = "general" | "display" | "share" | "incremental"
 
 interface SettingsWorkspaceDraft {
+  connectionMode: "hosted" | "self-hosted"
+  serviceApiUrl: string
   serviceApiToken: string
   newUIEnabled: boolean
   customCssEnabled: boolean
@@ -171,6 +174,8 @@ const createSettingsWorkspaceDraft = (
   const mergedAppConfig = mergeRemoteAppConfig(normalizedConfig.appConfig, remoteAppConfig)
 
   return {
+    connectionMode: normalizedConfig.serviceApiConfig.connectionMode === "self-hosted" ? "self-hosted" : "hosted",
+    serviceApiUrl: normalizedConfig.serviceApiConfig.apiUrl,
     serviceApiToken: normalizedConfig.serviceApiConfig?.token ?? "",
     newUIEnabled: normalizedConfig.isNewUIEnabled !== false,
     customCssEnabled: normalizedConfig.isCustomCssEnabled ?? true,
@@ -215,7 +220,9 @@ const applySettingsWorkspaceDraft = (
 ): ShareProConfig => {
   const normalizedConfig = createNormalizedWorkspaceConfig(sourceConfig)
 
-  normalizedConfig.serviceApiConfig.token = draft.serviceApiToken
+  normalizedConfig.serviceApiConfig.connectionMode = draft.connectionMode ?? "hosted"
+  normalizedConfig.serviceApiConfig.apiUrl = normalizeServiceApiUrl(draft.serviceApiUrl)
+  normalizedConfig.serviceApiConfig.token = draft.serviceApiToken.trim()
   normalizedConfig.isNewUIEnabled = draft.newUIEnabled
   normalizedConfig.isCustomCssEnabled = draft.customCssEnabled
   normalizedConfig.siyuanConfig.preferenceConfig.fixTitle = draft.fixTitle

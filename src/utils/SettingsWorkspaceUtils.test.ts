@@ -93,6 +93,8 @@ describe("SettingsWorkspaceUtils", () => {
         inited: true,
       } as ShareProConfig,
       {
+        connectionMode: "hosted",
+        serviceApiUrl: "https://service.example.com/base/",
         serviceApiToken: "new-token",
         newUIEnabled: true,
         customCssEnabled: true,
@@ -123,6 +125,7 @@ describe("SettingsWorkspaceUtils", () => {
       [{ name: "test", content: ".demo{}" }] as any
     )
 
+    expect(finalConfig.serviceApiConfig.apiUrl).toBe("https://service.example.com/base")
     expect(finalConfig.serviceApiConfig.token).toBe("new-token")
     expect(finalConfig.isNewUIEnabled).toBe(true)
     expect(finalConfig.isCustomCssEnabled).toBe(true)

@@ -73,8 +73,6 @@ export default class ShareProPlugin extends Plugin {
 
   async openSetting() {
     try {
-      const cfg = await this.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
-      const vipInfo = await this.shareService.getVipInfo(cfg?.serviceApiConfig?.token ?? "")
       const settingId = "share-pro-setting"
       const d = new Dialog({
         title: `${this.i18n?.shareSetting} - ${this.i18n?.sharePro} v${pkg.version}`,
@@ -86,7 +84,6 @@ export default class ShareProPlugin extends Plugin {
         props: {
           pluginInstance: this,
           dialog: d,
-          vipInfo: vipInfo,
         },
       })
     } catch (e) {

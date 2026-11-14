@@ -8,10 +8,11 @@
  */
 
 import { simpleLogger } from "zhi-lib-base"
-import { isDev, NULL_VALUE_FOR_SIYUAN_ATTR_REMOVE } from "../Constants"
+import { isDev, NULL_VALUE_FOR_SIYUAN_ATTR_REMOVE, SHARE_PRO_STORE_NAME } from "../Constants"
 import ShareProPlugin from "../index"
 import { ShareHistory, ShareHistoryItem } from "../models/ShareHistory"
 import { ApiUtils } from "../utils/ApiUtils"
+import { historyMatchesService, normalizeHistoryService } from "../utils/ShareHistoryScopeUtils"
 import { SettingKeys } from "../utils/SettingKeys"
 
 /**
@@ -33,6 +34,11 @@ export class LocalShareHistory implements ShareHistory {
     try {
       const { kernelApi } = await ApiUtils.getSiyuanKernelApi(this.pluginInstance)
 
+      const cfg=await this.pluginInstance.safeLoad<any>(SHARE_PRO_STORE_NAME)
+      const active=normalizeHistoryService(cfg?.serviceApiConfig?.apiUrl)
+      const scope=normalizeHistoryService(item.serviceApiUrl) ?? active
+      if(!active || scope!==active) return
+      item.serviceApiUrl=scope
       // 添加版本信息和更新时间用于兼容性检查
       const historyData = {
         ...item,
@@ -54,27 +60,14 @@ export class LocalShareHistory implements ShareHistory {
   async updateHistory(docId: string, updates: Partial<ShareHistoryItem>): Promise<void> {
     this.logger.info(`🔄 [Local] updateHistory: ${docId}`)
     try {
-      const { kernelApi } = await ApiUtils.getSiyuanKernelApi(this.pluginInstance)
-
       // 先获取现有记录
       const existingItem = await this.getHistoryByDocId(docId)
       if (!existingItem) {
         throw new Error(`文档 ${docId} 没有找到历史记录`)
       }
 
-      // 合并更新
-      const updatedItem = {
-        ...existingItem,
-        ...updates,
-        _version: "1.0",
-        _updatedAt: Date.now(),
-      }
-
-      const attrs = {
-        [SettingKeys.CUSTOM_SHARE_HISTORY]: JSON.stringify(updatedItem),
-      }
-
-      await kernelApi.setBlockAttrs(docId, attrs)
+      // Keep endpoint ownership fixed and re-check it in the canonical writer.
+      await this.addHistory({...existingItem,...updates,docId,serviceApiUrl:existingItem.serviceApiUrl})
     } catch (error) {
       this.logger.error(`更新分享历史记录失败: ${docId}`, error)
       throw error
@@ -86,6 +79,8 @@ export class LocalShareHistory implements ShareHistory {
     try {
       const { kernelApi } = await ApiUtils.getSiyuanKernelApi(this.pluginInstance)
 
+      // A successful remote deletion must not remove another service's local history.
+      if(!await this.getHistoryByDocId(docId)) return
       // 删除分享历史属性
       const attrs = {
         [SettingKeys.CUSTOM_SHARE_HISTORY]: NULL_VALUE_FOR_SIYUAN_ATTR_REMOVE,
@@ -106,6 +101,8 @@ export class LocalShareHistory implements ShareHistory {
 
       if (attrs[SettingKeys.CUSTOM_SHARE_HISTORY]) {
         const item = JSON.parse(attrs[SettingKeys.CUSTOM_SHARE_HISTORY])
+        const cfg=await this.pluginInstance.safeLoad<any>(SHARE_PRO_STORE_NAME)
+        if(!historyMatchesService(item,cfg?.serviceApiConfig?.apiUrl)) return undefined
 
         // 版本兼容性检查
         if (item._version === "1.0") {

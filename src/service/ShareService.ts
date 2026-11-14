@@ -35,6 +35,7 @@ import { shareHistoryCache } from "../utils/ShareHistoryCache"
 import { ProgressManager } from "../utils/progress/ProgressManager"
 import { RESOURCE_EVENTS, resourceEventEmitter } from "../utils/progress/ResourceEventEmitter"
 import { applyViewerPostContract } from "../utils/ViewerContractUtils"
+import { canSkipUnchangedShare, historyMatchesService } from "../utils/ShareHistoryScopeUtils"
 import { LocalShareHistory } from "./LocalShareHistory"
 
 /**
@@ -220,6 +221,7 @@ class ShareService implements IShareHistoryService {
         shareUrl: item.shareUrl,
         errorMessage: "",
         docModifiedTime: item.createAtTimestamp,
+        serviceApiUrl: (ret as any)._serviceApiUrl,
       }))
     }
     return []
@@ -235,8 +237,12 @@ class ShareService implements IShareHistoryService {
   /**
    * 获取VIP信息
    */
-  public async getVipInfo(token: string): Promise<ServiceResponse> {
-    return await this.shareApi.getVipInfo(token)
+  public async getVipInfoForConnection(apiUrl: string, token: string, signal?: AbortSignal): Promise<ServiceResponse> {
+    return this.shareApi.getVipInfoForConnection(apiUrl,token,signal)
+  }
+
+  public async getVipInfo(token: string, signal?: AbortSignal): Promise<ServiceResponse> {
+    return await this.shareApi.getVipInfo(token, signal)
   }
 
   /**
@@ -261,8 +267,10 @@ class ShareService implements IShareHistoryService {
     settings?: Partial<SingleDocSetting>,
     options?: Partial<ShareOptions>
   ): Promise<{ skipped: boolean; reason?: string }> {
+    let operationServiceApiUrl: string | undefined
     try {
       const cfg = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
+      operationServiceApiUrl=cfg?.serviceApiConfig?.apiUrl
       const { blogApi } = useSiyuanApi(cfg, settings)
       const post = await blogApi.getPost(docId)
       this.addLog(this.pluginInstance.i18n["shareService"]["getPost"], "info")
@@ -274,16 +282,20 @@ class ShareService implements IShareHistoryService {
         const history = await this.localShareHistory.getHistoryByDocId(docId)
 
         // 首次分享或有变更时继续
-        if (history && currentModifiedTime <= history.docModifiedTime) {
-          // 文档未变更，跳过分享
-          const docTitle = post?.title || docId
-          this.logger.info(`文档未变更，跳过分享: ${docTitle}`)
-          // 批量操作时不显示单文档 toast，避免 toast 爆炸
-          if (!options?.skipMsg) {
-            const skipMsg = this.pluginInstance.i18n["shareService"]["msgDocSkipped"].replace("[param1]", docTitle)
-            showMessage(skipMsg, 3000, "info")
+        if (canSkipUnchangedShare(history, cfg?.serviceApiConfig?.apiUrl, currentModifiedTime)) {
+          const remote = await this.shareApi.getHistoryByIds([docId])
+          const confirmed = historyMatchesService(history, remote._serviceApiUrl) &&
+            remote.code === 0 && Array.isArray(remote.data) &&
+            remote.data.some(item => item.docId === docId && item.status === "COMPLETED")
+          if (confirmed) {
+            const docTitle = post?.title || docId
+            this.logger.info(`文档未变更，跳过分享: ${docTitle}`)
+            if (!options?.skipMsg) {
+              const message = this.pluginInstance.i18n["shareService"]["msgDocSkipped"].replace("[param1]", docTitle)
+              showMessage(message, 3000, "info")
+            }
+            return { skipped: true, reason: "noChange" }
           }
-          return { skipped: true, reason: "noChange" }
         }
       }
       // ===== 增量检测结束 =====
@@ -311,7 +323,7 @@ class ShareService implements IShareHistoryService {
       })
 
       if (resp.code !== 0) {
-        await this.handleShareFailure(docId, post, resp.msg)
+        await this.handleShareFailure(docId, post, resp.msg, resp._serviceApiUrl)
         return { skipped: false }
       }
 
@@ -323,7 +335,7 @@ class ShareService implements IShareHistoryService {
       }
       return { skipped: false }
     } catch (e) {
-      await this.handleShareException(docId, e)
+      await this.handleShareException(docId, e, e?._serviceApiUrl ?? operationServiceApiUrl)
       return { skipped: false }
     }
   }
@@ -1080,6 +1092,7 @@ class ShareService implements IShareHistoryService {
         shareTime: Date.now(),
         shareStatus: "success",
         shareUrl: resp.data?.shareUrl,
+        serviceApiUrl: resp._serviceApiUrl,
         docModifiedTime: new Date(post.dateUpdated).getTime(),
       }
 
@@ -1099,7 +1112,7 @@ class ShareService implements IShareHistoryService {
   /**
    * 处理分享失败
    */
-  private async handleShareFailure(docId: string, post: any, errorMsg: string): Promise<void> {
+  private async handleShareFailure(docId: string, post: any, errorMsg: string, serviceApiUrl?: string): Promise<void> {
     const msg = this.pluginInstance.i18n["shareService"]["shareErrorWithDoc"].replace("[param1]", docId) + errorMsg
     this.addLog(msg, "error")
 
@@ -1110,6 +1123,7 @@ class ShareService implements IShareHistoryService {
         shareTime: Date.now(),
         shareStatus: "failed",
         errorMessage: errorMsg,
+        serviceApiUrl,
         docModifiedTime: post?.dateUpdated ? new Date(post.dateUpdated).getTime() : Date.now(),
       }
 
@@ -1125,7 +1139,7 @@ class ShareService implements IShareHistoryService {
   /**
    * 处理分享异常
    */
-  private async handleShareException(docId: string, e: any): Promise<void> {
+  private async handleShareException(docId: string, e: any, serviceApiUrl?: string): Promise<void> {
     let docTitle = "未知文档"
     let docModifiedTime = Date.now()
 
@@ -1146,6 +1160,7 @@ class ShareService implements IShareHistoryService {
         shareTime: Date.now(),
         shareStatus: "failed",
         errorMessage: String(e),
+        serviceApiUrl,
         docModifiedTime,
       }
 

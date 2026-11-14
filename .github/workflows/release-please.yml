@@ -36,7 +36,7 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
         uses: actions/setup-node@v6
         with:
-          node-version: 18
+          node-version: 24
           registry-url: 'https://registry.npmjs.org'
 
       # Install pnpm
@@ -69,7 +69,7 @@ jobs:
       # Install dependencies
       - name: Install dependencies
         if: ${{ steps.release.outputs.release_created }}
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       # Prepare new version
       # https://github.com/google-github-actions/release-please-action#outputs

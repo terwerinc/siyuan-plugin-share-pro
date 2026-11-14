@@ -39,6 +39,7 @@
     msg: string
     data: KeyInfo
   }
+  export let embeddedInServiceAccess = false
   export let docId: string = "" // 可选参数,无文档ID时显示简化版UI
 
   const logger = simpleLogger("share-ui", "share-pro", isDev)
@@ -704,6 +705,7 @@
           >
             {@html icons.iconManage}
           </button>
+          {#if !embeddedInServiceAccess}
           <button
             type="button"
             class="action-btn"
@@ -712,6 +714,7 @@
           >
             {@html icons.iconSettings}
           </button>
+          {/if}
         </div>
       </div>
     </div>

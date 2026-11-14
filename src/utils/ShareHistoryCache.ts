@@ -9,6 +9,7 @@
 
 import { simpleLogger } from "zhi-lib-base"
 import { isDev } from "../Constants"
+import {historyMatchesService} from "./ShareHistoryScopeUtils"
 import { ShareHistoryItem } from "../types"
 
 /**
@@ -16,7 +17,7 @@ import { ShareHistoryItem } from "../types"
  *
  * 提供内存级别的缓存机制，减少重复查询的开销
  */
-class ShareHistoryCache {
+export class ShareHistoryCache {
   private logger = simpleLogger("share-history-cache", "share-pro", isDev)
   private cache: Map<string, ShareHistoryItem> = new Map()
   private timestamps: Map<string, number> = new Map()
@@ -28,10 +29,11 @@ class ShareHistoryCache {
    * @param docId 文档ID
    * @returns 分享历史记录，如果不存在或已过期则返回undefined
    */
-  get(docId: string): ShareHistoryItem | undefined {
+  get(docId: string, apiUrl?: string): ShareHistoryItem | undefined {
     const timestamp = this.timestamps.get(docId)
     if (timestamp && Date.now() - timestamp < this.TTL) {
       const item = this.cache.get(docId)
+      if(!historyMatchesService(item,apiUrl)) return undefined
       this.logger.debug(`缓存命中: ${docId}`)
       return item
     }
