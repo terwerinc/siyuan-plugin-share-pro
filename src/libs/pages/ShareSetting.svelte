@@ -190,6 +190,7 @@
   ]
 
   // Hosted keeps the fixed official entry plus the account domains loaded from the service.
+  // Hosted candidates are the built-in entry plus the server-provided account domains.
   $: hostedDomainPool=[...new Set([...DEFAULT_DOMAINS,...remoteDomains,...draft.domains])]
   $: domainOptions = [...new Set([draft.domain, ...(draft.connectionMode==="hosted"?hostedDomainPool:draft.domains.filter(item=>!DEFAULT_DOMAINS.includes(item)))])].filter(Boolean)
   $: selfHostedAddresses=[localConfig.connectionProfiles?.["self-hosted"]?.appConfig?.domain,draft.connectionMode==="self-hosted"?draft.domain:undefined].filter(Boolean)
@@ -399,6 +400,15 @@
 
       if (result.syncedRemote) {
         const savedConnection=connectionSnapshot()
+        // Re-read the server list so candidates reflect this save immediately.
+        try{
+          const email=(vipInfo as any)?.data?.email as string | undefined
+          if(email){
+            const cfg=await withServiceTimeout(signal=>settingService.getSettingByAuthor(email,signal))
+            const list=(cfg as any)?.domains
+            if(Array.isArray(list)) remoteDomains=[...new Set(list.filter(Boolean))] as string[]
+          }
+        }catch{}
         readingCheckState=compatibilityCheckState="pending"
         const [reader,browser]=await Promise.all([checkReadingConnection(pluginInstance,draft.domain),checkReaderApiCompatibility(pluginInstance,finalConfig.serviceApiConfig.apiUrl,draft.domain)])
         if(savedConnection===connectionSnapshot()){
