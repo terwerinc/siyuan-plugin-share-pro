@@ -27,12 +27,15 @@ class SettingService {
     this.shareApi = new ShareApi(pluginInstance)
   }
 
-  public async syncSetting(token: string, setting: any) {
-    return await this.shareApi.saveSetting(token, normalizeAppConfigForViewerContract(setting))
+  public async syncSetting(token: string, setting: any, signal?: AbortSignal) {
+    return await this.shareApi.saveSetting(token, normalizeAppConfigForViewerContract(setting), signal)
   }
 
-  public async getSettingByAuthor(author: string) {
-    const setting = await this.shareApi.getSettingByAuthor(author)
+  public async getSettingByAuthor(author: string, signal?: AbortSignal) {
+    const setting = await this.shareApi.getSettingByAuthor(author, signal)
+    if (setting && typeof setting.code === "number" && setting.code !== 0 && typeof setting.errorCode === "string") {
+      throw Object.assign(new Error(setting.msg || this.pluginInstance.i18n.serviceErrors.UNKNOWN_ERROR), {errorCode:setting.errorCode})
+    }
     return normalizeAppConfigForViewerContract(setting)
   }
 }

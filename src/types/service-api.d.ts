@@ -11,6 +11,7 @@
  * Service API 配置接口
  */
 export interface IServiceApiConfig {
+  connectionMode?: "hosted" | "self-hosted"
   apiUrl?: string
   token?: string
 }

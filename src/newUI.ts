@@ -8,19 +8,17 @@
  */
 
 import { ILogger, simpleLogger } from "zhi-lib-base"
-import { isDev, SHARE_PRO_STORE_NAME } from "./Constants"
-import { confirm, Dialog, Menu, showMessage } from "siyuan"
+import { isDev } from "./Constants"
+import { Menu } from "siyuan"
 import ShareProPlugin from "./index"
 import { ShareService } from "./service/ShareService"
-import { ShareProConfig } from "./models/ShareProConfig"
 import { WidgetInvoke } from "./invoke/widgetInvoke"
-import pkg from "../package.json"
-import ShareSetting from "./libs/pages/ShareSetting.svelte"
-import ShareUI from "./libs/pages/ShareUI.svelte"
+import ShareEntry from "./libs/pages/ShareEntry.svelte"
+import { loadServiceAccess } from "./utils/ServiceAccessUtils"
 import PageUtil from "./utils/pageUtil"
 
 const createBootStrap = (content: any, props: any, container: string | HTMLElement) => {
-  new content({
+  return new content({
     target: container,
     props: props as any,
   })
@@ -38,6 +36,7 @@ class NewUI {
   private topBarElement: HTMLElement
   private contentMenu: Menu
   private contentMenuElement: HTMLElement
+  private contentComponent: { $destroy: () => void }
   private pluginInstance: ShareProPlugin
   private shareService: ShareService
   private widgetInvoke: WidgetInvoke
@@ -56,129 +55,30 @@ class NewUI {
     if (docCheck.flag) {
       docId = docCheck.docId
     }
-    // 无法获取稳定 ID 的是使用增量分享
-    // else {
-    //   showMessage(this.pluginInstance.i18n.msgNotFoundDoc, 7000, "error")
-    // }
-    const cfg = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
-    const vipInfo = await this.shareService.getVipInfo(cfg?.serviceApiConfig?.token ?? "")
-    if (vipInfo.code === 0) {
-      // 挂载内容到菜单
-      this.addMenu(
-        ShareUI,
-        {
-          pluginInstance: this.pluginInstance,
-          shareService: this.shareService,
-          vipInfo: vipInfo,
-          docId: docId,
-        },
-        "share-pro-ui"
-      )
-    } else {
-      const menu = new Menu("shareProSettingMenu")
-      menu.addItem({
-        icon: `iconKey`,
-        label: this.pluginInstance.i18n.getLicense,
-        click: () => {
-          const vipTip = vipInfo.msg ?? this.pluginInstance.i18n.unknownError
-          confirm(this.pluginInstance.i18n.tipTitle, vipTip + "，" + this.pluginInstance.i18n.openLicensePage, () => {
-            window.open("https://store.terwer.space/products/share-pro")
-          })
-        },
-      })
-      menu.addSeparator()
-      menu.addItem({
-        icon: `iconSettings`,
-        label: this.pluginInstance.i18n.shareSetting,
-        click: () => {
-          const settingId = "share-pro-setting"
-          const d = new Dialog({
-            title: `${this.pluginInstance.i18n.shareSetting} - ${this.pluginInstance.i18n.sharePro} v${pkg.version}`,
-            content: `<div id="${settingId}"></div>`,
-            width: this.pluginInstance.isMobile ? "92vw" : "61.8vw",
-          })
-          new ShareSetting({
-            target: document.getElementById(settingId) as HTMLElement,
-            props: {
-              pluginInstance: this.pluginInstance,
-              dialog: d,
-              vipInfo: vipInfo,
-            },
-          })
-        },
-      })
-
-      if (this.pluginInstance.isMobile) {
-        menu.fullscreen()
-      } else {
-        const rect = this.topBarElement.getBoundingClientRect()
-        menu.open({
-          x: rect.right,
-          y: rect.bottom,
-          isLeft: true,
-        })
-      }
-    }
+    this.addMenu(ShareEntry, {
+      pluginInstance: this.pluginInstance,
+      shareService: this.shareService,
+      docId,
+    }, "share-pro-ui")
   }
 
   public async settingForNewUI() {
-    const cfg = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
-    const vipInfo = await this.shareService.getVipInfo(cfg?.serviceApiConfig?.token ?? "")
+    // Settings is local UI and must not depend on the configured remote service.
     const menu = new Menu("shareProSettingMenu")
-    if (vipInfo.code === 0) {
-      const keyInfo = vipInfo.data
-      // 分享管理
-      menu.addItem({
-        icon: `iconDock`,
-        label: this.pluginInstance.i18n.manageDoc,
-        click: () => {
-          this.widgetInvoke.showShareManageTab(keyInfo)
-        },
-      })
-    } else {
-      menu.addItem({
-        icon: `iconKey`,
-        label: this.pluginInstance.i18n.getLicense,
-        click: () => {
-          const vipTip = vipInfo.msg ?? this.pluginInstance.i18n.unknownError
-          confirm(this.pluginInstance.i18n.tipTitle, vipTip + "，" + this.pluginInstance.i18n.openLicensePage, () => {
-            window.open("https://store.terwer.space/products/share-pro")
-          })
-        },
-      })
-    }
-
-    menu.addSeparator()
     menu.addItem({
-      icon: `iconSettings`,
+      icon: "iconSettings",
       label: this.pluginInstance.i18n.shareSetting,
-      click: () => {
-        const settingId = "share-pro-setting"
-        const d = new Dialog({
-          title: `${this.pluginInstance.i18n.shareSetting} - ${this.pluginInstance.i18n.sharePro} v${pkg.version}`,
-          content: `<div id="${settingId}"></div>`,
-          width: this.pluginInstance.isMobile ? "92vw" : "61.8vw",
-        })
-        new ShareSetting({
-          target: document.getElementById(settingId) as HTMLElement,
-          props: {
-            pluginInstance: this.pluginInstance,
-            dialog: d,
-            vipInfo: vipInfo,
-          },
-        })
-      },
+      click: () => { void this.pluginInstance.openSetting() },
     })
-
-    if (this.pluginInstance.isMobile) {
-      menu.fullscreen()
-    } else {
+    if (this.pluginInstance.isMobile) menu.fullscreen()
+    else {
       const rect = this.topBarElement.getBoundingClientRect()
-      menu.open({
-        x: rect.right,
-        y: rect.bottom,
-        isLeft: true,
-      })
+      menu.open({ x: rect.right, y: rect.bottom, isLeft: true })
+    }
+    const vipInfo = await loadServiceAccess(this.pluginInstance)
+    if (menu.isOpen && vipInfo.code === 0) {
+      menu.addItem({ icon: "iconDock", label: this.pluginInstance.i18n.manageDoc,
+        click: () => { this.widgetInvoke.showShareManageTab(vipInfo.data) } })
     }
   }
 
@@ -200,6 +100,7 @@ class NewUI {
   }
 
   private addMenu(content: any, props: any, menuID: string) {
+    this.contentMenu?.close()
     // 移除旧菜单
     const elements = document.querySelectorAll(".share-free-edition-menu-content")
     elements.forEach((element) => {
@@ -207,8 +108,12 @@ class NewUI {
     })
 
     if (!this.contentMenu) {
-      this.contentMenu = new Menu(menuID)
+      this.contentMenu = new Menu(menuID, () => {
+        this.contentComponent?.$destroy()
+        this.contentComponent = undefined
+      })
     }
+    this.contentComponent?.$destroy()
     this.contentMenuElement?.remove()
     const contentWrapper = Object.assign(document.createElement("div"), {
       id: `${menuID}-wrapper`,
@@ -218,7 +123,7 @@ class NewUI {
     if (!this.rect) {
       this.rect = this.topBarElement.getBoundingClientRect()
     }
-    createBootStrap(content, props, this.contentMenuElement)
+    this.contentComponent = createBootStrap(content, props, this.contentMenuElement)
     // 显示菜单
     const rect = this.rect
     this.contentMenu.open({

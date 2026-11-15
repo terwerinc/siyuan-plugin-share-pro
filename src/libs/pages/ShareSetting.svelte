@@ -8,12 +8,13 @@
   -->
 
 <script lang="ts">
-  import { onMount, tick } from "svelte"
+  import { onDestroy, onMount, tick } from "svelte"
   import { Dialog, showMessage } from "siyuan"
   import { simpleLogger } from "zhi-lib-base"
   import { isDev, SHARE_PRO_STORE_NAME } from "../../Constants"
-  import ShareProPlugin from "../../index"
-  import { KeyInfo } from "../../models/KeyInfo"
+  import type ShareProPlugin from "../../index"
+  import { checkServiceConnection, loadServiceAccess, normalizeServiceApiUrl, withServiceTimeout, SETTINGS_SAVED_EVENT } from "../../utils/ServiceAccessUtils"
+  import type { ServiceResponse } from "../../api/share-api"
   import BlacklistSetting from "./setting/BlacklistSetting.svelte"
   import { ApiUtils } from "../../utils/ApiUtils"
   import { getRegisterInfo } from "../../utils/LicenseUtils"
@@ -33,11 +34,7 @@
   const logger = simpleLogger("share-settings-workspace", "share-pro", isDev)
   export let pluginInstance: ShareProPlugin
   export let dialog: Dialog
-  export let vipInfo: {
-    code: number
-    msg: string
-    data: KeyInfo
-  }
+  export let vipInfo: ServiceResponse = { code: -2, msg: "", data: null, hostedMode: true }
 
   const settingService = new SettingService(pluginInstance)
   const themes = getSupportedThemes(pluginInstance)
@@ -46,11 +43,45 @@
   let activeSection: SettingsWorkspaceSectionId = "general"
   let isLoading = true
   let isSaving = false
+  let workspaceRevision = 0
   let saveErrorMessage = ""
   let workspaceMainEl: HTMLElement
   let localConfig = createNormalizedWorkspaceConfig(pluginInstance.getDefaultCfg())
   let draft: SettingsWorkspaceDraft = createSettingsWorkspaceDraft(localConfig)
   let initialSnapshot = JSON.stringify(draft)
+  const connectionSnapshot=()=>JSON.stringify([draft.connectionMode,draft.serviceApiUrl,draft.serviceApiToken])
+  let observedConnection=connectionSnapshot()
+  let isVerifying=false
+  let verificationMessage=""
+  let detectedMode:boolean | undefined
+
+  $: currentConnection=JSON.stringify([draft.connectionMode,draft.serviceApiUrl,draft.serviceApiToken])
+  $: if (currentConnection!==observedConnection) {
+    observedConnection=currentConnection
+    workspaceRevision++
+    verificationMessage=""
+    detectedMode=undefined
+    isVerifying=false
+    vipInfo={code:-3,msg:"",data:null,hostedMode:true}
+  }
+  const verifyConnection=async()=>{
+    const revision=++workspaceRevision
+    const snapshot=connectionSnapshot()
+    isVerifying=true
+    verificationMessage=""
+    const checked=await checkServiceConnection(pluginInstance,{apiUrl:draft.serviceApiUrl,token:draft.serviceApiToken,connectionMode:draft.connectionMode})
+    if(revision!==workspaceRevision || snapshot!==connectionSnapshot())return
+    vipInfo=checked.response
+    detectedMode=checked.reachable?checked.response.hostedMode:undefined
+    verificationMessage=!checked.reachable || !checked.modeMatches
+      ? pluginInstance.i18n.serviceErrors[checked.errorCode] || pluginInstance.i18n.serviceErrors.UNKNOWN_ERROR
+      : checked.response.code===0?pluginInstance.i18n.serviceAccess.verified:pluginInstance.i18n.serviceAccess.reachableKeyRejected
+    isVerifying=false
+  }
+  const useDetectedMode=()=>{
+    draft.connectionMode=detectedMode===false?"self-hosted":"hosted"
+  }
+
 
   const sections: Array<{ id: SettingsWorkspaceSectionId; label: string }> = [
     { id: "general", label: pluginInstance.i18n.settingsWorkspace.general },
@@ -59,13 +90,16 @@
     { id: "incremental", label: pluginInstance.i18n.settingsWorkspace.incremental },
   ]
 
-  $: domainOptions = draft.domains.length > 0 ? draft.domains : DEFAULT_DOMAINS
-  $: docPathOptions = draft.docPaths.length > 0 ? draft.docPaths : DEFAULT_DOC_PATHS
+  $: domainOptions = [...new Set([draft.domain, ...(draft.domains.length > 0 ? draft.domains : DEFAULT_DOMAINS)])].filter(Boolean)
+  $: docPathOptions = [...new Set([draft.docPath, ...(draft.docPaths.length > 0 ? draft.docPaths : DEFAULT_DOC_PATHS)])].filter(Boolean)
   $: isDirty = !isLoading && JSON.stringify(draft) !== initialSnapshot
   $: accountSummary =
-    vipInfo.code === 1 || vipInfo.code === 403
+    vipInfo.code !== 0 || !vipInfo.data
       ? []
-      : [
+      : vipInfo.hostedMode === false ? [
+          {label:pluginInstance.i18n.settingsWorkspace.accountStatus,value:pluginInstance.i18n.serviceAccess.selfHosted},
+          {label:pluginInstance.i18n.serviceAccess.instanceIdentity,value:vipInfo.data.email},
+        ] : [
           {
             label: pluginInstance.i18n.settingsWorkspace.accountStatus,
             value: vipInfo.data.isVip ? "VIP" : pluginInstance.i18n.keyInfo.freeUser,
@@ -87,9 +121,6 @@
             value: vipInfo.data.from,
           },
         ]
-  $: if (saveErrorMessage && isDirty) {
-    saveErrorMessage = ""
-  }
   $: footerState = (() => {
     if (isSaving) {
       return {
@@ -174,20 +205,30 @@
   }
 
   const loadWorkspace = async () => {
+    const revision = ++workspaceRevision
     isLoading = true
 
     try {
       localConfig = createNormalizedWorkspaceConfig(await pluginInstance.safeLoad(SHARE_PRO_STORE_NAME))
 
-      let remoteAppConfig
-      try {
-        remoteAppConfig = await settingService.getSettingByAuthor(vipInfo.data.email)
-      } catch (error) {
-        logger.warn("load remote settings failed, fallback to local config", error)
-      }
-
-      draft = createSettingsWorkspaceDraft(localConfig, remoteAppConfig)
+      draft = createSettingsWorkspaceDraft(localConfig)
+      observedConnection=connectionSnapshot()
       initialSnapshot = JSON.stringify(draft)
+      isLoading = false
+      const account = await loadServiceAccess(pluginInstance)
+      if (revision !== workspaceRevision) return
+      vipInfo = account
+      if (vipInfo.code === 0) {
+        try {
+          const remoteAppConfig = await withServiceTimeout(signal => settingService.getSettingByAuthor(vipInfo.data.email, signal))
+          if (revision === workspaceRevision && !isSaving && JSON.stringify(draft) === initialSnapshot) {
+            draft = createSettingsWorkspaceDraft(localConfig, remoteAppConfig)
+            initialSnapshot = JSON.stringify(draft)
+          }
+        } catch (error) {
+          logger.warn("load remote settings failed, fallback to local config", error)
+        }
+      }
     } finally {
       isLoading = false
     }
@@ -199,38 +240,53 @@
     }
 
     isSaving = true
+    ++workspaceRevision
 
     try {
+      try {
+        draft.serviceApiUrl = normalizeServiceApiUrl(draft.serviceApiUrl)
+      } catch {
+        saveErrorMessage = pluginInstance.i18n.serviceAccess.invalidAddress
+        return
+      }
+      try {draft.domain=normalizeServiceApiUrl(draft.domain)} catch {saveErrorMessage=pluginInstance.i18n.serviceAccess.invalidReadingAddress;return}
+      if(!/^[A-Za-z0-9_-]+$/.test(draft.docPath)){saveErrorMessage=pluginInstance.i18n.serviceAccess.invalidPath;return}
+      draft.serviceApiToken = draft.serviceApiToken.trim()
+      observedConnection=connectionSnapshot()
       const customCss = draft.customCssEnabled ? await fetchCustomCss() : ([] as any[])
       const finalConfig = applySettingsWorkspaceDraft(localConfig, draft, customCss)
+      const savedSnapshot = JSON.stringify(draft)
       saveErrorMessage = ""
 
       const result = await persistSettingsWorkspace({
         finalConfig,
         saveLocal: async (config) => {
           await pluginInstance.saveData(SHARE_PRO_STORE_NAME, config)
+          localConfig = config
+          initialSnapshot = savedSnapshot
+          vipInfo = { code: -2, msg: "", data: null }
+          vipInfo = await loadServiceAccess(pluginInstance)
+          window.dispatchEvent(new CustomEvent(SETTINGS_SAVED_EVENT))
         },
         syncRemote: async (appConfig) => {
-          const response = await settingService.syncSetting(finalConfig.serviceApiConfig.token, appConfig)
-          if (response?.code === 1) {
-            throw response.msg
+          const response = await withServiceTimeout(signal => settingService.syncSetting(finalConfig.serviceApiConfig.token, appConfig, signal))
+          if (response?.code !== 0) {
+            throw new Error(response?.msg || pluginInstance.i18n.settingsWorkspace.syncFailed)
           }
         },
       })
 
       localConfig = finalConfig
-      initialSnapshot = JSON.stringify(draft)
+      initialSnapshot = savedSnapshot
 
       if (result.syncedRemote) {
         showMessage(`${pluginInstance.i18n.settingConfigSaveAndSyncSuccess}`, 2000, "info")
       } else {
         saveErrorMessage = pluginInstance.i18n.settingsWorkspace.syncFailed
-        showMessage(`${pluginInstance.i18n.settingConfigSaveFail},${result.syncError}`, 7000, "error")
       }
     } catch (error) {
       logger.error("save settings workspace error", error)
       saveErrorMessage = pluginInstance.i18n.settingsWorkspace.saveFailed
-      showMessage(`${pluginInstance.i18n.settingConfigSaveFail},${error}`, 7000, "error")
     } finally {
       isSaving = false
     }
@@ -239,6 +295,8 @@
   const handleCancel = () => {
     dialog.destroy()
   }
+
+  onDestroy(() => { ++workspaceRevision })
 
   onMount(async () => {
     await loadWorkspace()
@@ -284,11 +342,65 @@
         <div class="workspace-loading">{pluginInstance.i18n.incrementalShare.loading}</div>
       {:else if activeSection === "general"}
         <div class="workspace-section general-section">
+          <div class="section-card connection-settings-card">
+            <div class="section-title">{pluginInstance.i18n.settingsWorkspace.connection}</div>
+            <fieldset class="connection-mode" disabled={isSaving}>
+              <legend>{pluginInstance.i18n.serviceAccess.mode}</legend>
+              <label><input type="radio" name="share-connection-mode" value="hosted" bind:group={draft.connectionMode} /> {pluginInstance.i18n.serviceAccess.hosted}</label>
+              <label><input type="radio" name="share-connection-mode" value="self-hosted" bind:group={draft.connectionMode} /> {pluginInstance.i18n.serviceAccess.selfHosted}</label>
+            </fieldset>
+            <label class="subsection-title" for="share-service-api-key">{pluginInstance.i18n.serviceAccess.key}</label>
+            <textarea
+              id="share-service-api-key"
+              class="b3-text-field fn__block reg-code-input"
+              bind:value={draft.serviceApiToken}
+              disabled={isSaving}
+              rows="2"
+              placeholder={pluginInstance.i18n.serviceAccess.keyPlaceholder}
+            />
+            <div class="inline-divider" />
+            <label class="subsection-title" for="share-service-api-url">{pluginInstance.i18n.serviceAccess.address}</label>
+            <div class="section-tip">{pluginInstance.i18n.serviceAccess.addressHelp}</div>
+            <input id="share-service-api-url" class="b3-text-field fn__block" type="url"
+              bind:value={draft.serviceApiUrl} disabled={isSaving} placeholder="https://api.example.com" />
+            <div class="connection-verification">
+              <button type="button" class="b3-button b3-button--outline" data-action="verify-connection" disabled={isSaving || isVerifying} on:click|stopPropagation={verifyConnection}>
+                {isVerifying ? pluginInstance.i18n.serviceAccess.verifying : pluginInstance.i18n.serviceAccess.verify}
+              </button>
+              {#if verificationMessage}<p role="status">{verificationMessage}</p>{/if}
+              {#if detectedMode!==undefined && detectedMode!==(draft.connectionMode!=="self-hosted")}
+                <button type="button" class="b3-button b3-button--text" on:click|stopPropagation={useDetectedMode}>{pluginInstance.i18n.serviceAccess.useDetectedMode}</button>
+              {/if}
+            </div>
+            <div class="inline-divider" />
+            <div class="setting-row">
+              <div class="setting-copy">
+                <label class="setting-label" for="share-reading-domain">{pluginInstance.i18n.cs.domain}</label>
+                <div class="setting-tip">{pluginInstance.i18n.serviceAccess.readingAddressHelp}</div>
+              </div>
+              <input id="share-reading-domain" class="b3-text-field control-select" type="url" list="share-reading-domain-options" bind:value={draft.domain} />
+              <datalist id="share-reading-domain-options">{#each domainOptions as item}<option value={item} />{/each}</datalist>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-copy">
+                <label class="setting-label" for="share-reading-path">{pluginInstance.i18n.cs.docPath}</label>
+                <div class="setting-tip">{pluginInstance.i18n.cs.docPathTip}</div>
+              </div>
+              <input id="share-reading-path" class="b3-text-field control-select" list="share-reading-path-options" bind:value={draft.docPath} />
+              <datalist id="share-reading-path-options">{#each docPathOptions as item}<option value={item} />{/each}</datalist>
+            </div>
+          </div>
+
           <div class="section-card account-access-card">
             <div class="section-title">{pluginInstance.i18n.settingsWorkspace.account}</div>
-            {#if vipInfo.code === 1 || vipInfo.code === 403}
-              <div class="status-panel status-error">
-                {pluginInstance.i18n.keyInfo.notValid}！ {vipInfo.msg}
+            {#if vipInfo.code === -3}
+              <div class="status-panel" role="status">{pluginInstance.i18n.serviceAccess.needsVerification}</div>
+            {:else if vipInfo.code === -2}
+              <div class="status-panel" role="status">{pluginInstance.i18n.serviceAccess.checking}</div>
+            {:else if vipInfo.code !== 0 || !vipInfo.data}
+              <div class="status-panel status-error" role="alert">
+                {vipInfo.msg}
               </div>
             {:else}
               <div class="status-panel status-success status-grid compact-status-grid">
@@ -300,20 +412,12 @@
                 {/each}
               </div>
             {/if}
-
-            <div class="inline-divider" />
-
-            <div class="subsection-title">{pluginInstance.i18n.bs.regCode}</div>
-            <div class="section-tip compact-reg-tip">
-              <a class="fn__code" href="https://store.terwer.space/products/share-pro">{pluginInstance.i18n.bs.regCodeClick}</a>
-              <span>{pluginInstance.i18n.bs.regCodeTip}</span>
-            </div>
-            <textarea
-              class="b3-text-field fn__block reg-code-input"
-              bind:value={draft.serviceApiToken}
-              rows="2"
-              placeholder={pluginInstance.i18n.bs.regCodePlaceholder}
-            />
+            {#if vipInfo.code!==-2 && vipInfo.code!==-3 && !vipInfo.errorCode?.startsWith("CLIENT_") && vipInfo.hostedMode!==false}
+              <div class="section-tip compact-reg-tip">
+                <a class="fn__code" href="https://store.terwer.space/products/share-pro">{pluginInstance.i18n.bs.regCodeClick}</a>
+                <span>{pluginInstance.i18n.bs.regCodeTip}</span>
+              </div>
+            {/if}
           </div>
 
           <div class="section-card">
@@ -368,37 +472,6 @@
             </div>
           </div>
 
-          <div class="section-card">
-            <div class="section-title">{pluginInstance.i18n.settingsWorkspace.addressing}</div>
-
-            <div class="setting-row">
-              <div class="setting-copy">
-                <div class="setting-label">{pluginInstance.i18n.cs.domain}</div>
-                <div class="setting-tip">
-                  {pluginInstance.i18n.cs.domainTip}
-                  <a href={domainApplyUrl} target="_blank">{pluginInstance.i18n.cs.domainClick}</a>
-                  {pluginInstance.i18n.cs.domainApply}
-                </div>
-              </div>
-              <select class="b3-select control-select" bind:value={draft.domain}>
-                {#each domainOptions as item}
-                  <option value={item}>{item}</option>
-                {/each}
-              </select>
-            </div>
-
-            <div class="setting-row">
-              <div class="setting-copy">
-                <div class="setting-label">{pluginInstance.i18n.cs.docPath}</div>
-                <div class="setting-tip">{pluginInstance.i18n.cs.docPathTip}</div>
-              </div>
-              <select class="b3-select control-select" bind:value={draft.docPath}>
-                {#each docPathOptions as item}
-                  <option value={item}>{item}</option>
-                {/each}
-              </select>
-            </div>
-          </div>
 
           <div class="section-card">
             <div class="section-title">{pluginInstance.i18n.seoSetting}</div>
@@ -594,6 +667,12 @@
 </div>
 
 <style>
+  .connection-mode { border: 0; margin: 0 0 16px; padding: 0; }
+  .connection-mode label { display: inline-flex; align-items: center; gap: 4px; margin-right: 20px; }
+  .connection-mode legend { margin-bottom: 8px; }
+  .connection-verification { margin: 10px 0; }
+  .connection-verification p { white-space: normal; overflow-wrap: anywhere; }
+
   .settings-workspace {
     display: flex;
     min-height: min(78vh, 860px);

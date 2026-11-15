@@ -217,10 +217,11 @@ export class IncrementalShareService {
    */
   private async getLocalHistoryByIds(docIds: string[]): Promise<ShareHistoryItem[]> {
     const historyItems: ShareHistoryItem[] = []
+    const cfg=await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
 
     for (const docId of docIds) {
       // 首先尝试从缓存获取
-      let item = shareHistoryCache.get(docId)
+      let item = shareHistoryCache.get(docId,cfg?.serviceApiConfig?.apiUrl)
 
       // 如果缓存中没有，则从本地存储获取
       if (!item) {
@@ -417,22 +418,7 @@ export class IncrementalShareService {
           try {
             // 使用智能重试机制分享文档
             const shareResult = await this.shareDocumentWithRetry(doc.docId)
-
-            // 更新本地历史记录
-            if (shareResult.success) {
-              const historyItem: ShareHistoryItem = {
-                docId: doc.docId,
-                docTitle: doc.docTitle,
-                shareTime: Date.now(),
-                shareStatus: "success",
-                shareUrl: shareResult.shareUrl,
-                docModifiedTime: Date.now(), // 这里应该获取文档的实际修改时间
-              }
-
-              // 保存到本地存储和缓存
-              await this.localShareHistory.addHistory(historyItem)
-              shareHistoryCache.set(doc.docId, historyItem)
-            }
+            // ShareService owns the history for the actual request endpoint.
 
             results.push({
               docId: doc.docId,
@@ -512,19 +498,7 @@ export class IncrementalShareService {
 
             // 更新本地历史记录
             if (shareResult.success) {
-              const historyItem: ShareHistoryItem = {
-                docId: doc.docId,
-                docTitle: doc.docTitle,
-                shareTime: Date.now(),
-                shareStatus: "success",
-                shareUrl: shareResult.shareUrl,
-                docModifiedTime: Date.now(), // 这里应该获取文档的实际修改时间
-              }
-
-              // 保存到本地存储和缓存
-              await this.localShareHistory.addHistory(historyItem)
-              shareHistoryCache.set(doc.docId, historyItem)
-
+              // Canonical ShareService already saved request-bound history.
               // 更新任务状态为成功
               await this.queueService.updateTaskStatus(doc.docId, "success")
             } else {

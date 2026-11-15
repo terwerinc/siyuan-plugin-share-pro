@@ -16,6 +16,7 @@ import { WidgetInvoke } from "./invoke/widgetInvoke"
 import { ShareProConfig } from "./models/ShareProConfig"
 import { NewUI } from "./newUI"
 import { ShareService } from "./service/ShareService"
+import { loadServiceAccess } from "./utils/ServiceAccessUtils"
 import PageUtil from "./utils/pageUtil"
 import { icons } from "./utils/svg"
 import IncrementalShareUI from "./libs/pages/IncrementalShareUI.svelte"
@@ -85,7 +86,7 @@ class Topbar {
       this.contextLock = true
       try {
         const settingConfig = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
-        if (settingConfig.isNewUIEnabled) {
+        if (settingConfig.isNewUIEnabled !== false) {
           await newUI.settingForNewUI()
         }
       } catch (e) {
@@ -112,9 +113,13 @@ class Topbar {
 
   private async addMenu(rect: DOMRect) {
     const menu = new Menu("shareProMenu")
+    menu.addItem({ icon: "iconSettings", label: this.pluginInstance.i18n.shareSetting,
+      click: () => { void this.pluginInstance.openSetting() } })
+    if (this.pluginInstance.isMobile) menu.fullscreen()
+    else menu.open({ x: rect.right, y: rect.bottom, isLeft: true })
 
     const cfg = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
-    const vipInfo = await this.shareService.getVipInfo(cfg?.serviceApiConfig?.token ?? "")
+    const vipInfo = await loadServiceAccess(this.pluginInstance)
     if (vipInfo.code === 0) {
       const docCheck = this.checkDocId()
       if (docCheck.flag) {
@@ -239,13 +244,6 @@ class Topbar {
       menu.addSeparator()
     }
 
-    menu.addItem({
-      icon: `iconSettings`,
-      label: this.pluginInstance.i18n?.shareSetting,
-      click: () => {
-        this.pluginInstance.openSetting()
-      },
-    })
 
     if (this.pluginInstance.isMobile) {
       menu.fullscreen()
@@ -263,7 +261,7 @@ class Topbar {
    */
   public async showIncrementalShareUI() {
     const cfg = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
-    const vipInfo = await this.shareService.getVipInfo(cfg?.serviceApiConfig?.token ?? "")
+    const vipInfo = await loadServiceAccess(this.pluginInstance)
 
     if (vipInfo.code !== 0) {
       const vipTip = vipInfo.msg ?? this.pluginInstance.i18n?.unknownError

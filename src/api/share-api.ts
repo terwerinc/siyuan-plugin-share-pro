@@ -7,7 +7,7 @@
  *  of this license document, but changing it is not allowed.
  */
 
-import { showMessage } from "siyuan"
+import { normalizeServiceResponse } from "../utils/ServiceResponseUtils"
 import { ILogger, simpleLogger } from "zhi-lib-base"
 import { isDev, SHARE_PRO_STORE_NAME } from "../Constants"
 import ShareProPlugin from "../index"
@@ -49,13 +49,17 @@ class ShareApi {
     return res
   }
 
-  public async getVipInfo(token: string) {
+  public async getVipInfo(token: string, signal?: AbortSignal) {
     const headers = {
       Authorization: `${token}`,
     }
-    const res = await this.shareServiceRequest(ServiceApiKeys.API_LICENSE_VIP_INFO, {}, headers)
-    this.logger.info("vip info =>", res)
+    const res = await this.shareServiceRequest(ServiceApiKeys.API_LICENSE_VIP_INFO, {}, headers, signal)
+    this.logger.info("vip status =>", res?.code)
     return res
+  }
+
+  public async getVipInfoForConnection(apiUrl: string, token: string, signal?: AbortSignal) {
+    return this.shareServiceRequest(ServiceApiKeys.API_LICENSE_VIP_INFO, {}, {Authorization:token}, signal, {apiUrl,token})
   }
 
   public async uploadMedia(shareBody: any) {
@@ -76,18 +80,18 @@ class ShareApi {
     return res
   }
 
-  public async getSettingByAuthor(author: string) {
+  public async getSettingByAuthor(author: string, signal?: AbortSignal) {
     const params = {
       group: "GENERAL",
       key: "static.app.config.json",
       author: author,
     }
-    const res = (await this.shareServiceRequest(ServiceApiKeys.API_GET_SETTING_BY_AUTHOR, params, {})) as any
+    const res = (await this.shareServiceRequest(ServiceApiKeys.API_GET_SETTING_BY_AUTHOR, params, {}, signal)) as any
     this.logger.info("get setting by author=>", res)
     return res
   }
 
-  public async saveSetting(token: string, setting: any) {
+  public async saveSetting(token: string, setting: any, signal?: AbortSignal) {
     const headers = {
       Authorization: `${token}`,
     }
@@ -96,7 +100,7 @@ class ShareApi {
       key: "static.app.config.json",
       value: JSON.stringify(setting),
     }
-    const res = await this.shareServiceRequest(ServiceApiKeys.API_UPDATE_SETTING, params, headers)
+    const res = await this.shareServiceRequest(ServiceApiKeys.API_UPDATE_SETTING, params, headers, signal)
     this.logger.info("get setting by author =>", res)
     return res
   }
@@ -173,15 +177,17 @@ class ShareApi {
   private async shareServiceRequest(
     url: string,
     data: object,
-    headers?: Record<string, any>
+    headers?: Record<string, any>,
+    signal?: AbortSignal,
+    connection?: {apiUrl:string;token:string}
   ): Promise<ServiceResponse> {
-    const cfg = await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
+    const cfg = connection ? {serviceApiConfig:connection} : await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
     const shareApiEndPoint = cfg?.serviceApiConfig?.apiUrl ?? ""
     if (shareApiEndPoint.trim() == "") {
-      showMessage("未找到分享服务，请先初始化", 7000, "error")
-      return
+      throw new Error("Sharing service address is required")
     }
-    const reqUrl = `${shareApiEndPoint}${url}`
+    const serviceApiUrl = shareApiEndPoint.trim().replace(/\/+$/, "")
+    const reqUrl = `${serviceApiUrl}${url}`
 
     const fetchOps = {
       headers: {
@@ -190,8 +196,9 @@ class ShareApi {
       },
       body: JSON.stringify(data),
       method: "POST",
+      signal,
     }
-    if (cfg.serviceApiConfig.token !== "") {
+    if (cfg?.serviceApiConfig?.token) {
       fetchOps.headers["Authorization"] = `${cfg.serviceApiConfig.token}`
     }
 
@@ -200,8 +207,21 @@ class ShareApi {
       this.logger.debug("开始向分享服务请求数据，fetchOps=>", fetchOps)
     }
 
-    const response = await fetch(reqUrl, fetchOps)
-    const resJson = await response.json()
+    let response: Response
+    try { response=await fetch(reqUrl,fetchOps) } catch(error) {
+      if(error && typeof error==="object" && Object.isExtensible(error)) Object.defineProperty(error,"_serviceApiUrl",{value:serviceApiUrl,enumerable:false})
+      throw error
+    }
+    let resJson:any
+    try {resJson=await response.json()} catch {
+      resJson={code:response.ok?-1:response.status,errorCode:response.headers?.get("X-Error-Code") || "CLIENT_INVALID_RESPONSE",
+        hostedMode:response.headers?.get("X-Hosted-Mode")!=="false",data:null}
+    }
+    if (!response.ok && typeof resJson?.code!=="number") resJson={...resJson,code:response.status}
+    resJson=normalizeServiceResponse(resJson,this.pluginInstance.i18n?.serviceErrors,url)
+    if(resJson && typeof resJson.code==="number" && typeof resJson.errorCode==="string") {
+      Object.defineProperty(resJson,"_serviceApiUrl",{value:serviceApiUrl,enumerable:false})
+    }
     if (isDev) {
       this.logger.debug("分享服务请求数据返回，resJson=>", resJson)
     }
@@ -231,8 +251,14 @@ enum ServiceApiKeys {
 }
 
 class ServiceResponse {
+  /** Actual request endpoint; non-enumerable client transport context, never a wire field. */
+  declare readonly _serviceApiUrl?: string
   code: number
+  /** @deprecated Use errorCode for localized presentation. */
   msg: string
+  errorCode?: string
+  hostedMode?: boolean
+  legacyMessage?: string
   data: any
 }
 
