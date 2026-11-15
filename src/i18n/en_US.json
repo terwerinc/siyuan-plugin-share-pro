@@ -487,7 +487,23 @@
     "readingAddressHelp": "The address readers use to open shared links.",
     "invalidReadingAddress": "Enter a valid HTTP(S) reading address.",
     "invalidPath": "Path may contain letters, numbers, underscores and hyphens.",
-    "keyPlaceholder": "Enter this service’s Key, if required."
+    "keyPlaceholder": "Enter this service’s Key, if required.",
+    "showKey": "Show",
+    "hideKey": "Hide",
+    "readingVerified": "Reading site reachable.",
+    "readingAddressLabel": "Reading site",
+    "confirmLegacy": "Confirm the connection mode for your existing address before saving.",
+    "confirmMode": "Confirm mode",
+    "confirmReading": "Choose a built-in or account-authorized reading domain before saving.",
+    "hostedKeyPlaceholder": "Paste your hosted service Key.",
+    "hostedKeyHelp": "Paste to replace the Key. Show to view or edit the full text.",
+    "notChecked": "Not checked",
+    "browserLabel": "Browser access",
+    "browserVerified": "Reader origin allowed.",
+    "instanceAccess": "Service access",
+    "trialPlan": "Trial",
+    "unknownPlan": "Unknown plan",
+    "renew": "Renew"
   },
   "serviceErrors": {
     "OK": "Ready",
@@ -507,6 +523,12 @@
     "CLIENT_NETWORK_ERROR": "Cannot connect to the sharing service. Check the service address and retry.",
     "CLIENT_TIMEOUT": "The service did not respond in time. Retry or check its address.",
     "CLIENT_INVALID_RESPONSE": "This address did not return a supported sharing-service response.",
-    "CLIENT_MODE_MISMATCH": "The detected service mode differs from your selection. Select the detected mode and verify again."
+    "CLIENT_MODE_MISMATCH": "The detected service mode differs from your selection. Select the detected mode and verify again.",
+    "CONFIGURATION_REQUIRED": "Save the service and reading addresses in the sharing client.",
+    "CONFIGURATION_CONFLICT": "This reading address matches multiple sites. Set a unique address or path prefix.",
+    "CLIENT_INVALID_READING_ADDRESS": "Enter a valid HTTP(S) reading address.",
+    "CLIENT_READING_UNREACHABLE": "Reading site is unreachable. Check the address, network and HTTPS certificate.",
+    "CLIENT_MIXED_CONTENT": "An HTTPS reading site cannot use an HTTP API. Configure an HTTPS API address.",
+    "CLIENT_CORS_ERROR": "The API does not allow requests from this reading origin. Check CORS settings."
   }
 }

@@ -9,7 +9,7 @@
 
 import { normalizeServiceResponse } from "../utils/ServiceResponseUtils"
 import { ILogger, simpleLogger } from "zhi-lib-base"
-import { isDev, SHARE_PRO_STORE_NAME } from "../Constants"
+import { SHARE_SERVICE_ENDPOINT_PROD, isDev, SHARE_PRO_STORE_NAME } from "../Constants"
 import ShareProPlugin from "../index"
 import { ShareProConfig } from "../models/ShareProConfig"
 
@@ -182,7 +182,7 @@ class ShareApi {
     connection?: {apiUrl:string;token:string}
   ): Promise<ServiceResponse> {
     const cfg = connection ? {serviceApiConfig:connection} : await this.pluginInstance.safeLoad<ShareProConfig>(SHARE_PRO_STORE_NAME)
-    const shareApiEndPoint = cfg?.serviceApiConfig?.apiUrl ?? ""
+    const shareApiEndPoint = cfg?.serviceApiConfig?.connectionMode === "hosted" ? SHARE_SERVICE_ENDPOINT_PROD : cfg?.serviceApiConfig?.apiUrl ?? ""
     if (shareApiEndPoint.trim() == "") {
       throw new Error("Sharing service address is required")
     }
@@ -204,7 +204,7 @@ class ShareApi {
 
     if (isDev) {
       this.logger.debug("开始向分享服务请求数据，reqUrl=>", reqUrl)
-      this.logger.debug("开始向分享服务请求数据，fetchOps=>", fetchOps)
+      this.logger.debug("Sharing service request", { method: fetchOps.method })
     }
 
     let response: Response
