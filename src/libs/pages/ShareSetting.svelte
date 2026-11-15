@@ -62,7 +62,6 @@
     const editor=document.querySelector("#share-service-api-key") as HTMLTextAreaElement | null
     editor?.focus()
   }
-  let showDomainCandidates=false
   let remoteDomains: string[] = []
   const pasteHostedKey=(event: ClipboardEvent)=>{
     if(isSaving)return
@@ -192,7 +191,8 @@
   // Hosted keeps the fixed official entry plus the account domains loaded from the service.
   // Hosted candidates are the built-in entry plus the server-provided account domains.
   $: hostedDomainPool=[...new Set([...DEFAULT_DOMAINS,...remoteDomains,...draft.domains])]
-  $: domainOptions = [...new Set([draft.domain, ...(draft.connectionMode==="hosted"?hostedDomainPool:draft.domains.filter(item=>!DEFAULT_DOMAINS.includes(item)))])].filter(Boolean)
+  // Self-hosted reads a typed address, so it takes no candidates from stored history.
+  $: domainOptions = [...new Set([draft.domain, ...(draft.connectionMode==="hosted"?hostedDomainPool:[])])].filter(Boolean)
   $: selfHostedAddresses=[localConfig.connectionProfiles?.["self-hosted"]?.appConfig?.domain,draft.connectionMode==="self-hosted"?draft.domain:undefined].filter(Boolean)
   $: authorizedDomainOptions=draft.connectionMode==="hosted"
     ? hostedDomainPool.filter(item=>!selfHostedAddresses.includes(item))
@@ -525,7 +525,7 @@
                 <label class="setting-label" for="share-reading-domain">{pluginInstance.i18n.cs.domain}</label>
                 <div class="setting-tip">{pluginInstance.i18n.serviceAccess.readingAddressHelp} {#if draft.connectionMode==="hosted"}<a class="setting-link" href={domainApplyUrl} target="_blank" rel="noopener noreferrer">{pluginInstance.i18n.cs.domainApply}</a>{/if}</div>
               </div>
-              <div class="reading-control">{#if draft.connectionMode==="hosted"}<select id="share-reading-domain" class="b3-select control-select" bind:value={draft.domain}>{#each domainOptions as item}<option value={item} disabled={!authorizedDomainOptions.includes(item)}>{item}</option>{/each}</select>{:else}<input id="share-reading-domain" class="b3-text-field control-select" type="url" bind:value={draft.domain} /><button type="button" class="candidate-toggle" aria-label={pluginInstance.i18n.cs.domain} aria-expanded={showDomainCandidates} on:click|stopPropagation={()=>showDomainCandidates=!showDomainCandidates}>▾</button>{#if showDomainCandidates}<div class="candidate-menu" role="listbox">{#each domainOptions as item}<button type="button" role="option" aria-selected={draft.domain===item} on:click|stopPropagation={()=>{draft.domain=item;showDomainCandidates=false}}>{item}</button>{/each}</div>{/if}{/if}</div>
+              <div class="reading-control">{#if draft.connectionMode==="hosted"}<select id="share-reading-domain" class="b3-select control-select" bind:value={draft.domain}>{#each domainOptions as item}<option value={item} disabled={!authorizedDomainOptions.includes(item)}>{item}</option>{/each}</select>{:else}<input id="share-reading-domain" class="b3-text-field control-select" type="url" bind:value={draft.domain} />{/if}</div>
             </div>
 
             {#if readingNeedsConfirmation}<p class="check-error" role="status">{pluginInstance.i18n.serviceAccess.confirmReading}</p>{/if}
@@ -1235,12 +1235,6 @@
     }
   }
   .key-field, .reading-control { display:flex; gap:6px; align-items:center; min-width:0; position:relative; }
-.candidate-toggle { position:absolute; right:6px; top:50%; transform:translateY(-50%); padding:0 2px; border:none; background:transparent; color:var(--b3-theme-on-surface-light); cursor:pointer; line-height:1; }
-.candidate-toggle:hover { color:var(--b3-theme-primary); }
-.reading-control input.control-select { padding-right:26px; }
-.candidate-menu { position:absolute; top:100%; right:0; z-index:20; margin-top:4px; min-width:160px; max-height:220px; overflow:auto; display:flex; flex-direction:column; padding:4px; background:var(--b3-theme-background); border:1px solid var(--b3-border-color); border-radius:4px; box-shadow:var(--b3-dialog-shadow); }
-.candidate-menu button { text-align:left; padding:4px 8px; border:none; border-radius:3px; background:transparent; color:var(--b3-theme-on-background); cursor:pointer; }
-.candidate-menu button:hover { background:var(--b3-theme-surface); }
   .key-field input { min-width:0; flex:1; height:30px; }
 
   .check-success { color:var(--b3-card-success-color, #238636); margin:4px 0; }

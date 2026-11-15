@@ -187,11 +187,11 @@ it('keeps every path selectable and read-only',async()=>{
 it('never offers the official reading domain in self-hosted mode',async()=>{
   mount({domain:'http://reader.test'},'self-hosted')
   await vi.waitFor(()=>expect(document.querySelector('#share-reading-domain')).not.toBeNull())
-  const toggle=[...document.querySelectorAll('.candidate-toggle')].find(e=>e.getAttribute('aria-label')===locale.cs.domain) as HTMLButtonElement
-  toggle.click();await tick()
-  const options=[...document.querySelectorAll('.candidate-menu button')].map(e=>e.textContent?.trim())
-  expect(options).toContain('http://reader.test')
-  expect(options).not.toContain('https://siyuan.wiki')
+  const domain=document.querySelector('#share-reading-domain') as HTMLInputElement
+  expect(domain.tagName).toBe('INPUT')
+  expect(domain.value).toBe('http://reader.test')
+  expect(document.querySelectorAll('.candidate-toggle')).toHaveLength(0)
+  expect(document.querySelectorAll('.candidate-menu')).toHaveLength(0)
 })
 
 it('switches independent profiles without forwarding or discarding the other Key',async()=>{
