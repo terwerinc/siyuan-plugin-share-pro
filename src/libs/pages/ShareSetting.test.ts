@@ -177,19 +177,20 @@ it('keeps hosted service fixed and offers only the official reading domain plus 
   expect(values).toEqual(expect.arrayContaining(['https://siyuan.wiki','https://account.example.test']))
   expect(values).not.toContain('https://siyuannote.space')
 })
-it('offers every path through the datalist without a second control',async()=>{
+it('offers every path in the full candidate menu',async()=>{
   mount({docPath:'doc'});await vi.waitFor(()=>expect(document.querySelector('#share-reading-path')).not.toBeNull())
   field('#share-reading-path','custom');await tick()
-  const input=document.querySelector('#share-reading-path') as HTMLInputElement
-  expect(input.getAttribute('list')).toBe('share-reading-path-options')
-  const options=[...document.querySelectorAll('#share-reading-path-options option')].map(o=>(o as HTMLOptionElement).value)
+  const toggle=[...document.querySelectorAll('.candidate-toggle')].find(e=>e.getAttribute('aria-label')===locale.cs.docPath) as HTMLButtonElement
+  toggle.click();await tick()
+  const options=[...document.querySelectorAll('.candidate-menu button')].map(e=>e.textContent?.trim())
   expect(options).toEqual(expect.arrayContaining(['s','x','doc','article','custom']))
-  expect(document.querySelectorAll('.candidate-select')).toHaveLength(0)
 })
 it('never offers the official reading domain in self-hosted mode',async()=>{
   mount({domain:'http://reader.test'},'self-hosted')
   await vi.waitFor(()=>expect(document.querySelector('#share-reading-domain')).not.toBeNull())
-  const options=[...document.querySelectorAll('#share-reading-domain-options option')].map(o=>(o as HTMLOptionElement).value)
+  const toggle=[...document.querySelectorAll('.candidate-toggle')].find(e=>e.getAttribute('aria-label')===locale.cs.domain) as HTMLButtonElement
+  toggle.click();await tick()
+  const options=[...document.querySelectorAll('.candidate-menu button')].map(e=>e.textContent?.trim())
   expect(options).toContain('http://reader.test')
   expect(options).not.toContain('https://siyuan.wiki')
 })

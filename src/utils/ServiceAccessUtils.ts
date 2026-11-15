@@ -52,15 +52,10 @@ export const checkReadingConnection = async (plugin:ShareProPlugin, address:stri
     const {kernelApi}=await ApiUtils.getSiyuanKernelApi(plugin)
     const result=await withServiceTimeout(()=>kernelApi.forwardProxy(url, [], undefined, "GET", undefined, undefined, "text", timeoutMs),timeoutMs)
     const status=Number(result?.status)
-    const headers=result?.headers || {}
-    const errorHeader=Object.keys(headers).find(key=>key.toLowerCase()==="x-error-code")
-    const value=headers[errorHeader]
-    const code=Array.isArray(value)?value[0]:value
-    const settled=status>=200 && status<400
-    if (settled) return {ok:true,errorCode:""}
-    // A reachable reader that has no synchronized settings is not a failure: saving publishes them.
-    if (code==="CONFIGURATION_REQUIRED") return {ok:false,pending:true,errorCode:"CLIENT_CONFIGURATION_PENDING"}
-    return {ok:false,errorCode:code==="CONFIGURATION_CONFLICT"?code:"CLIENT_READING_UNREACHABLE"}
+    // Reachability only: any HTTP response below 500 proves the reading entry answers.
+    // Missing or conflicting synchronized settings are a configuration state, not a connection failure.
+    const reachable=status>0 && status<500
+    return {ok:reachable,errorCode:reachable?"":"CLIENT_READING_UNREACHABLE"}
   } catch(error) {return {ok:false,errorCode:error?.name==="ServiceTimeoutError"?"CLIENT_TIMEOUT":"CLIENT_READING_UNREACHABLE"}}
 }
 
