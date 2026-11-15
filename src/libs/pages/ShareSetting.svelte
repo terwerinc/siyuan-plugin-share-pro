@@ -142,7 +142,7 @@
     isVerifying=true
     apiCheckState=readingCheckState=compatibilityCheckState="pending"
     verificationMessage=readingMessage=compatibilityMessage=pluginInstance.i18n.serviceAccess.verifying
-    const apiRequest=checkServiceConnection(pluginInstance,connection).then(checked=>{
+    const apiRequest=checkServiceConnection(pluginInstance,connection).then(async checked=>{
       if(round!==verificationRound || api!==apiSnapshot())return
       vipInfo=checked.response
       detectedMode=checked.reachable?checked.response.hostedMode:undefined
@@ -151,6 +151,15 @@
       verificationMessage=!checked.reachable || !checked.modeMatches
         ? pluginInstance.i18n.serviceErrors[checked.errorCode] || pluginInstance.i18n.serviceErrors.UNKNOWN_ERROR
         : checked.response.code===0?pluginInstance.i18n.serviceAccess.verified:pluginInstance.i18n.serviceAccess.reachableKeyRejected
+      // Keep the domain candidates current: every successful check re-reads the server list.
+      const email=(checked.response as any)?.data?.email as string | undefined
+      if(verificationOk && email){
+        try{
+          const cfg=await withServiceTimeout(signal=>settingService.getSettingByAuthor(email,signal))
+          const list=(cfg as any)?.domains
+          if(Array.isArray(list) && round===verificationRound) remoteDomains=[...new Set(list.filter(Boolean))] as string[]
+        }catch{}
+      }
     })
     const readingRequest=checkReadingConnection(pluginInstance,address).then(result=>{
       if(round!==verificationRound || reading!==readingSnapshot())return
@@ -314,9 +323,10 @@
       const account = await loadServiceAccess(pluginInstance)
       if (revision !== workspaceRevision) return
       vipInfo = account
-      if (vipInfo.code === 0) {
+      const accountEmail = (vipInfo as any)?.data?.email as string | undefined
+      if (accountEmail) {
         try {
-          const remoteAppConfig = await withServiceTimeout(signal => settingService.getSettingByAuthor(vipInfo.data.email, signal))
+          const remoteAppConfig = await withServiceTimeout(signal => settingService.getSettingByAuthor(accountEmail, signal))
           // Keep the account domains even when the draft is already dirty, otherwise the
           // first open shows only the built-in entry until the panel is reopened.
           if (revision === workspaceRevision) {
