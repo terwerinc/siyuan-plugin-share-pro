@@ -202,10 +202,8 @@
       logger.info("get shared data =>", formData.shareData)
       // 注意 undefined
       if (formData?.shareData?.shareStatus && formData.shareData.shareStatus !== "COMPLETED") {
-        formData.lock = true
+        // 未完成状态只提示，不再拦截：取消/重新分享正是处理这种状态的入口。
         showMessage(pluginInstance.i18n["ui"]["msgIngError"], 3000, "info")
-        formData.operationState.status = "idle"
-        return
       }
 
       // 取消分享
