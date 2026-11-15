@@ -534,7 +534,9 @@
             {/if}
           </div>
 
-          <p class="self-hosted-cta">{pluginInstance.i18n.serviceAccess.selfHostedCta} <a href="mailto:youweics@163.com">youweics@163.com</a></p>
+          {#if draft.connectionMode==="self-hosted"}
+            <p class="self-hosted-cta">{pluginInstance.i18n.serviceAccess.selfHostedCta} <a href="mailto:youweics@163.com">youweics@163.com</a></p>
+          {/if}
 
         </div>
       {:else if activeSection === "display"}
