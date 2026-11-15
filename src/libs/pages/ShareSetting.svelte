@@ -54,7 +54,6 @@
   let observedConnection=JSON.stringify([draft.connectionMode,draft.serviceApiUrl,draft.serviceApiToken])
   let showKey=false
   let showDomainCandidates=false
-  let showPathCandidates=false
   const pasteHostedKey=(event: ClipboardEvent)=>{
     if(isSaving)return
     const value=event.clipboardData?.getData("text")
@@ -493,7 +492,7 @@
                 <label class="setting-label" for="share-reading-path">{pluginInstance.i18n.cs.docPath}</label>
                 <div class="setting-tip"><span title={pluginInstance.i18n.cs.docPathTip}>{draft.domain}/{draft.docPath}/…</span></div>
               </div>
-              <div class="reading-control"><input id="share-reading-path" class="b3-text-field control-select" bind:value={draft.docPath} /><button type="button" class="candidate-toggle" aria-label={pluginInstance.i18n.cs.docPath} aria-expanded={showPathCandidates} on:click|stopPropagation={()=>showPathCandidates=!showPathCandidates}>▾</button>{#if showPathCandidates}<div class="candidate-menu" role="listbox">{#each docPathOptions as item}<button type="button" role="option" aria-selected={draft.docPath===item} on:click|stopPropagation={()=>{draft.docPath=item;showPathCandidates=false}}>{item}</button>{/each}</div>{/if}</div>
+              <div class="reading-control"><select id="share-reading-path" class="b3-select control-select" bind:value={draft.docPath}>{#each docPathOptions as item}<option value={item}>{item}</option>{/each}</select></div>
             </div>
             <div class="connection-checks" aria-live="polite">
               <p class:check-success={apiCheckState==="success"} class:check-error={apiCheckState==="error"} data-check="api" data-state={apiCheckState} role="status">{apiCheckState==="success"?"✓":apiCheckState==="error"?"✕":apiCheckState==="pending"?"…":"○"} API · {verificationMessage || pluginInstance.i18n.serviceAccess.notChecked}</p>

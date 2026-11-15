@@ -109,7 +109,7 @@ it("keeps address controls in General and persists their selected values togethe
   const domain=document.querySelector('#share-reading-domain') as HTMLSelectElement
   const path=document.querySelector('#share-reading-path') as HTMLSelectElement
   field('#share-reading-domain','http://reader.example.test:4000')
-  field('#share-reading-path','article')
+  path.value='article';path.dispatchEvent(new Event('change',{bubbles:true}))
   field('#share-service-api-key','new-key');await tick();save()
   await vi.waitFor(()=>expect(mocks.sync).toHaveBeenCalledOnce())
   expect(config.appConfig.domain).toBe(domain.value)
@@ -177,13 +177,12 @@ it('keeps hosted service fixed and offers only the official reading domain plus 
   expect(values).toEqual(expect.arrayContaining(['https://siyuan.wiki','https://account.example.test']))
   expect(values).not.toContain('https://siyuannote.space')
 })
-it('offers every path in the full candidate menu',async()=>{
+it('keeps every path selectable and read-only',async()=>{
   mount({docPath:'doc'});await vi.waitFor(()=>expect(document.querySelector('#share-reading-path')).not.toBeNull())
-  field('#share-reading-path','custom');await tick()
-  const toggle=[...document.querySelectorAll('.candidate-toggle')].find(e=>e.getAttribute('aria-label')===locale.cs.docPath) as HTMLButtonElement
-  toggle.click();await tick()
-  const options=[...document.querySelectorAll('.candidate-menu button')].map(e=>e.textContent?.trim())
-  expect(options).toEqual(expect.arrayContaining(['s','x','doc','article','custom']))
+  const select=document.querySelector('#share-reading-path') as HTMLSelectElement
+  expect(select.tagName).toBe('SELECT')
+  const values=[...select.options].map(o=>o.value)
+  expect(values).toEqual(expect.arrayContaining(['s','x','p','a','static','post','link','doc','article']))
 })
 it('never offers the official reading domain in self-hosted mode',async()=>{
   mount({domain:'http://reader.test'},'self-hosted')

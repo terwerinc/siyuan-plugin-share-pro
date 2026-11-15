@@ -722,9 +722,7 @@
 
     <div class="share-settings">
       <div class="setting-row">
-        <span class="setting-label">
-          {pluginInstance.i18n["sharePro"]} - {pluginInstance.i18n["shareProDesc"]}
-        </span>
+        <span class="setting-label">{pluginInstance.i18n["shareProDesc"]}</span>
 
         {#if isSingleDocMode}
           <!-- 单文档功能按钮：需要docId，仅单文档模式显示 -->
@@ -1346,6 +1344,7 @@
       align-items center
       gap 12px
       flex-shrink 0
+      margin-left auto
 
     .action-btn
       display inline-flex
