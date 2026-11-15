@@ -475,28 +475,37 @@
 
   .preview-header
     display flex
+    flex-wrap wrap
     justify-content space-between
     align-items center
+    gap 8px
     margin-bottom 6px
     padding-bottom 8px
     border-bottom 1px solid var(--b3-theme-surface-light)
 
   .stats
     display flex
-    gap 16px
+    flex-wrap wrap
+    align-items center
+    gap 4px 16px
+    flex 1 1 auto
+    min-width 0
 
   .stat-item
     font-size 12px
     color var(--b3-theme-on-surface)
+    white-space nowrap
 
   .actions
     display flex
+    flex 0 0 auto
     gap 8px
-    margin-left 8px
+    margin-left auto
 
   .action-btn
     padding 4px 8px
     font-size 12px
+    white-space nowrap
     border 1px solid var(--b3-theme-primary)
     background-color transparent
     color var(--b3-theme-primary)
