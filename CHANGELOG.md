@@ -1,17 +1,11 @@
 # Changelog
 
 ## [1.18.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.17.1...share-pro-v1.18.0) (2026-11-15)
-
-
 ### Features
-
 * refine hosted and self-hosted connection settings ([0203bcc](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/0203bcc1bb48680635746aff508a74dd0a3ea67e))
 * **settings:** add a fixed self-hosting contact hint ([4836d65](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/4836d6584f5b4a75fbb62d4a69dd27fc0da826d1))
 * **settings:** verify service modes and isolate sharing history ([3f482c2](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/3f482c25d4e379aeb00c60739634dafce049fffd))
-
-
 ### Bug Fixes
-
 * **build:** flatten plugin locale assets ([b1fda38](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/b1fda38e726dae83ca022206f0145ea14551e3a6))
 * **settings:** drop the carried self-hosted domain without overwriting saved custom domains ([6ee2a6e](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/6ee2a6e6b687e03f9cfe2bbc36cd75eb77ff6154))
 * **settings:** keep candidate dropdowns readable and exclude the self-hosted address from hosted candidates ([46f149c](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/46f149c5eb5ef3784355c61fb8d7fe435f4d3020))
@@ -21,18 +15,12 @@
 * **share:** preserve document context and partial upload results ([ad9d2f4](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/ad9d2f4a875844f3984d958f9605e4a55d371ce8))
 * **share:** treat any reading-site response below 500 as reachable ([eefc46b](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/eefc46b60110758372a71b155bc10bd1a7c39bfe))
 * **share:** treat unsaved reading config as pending and keep action buttons visible ([3f24dff](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/3f24dffd9eb3b72b5e906690cf0a8d578af71c3c))
-
-
 ### Miscellaneous
-
 * **manifest:** drop the retired i18n field for bazaar rules compliance ([52a3d7f](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/52a3d7f728ae3b509e9480ffd4c4d7d57d5413e6))
-* stop tracking local IDE metadata ([57723fc](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/57723fccd642f16523e56aa37717c598b7817207))
-
+* stop tracking local ide metadata ([57723fc](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/57723fccd642f16523e56aa37717c598b7817207))
 ## [1.17.1](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.17.0...share-pro-v1.17.1) (2026-03-28)
-### Bug Fixes
 * restrict i18n copy to json files and enable emptyoutdir ([9a5451e](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/9a5451e0fa018f6812604a7cff8f56b2a258703b))
 ## [1.17.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.16.0...share-pro-v1.17.0) (2026-03-28)
-### Features
 * **viewer:** add ai assistant/info bar compatibility toggles ([0a147a2](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/0a147a2bf5807a6482e67c119d806dc310e4040b))
 * **incremental-share:** reset selection state and localize select all ([7e9d8d3](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/7e9d8d3937ed027c69b1902d5ccb9f20a4d09af1))
 ### Code Refactoring
@@ -92,7 +80,6 @@
 * **subdocument:** remove maxsubdocuments limit and add performance warning ([a968936](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/a968936ef7fb99aff69e437cc9bc552a058c25f8))
 * **subdocument:** restructure subdocument components and move files ([35f7bb5](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/35f7bb551d90c506aa89096087e2ba00ba903fbc))
 * **subdocumenttree:** unify select all and deselect all toggle logic ([284dc62](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/284dc62791a15bd4c37798a7bc01948d80092fe1))
-### Miscellaneous
 * add vitest, file perms, and zh wiki metadata with parent-child relations ([ea294b8](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/ea294b84d29d50681b054c122d395f0dcc05b7c0))
 * **package:** add initial package.json and pnpm-lock.yaml ([6c270fa](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/6c270fad60cf8f907d3e9d511fd8b3394a9a15d9))
 ## [1.15.3](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.15.2...share-pro-v1.15.3) (2026-02-12)
