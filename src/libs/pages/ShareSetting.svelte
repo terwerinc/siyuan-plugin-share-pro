@@ -54,6 +54,7 @@
   let observedConnection=JSON.stringify([draft.connectionMode,draft.serviceApiUrl,draft.serviceApiToken])
   let showKey=false
   let showDomainCandidates=false
+  let remoteDomains: string[] = []
   const pasteHostedKey=(event: ClipboardEvent)=>{
     if(isSaving)return
     const value=event.clipboardData?.getData("text")
@@ -170,11 +171,12 @@
     { id: "incremental", label: pluginInstance.i18n.settingsWorkspace.incremental },
   ]
 
-  // Hosted keeps the fixed official entry; self-hosted never inherits it.
-  $: domainOptions = [...new Set([draft.domain, ...(draft.connectionMode==="hosted"?DEFAULT_DOMAINS:[]), ...(draft.connectionMode==="hosted"?draft.domains:draft.domains.filter(item=>!DEFAULT_DOMAINS.includes(item)))])].filter(Boolean)
+  // Hosted keeps the fixed official entry plus the account domains loaded from the service.
+  $: hostedDomainPool=[...new Set([...DEFAULT_DOMAINS,...remoteDomains,...draft.domains])]
+  $: domainOptions = [...new Set([draft.domain, ...(draft.connectionMode==="hosted"?hostedDomainPool:draft.domains.filter(item=>!DEFAULT_DOMAINS.includes(item)))])].filter(Boolean)
   $: selfHostedAddresses=[localConfig.connectionProfiles?.["self-hosted"]?.appConfig?.domain,draft.connectionMode==="self-hosted"?draft.domain:undefined].filter(Boolean)
   $: authorizedDomainOptions=draft.connectionMode==="hosted"
-    ? [...new Set([...DEFAULT_DOMAINS,...draft.domains])].filter(item=>!selfHostedAddresses.includes(item))
+    ? hostedDomainPool.filter(item=>!selfHostedAddresses.includes(item))
     : [...new Set([...draft.domains,...(draft.domain?[draft.domain]:[])])].filter(item=>!DEFAULT_DOMAINS.includes(item))
   $: readingNeedsConfirmation=draft.connectionMode==="hosted" && !authorizedDomainOptions.includes(draft.domain)
   $: docPathOptions = [...new Set([draft.docPath, ...DEFAULT_DOC_PATHS, ...draft.docPaths])].filter(Boolean)
@@ -306,6 +308,12 @@
       if (vipInfo.code === 0) {
         try {
           const remoteAppConfig = await withServiceTimeout(signal => settingService.getSettingByAuthor(vipInfo.data.email, signal))
+          // Keep the account domains even when the draft is already dirty, otherwise the
+          // first open shows only the built-in entry until the panel is reopened.
+          if (revision === workspaceRevision) {
+            const remoteList = (remoteAppConfig as any)?.domains
+            remoteDomains = Array.isArray(remoteList) ? [...new Set(remoteList.filter(Boolean))] as string[] : []
+          }
           if (revision === workspaceRevision && !isSaving && JSON.stringify(draft) === initialSnapshot) {
             localConfig={...localConfig,appConfig:mergeRemoteAppConfig(localConfig.appConfig,remoteAppConfig)}
             draft = createSettingsWorkspaceDraft(localConfig)
