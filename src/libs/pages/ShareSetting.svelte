@@ -139,8 +139,8 @@
     const readingRequest=checkReadingConnection(pluginInstance,address).then(result=>{
       if(round!==verificationRound || reading!==readingSnapshot())return
       readingOk=result.ok
-      readingCheckState=result.ok?"success":"error"
-      readingMessage=result.ok?pluginInstance.i18n.serviceAccess.readingVerified:pluginInstance.i18n.serviceErrors[result.errorCode] || pluginInstance.i18n.serviceAccess.unavailable
+      readingCheckState=result.ok?"success":result.pending?"idle":"error"
+      readingMessage=result.ok?pluginInstance.i18n.serviceAccess.readingVerified:result.pending?pluginInstance.i18n.serviceAccess.readingPending:pluginInstance.i18n.serviceErrors[result.errorCode] || pluginInstance.i18n.serviceAccess.unavailable
     })
     const browserRequest=checkReaderApiCompatibility(pluginInstance,connection.connectionMode==="hosted"?SHARE_SERVICE_ENDPOINT_PROD:connection.apiUrl,address).then(result=>{
       if(round!==verificationRound || browser!==browserSnapshot())return
@@ -370,8 +370,8 @@
         const [reader,browser]=await Promise.all([checkReadingConnection(pluginInstance,draft.domain),checkReaderApiCompatibility(pluginInstance,finalConfig.serviceApiConfig.apiUrl,draft.domain)])
         if(savedConnection===connectionSnapshot()){
           readingOk=reader.ok
-          readingCheckState=reader.ok?"success":"error"
-          readingMessage=reader.ok?pluginInstance.i18n.serviceAccess.readingVerified:pluginInstance.i18n.serviceErrors[reader.errorCode] || pluginInstance.i18n.serviceAccess.unavailable
+          readingCheckState=reader.ok?"success":reader.pending?"idle":"error"
+          readingMessage=reader.ok?pluginInstance.i18n.serviceAccess.readingVerified:reader.pending?pluginInstance.i18n.serviceAccess.readingPending:pluginInstance.i18n.serviceErrors[reader.errorCode] || pluginInstance.i18n.serviceAccess.unavailable
           compatibilityOk=browser.ok
           compatibilityCheckState=browser.ok?"success":"error"
           compatibilityMessage=browser.ok?pluginInstance.i18n.serviceAccess.browserVerified:pluginInstance.i18n.serviceErrors[browser.errorCode] || pluginInstance.i18n.serviceAccess.unavailable

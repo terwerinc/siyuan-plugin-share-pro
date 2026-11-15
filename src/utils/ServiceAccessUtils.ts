@@ -56,8 +56,11 @@ export const checkReadingConnection = async (plugin:ShareProPlugin, address:stri
     const errorHeader=Object.keys(headers).find(key=>key.toLowerCase()==="x-error-code")
     const value=headers[errorHeader]
     const code=Array.isArray(value)?value[0]:value
-    const errorCode=["CONFIGURATION_REQUIRED","CONFIGURATION_CONFLICT"].includes(code)?code:"CLIENT_READING_UNREACHABLE"
-    return {ok:status>=200 && status<400,errorCode:status>=200 && status<400 ? "" : errorCode}
+    const settled=status>=200 && status<400
+    if (settled) return {ok:true,errorCode:""}
+    // A reachable reader that has no synchronized settings is not a failure: saving publishes them.
+    if (code==="CONFIGURATION_REQUIRED") return {ok:false,pending:true,errorCode:"CLIENT_CONFIGURATION_PENDING"}
+    return {ok:false,errorCode:code==="CONFIGURATION_CONFLICT"?code:"CLIENT_READING_UNREACHABLE"}
   } catch(error) {return {ok:false,errorCode:error?.name==="ServiceTimeoutError"?"CLIENT_TIMEOUT":"CLIENT_READING_UNREACHABLE"}}
 }
 

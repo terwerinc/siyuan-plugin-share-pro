@@ -1061,6 +1061,7 @@
       display flex
       flex-direction column
       flex-grow 1
+      min-width 0
       gap 4px
 
     .share-title
@@ -1344,6 +1345,7 @@
       display flex
       align-items center
       gap 12px
+      flex-shrink 0
 
     .action-btn
       display inline-flex
@@ -1504,6 +1506,7 @@
       transition all 0.2s ease
       height 28px
       line-height 18px
+      white-space nowrap
       font-weight 500
       display flex
       align-items center
