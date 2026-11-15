@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.18.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.17.1...share-pro-v1.18.0) (2026-11-15)
+
+
+### Features
+
+* refine hosted and self-hosted connection settings ([0203bcc](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/0203bcc1bb48680635746aff508a74dd0a3ea67e))
+* **settings:** add a fixed self-hosting contact hint ([4836d65](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/4836d6584f5b4a75fbb62d4a69dd27fc0da826d1))
+* **settings:** verify service modes and isolate sharing history ([3f482c2](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/3f482c25d4e379aeb00c60739634dafce049fffd))
+
+
+### Bug Fixes
+
+* **build:** flatten plugin locale assets ([b1fda38](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/b1fda38e726dae83ca022206f0145ea14551e3a6))
+* **settings:** drop the carried self-hosted domain without overwriting saved custom domains ([6ee2a6e](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/6ee2a6e6b687e03f9cfe2bbc36cd75eb77ff6154))
+* **settings:** keep candidate dropdowns readable and exclude the self-hosted address from hosted candidates ([46f149c](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/46f149c5eb5ef3784355c61fb8d7fe435f4d3020))
+* **settings:** limit the reading domain to siyuan.wiki and drop duplicate candidate selects ([caed3c1](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/caed3c17dceb8c410eec4a2e3309f862001cfb1f))
+* **settings:** show the self-hosting contact hint only in self-hosted mode ([a12a688](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/a12a68895ca1f8764534af531451a669fad2cc6a))
+* **share:** keep the description without the product prefix and make the path read-only ([0a9ff1c](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/0a9ff1cdac94f35eadd9a1055b0752f3c137fadc))
+* **share:** preserve document context and partial upload results ([ad9d2f4](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/ad9d2f4a875844f3984d958f9605e4a55d371ce8))
+* **share:** treat any reading-site response below 500 as reachable ([eefc46b](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/eefc46b60110758372a71b155bc10bd1a7c39bfe))
+* **share:** treat unsaved reading config as pending and keep action buttons visible ([3f24dff](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/3f24dffd9eb3b72b5e906690cf0a8d578af71c3c))
+
+
+### Miscellaneous
+
+* **manifest:** drop the retired i18n field for bazaar rules compliance ([52a3d7f](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/52a3d7f728ae3b509e9480ffd4c4d7d57d5413e6))
+* stop tracking local IDE metadata ([57723fc](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/57723fccd642f16523e56aa37717c598b7817207))
+
 ## [1.17.1](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.17.0...share-pro-v1.17.1) (2026-03-28)
 ### Bug Fixes
 * restrict i18n copy to json files and enable emptyoutdir ([9a5451e](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/9a5451e0fa018f6812604a7cff8f56b2a258703b))
