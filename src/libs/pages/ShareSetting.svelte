@@ -53,6 +53,15 @@
   const connectionSnapshot=()=>JSON.stringify([draft.connectionMode,draft.serviceApiUrl,draft.serviceApiToken,draft.domain,draft.docPath])
   let observedConnection=JSON.stringify([draft.connectionMode,draft.serviceApiUrl,draft.serviceApiToken])
   let showKey=false
+  // The masked field stays read-only so the plaintext never sits in the DOM, but clicking it
+  // should go straight into editing instead of looking like a dead control.
+  const revealKeyEditor=async()=>{
+    if(isSaving || showKey)return
+    showKey=true
+    await tick()
+    const editor=document.querySelector("#share-service-api-key") as HTMLTextAreaElement | null
+    editor?.focus()
+  }
   let showDomainCandidates=false
   let remoteDomains: string[] = []
   const pasteHostedKey=(event: ClipboardEvent)=>{
@@ -465,7 +474,7 @@
                   {#if showKey}
                     <textarea id="share-service-api-key" class="b3-text-field hosted-key-input" rows="3" wrap="soft" bind:value={draft.serviceApiToken} disabled={isSaving} autocomplete="off" spellcheck="false" aria-describedby="share-service-key-help" placeholder={pluginInstance.i18n.serviceAccess.hostedKeyPlaceholder} />
                   {:else}
-                    <textarea id="share-service-api-key" class="b3-text-field hosted-key-input" rows="3" wrap="soft" readonly value={draft.serviceApiToken ? "•".repeat(Math.min(draft.serviceApiToken.length, 240)) : ""} disabled={isSaving} autocomplete="off" spellcheck="false" on:paste={pasteHostedKey} aria-describedby="share-service-key-help" placeholder={pluginInstance.i18n.serviceAccess.hostedKeyPlaceholder} />
+                    <textarea id="share-service-api-key" class="b3-text-field hosted-key-input" rows="3" wrap="soft" readonly value={draft.serviceApiToken ? "•".repeat(Math.min(draft.serviceApiToken.length, 240)) : ""} disabled={isSaving} autocomplete="off" spellcheck="false" on:paste={pasteHostedKey} on:click={revealKeyEditor} on:focus={revealKeyEditor} aria-describedby="share-service-key-help" placeholder={pluginInstance.i18n.serviceAccess.hostedKeyPlaceholder} />
                   {/if}
                 </div>
               {:else if showKey}
