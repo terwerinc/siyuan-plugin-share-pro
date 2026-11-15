@@ -1,7 +1,10 @@
 # Changelog
 
-## [1.18.1](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.18.0...share-pro-v1.18.1) (2026-11-15)
+## [1.18.2](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.18.1...share-pro-v1.18.2) (2026-11-15)
 ### Bug Fixes
+* **share:** cancel without any share-status gate ([7063d34](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/7063d34710d6716107943f713a3f7a2bbb06e6c2))
+* **share:** do not block cancel when the share is not completed ([3a6fa62](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/3a6fa62b2896582d2f25f044b3da038e5e91bb31))
+## [1.18.1](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.18.0...share-pro-v1.18.1) (2026-11-15)
 * **settings:** always re-read the server domain list on open and after verification ([1599d38](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/1599d38a31757d831e5c8ed90753431d6fb3aa3d))
 * **settings:** enter editing when the masked license field is clicked ([cf7e349](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/cf7e349de42adf71906afc7da88b2009f35cc87f))
 * **settings:** keep the self-hosted domain a plain typed input without stored candidates ([8ebf2d6](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/8ebf2d6fbc080352774ebd04e93c3b441222246f))
