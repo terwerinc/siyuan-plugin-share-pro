@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.18.1](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.18.0...share-pro-v1.18.1) (2026-11-15)
+
+
+### Bug Fixes
+
+* **settings:** always re-read the server domain list on open and after verification ([1599d38](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/1599d38a31757d831e5c8ed90753431d6fb3aa3d))
+* **settings:** enter editing when the masked license field is clicked ([cf7e349](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/cf7e349de42adf71906afc7da88b2009f35cc87f))
+* **settings:** keep the self-hosted domain a plain typed input without stored candidates ([8ebf2d6](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/8ebf2d6fbc080352774ebd04e93c3b441222246f))
+* **settings:** load account domains on the first panel open ([481792e](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/481792e0405d9ece6166a54d7ee69f9abb45e871))
+* **settings:** re-read the server domain list on open, verify and save ([83162ed](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/83162ed8e6257ea77ca483638fdce4540559b782))
+
 ## [1.18.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.17.1...share-pro-v1.18.0) (2026-11-15)
 ### Features
 * refine hosted and self-hosted connection settings ([0203bcc](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/0203bcc1bb48680635746aff508a74dd0a3ea67e))
