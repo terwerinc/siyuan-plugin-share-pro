@@ -93,7 +93,7 @@ describe("SettingsWorkspaceUtils", () => {
         inited: true,
       } as ShareProConfig,
       {
-        connectionMode: "hosted",
+        connectionMode: "self-hosted",
         serviceApiUrl: "https://service.example.com/base/",
         serviceApiToken: "new-token",
         newUIEnabled: true,

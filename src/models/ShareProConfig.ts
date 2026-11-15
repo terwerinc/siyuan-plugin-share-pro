@@ -33,6 +33,7 @@ class ShareProConfig {
    * @since 1.9.0
    */
   isNewUIEnabled?: boolean
+  connectionProfiles?: Partial<Record<"hosted" | "self-hosted", { serviceApiConfig: IServiceApiConfig; appConfig: AppConfig; draft?: Record<string, any> }>>
   inited: boolean
 }
 

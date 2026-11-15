@@ -73,13 +73,15 @@ export default class ShareProPlugin extends Plugin {
 
   async openSetting() {
     try {
-      const settingId = "share-pro-setting"
+      const settingId = `share-pro-setting-${crypto.randomUUID()}`
+      let component: ShareSetting | undefined
       const d = new Dialog({
         title: `${this.i18n?.shareSetting} - ${this.i18n?.sharePro} v${pkg.version}`,
         content: `<div id="${settingId}"></div>`,
-        width: this.isMobile ? "92vw" : "61.8vw",
+        width: this.isMobile ? "96vw" : "min(1120px, 96vw)",
+        destroyCallback: () => component?.$destroy(),
       })
-      new ShareSetting({
+      component = new ShareSetting({
         target: document.getElementById(settingId) as HTMLElement,
         props: {
           pluginInstance: this,
@@ -99,7 +101,6 @@ export default class ShareProPlugin extends Plugin {
    * 默认配置
    */
   public getDefaultCfg() {
-    const latestServiceApiUrl = isDev ? SHARE_SERVICE_ENDPOINT_DEV : SHARE_SERVICE_ENDPOINT_PROD
     return normalizeShareProConfigForViewerContract({
       siyuanConfig: {
         apiUrl: DEFAULT_SIYUAN_API_URL,
@@ -110,7 +111,8 @@ export default class ShareProPlugin extends Plugin {
         },
       },
       serviceApiConfig: {
-        apiUrl: latestServiceApiUrl,
+        connectionMode: "hosted",
+        apiUrl: SHARE_SERVICE_ENDPOINT_PROD,
         token: "",
       },
     } as any as ShareProConfig)
@@ -155,18 +157,6 @@ export default class ShareProPlugin extends Plugin {
       cfg.inited = true
       await this.saveData(SHARE_PRO_STORE_NAME, cfg)
       this.logger.info("Share pro config inited")
-    } else {
-      // 开发阶段
-      if (isDev && cfg.serviceApiConfig.apiUrl !== SHARE_SERVICE_ENDPOINT_DEV) {
-        cfg.serviceApiConfig = {
-          apiUrl: DEFAULT_SIYUAN_API_URL,
-          token: DEFAULT_SIYUAN_AUTH_TOKEN,
-          cookie: DEFAULT_SIYUAN_COOKIE,
-        } as any
-        cfg.serviceApiConfig.apiUrl = SHARE_SERVICE_ENDPOINT_DEV
-        await this.saveData(SHARE_PRO_STORE_NAME, cfg)
-        this.logger.info("Share pro updated for dev mode")
-      }
     }
   }
 

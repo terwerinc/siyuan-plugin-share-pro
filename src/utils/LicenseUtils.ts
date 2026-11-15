@@ -28,8 +28,15 @@ const getRegisterInfo = (pluginInstance: ShareProPlugin, payType: string): strin
     case "year":
       registerInfo = pluginInstance.i18n.cardType.year
       break
+    case "trial":
+      registerInfo = pluginInstance.i18n.serviceAccess.trialPlan
+      break
+    case "lifetime":
+    case "permanent":
+      registerInfo = pluginInstance.i18n.keyInfo.lifetime
+      break
     default:
-      registerInfo = pluginInstance.i18n.cardType.day
+      registerInfo = payType || pluginInstance.i18n.serviceAccess.unknownPlan
       break
   }
 

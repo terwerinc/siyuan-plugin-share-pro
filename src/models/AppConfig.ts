@@ -10,6 +10,8 @@
 type ThemeType = "system" | "dark" | "light"
 
 interface AppConfig {
+  /** Public API base synchronized for readers. Never contains credentials. */
+  publicApiUrl?: string
   lang?: string
   siteUrl?: string
   siteTitle?: string

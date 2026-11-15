@@ -1,4 +1,6 @@
 /* Copyright (C) 2026 Terwer, Inc. GPL-3.0. */
+import { ApiUtils } from "./ApiUtils"
+import { SHARE_SERVICE_ENDPOINT_PROD } from "../Constants"
 import type ShareProPlugin from "../index"
 import type { ServiceResponse } from "../api/share-api"
 import { normalizeServiceResponse } from "./ServiceResponseUtils"
@@ -19,7 +21,7 @@ export const withServiceTimeout = async <T>(request:(signal:AbortSignal)=>Promis
 const failure=(plugin:ShareProPlugin,errorCode:string):ServiceResponse=>({code:-1,errorCode,hostedMode:true,data:null,msg:plugin.i18n.serviceErrors?.[errorCode] || plugin.i18n.serviceAccess.unavailable})
 const query = async (plugin:ShareProPlugin,connection:ServiceConnection,timeoutMs:number,preview:boolean):Promise<ServiceResponse> => {
   let apiUrl:string
-  try {apiUrl=normalizeServiceApiUrl(connection.apiUrl)} catch {return failure(plugin,"CLIENT_INVALID_SERVICE_ADDRESS")}
+  try {apiUrl=normalizeServiceApiUrl(connection.connectionMode === "hosted" ? SHARE_SERVICE_ENDPOINT_PROD : connection.apiUrl)} catch {return failure(plugin,"CLIENT_INVALID_SERVICE_ADDRESS")}
   try {
     const raw=await withServiceTimeout(signal=>preview
       ? plugin.shareService.getVipInfoForConnection(apiUrl,connection.token.trim(),signal)
@@ -40,4 +42,40 @@ export const checkServiceConnection=async(plugin:ShareProPlugin,connection:Servi
   const reachable=!response.errorCode?.startsWith("CLIENT_")
   const modeMatches=reachable && response.hostedMode===(connection.connectionMode!=="self-hosted")
   return {response,reachable,modeMatches,errorCode:reachable&&!modeMatches?"CLIENT_MODE_MISMATCH":response.errorCode}
+}
+
+/** Reading reachability is a separate kernel request with no service/SiYuan credentials forwarded. */
+export const checkReadingConnection = async (plugin:ShareProPlugin, address:string, timeoutMs=8000) => {
+  let url:string
+  try { url=normalizeServiceApiUrl(address) } catch { return {ok:false,errorCode:"CLIENT_INVALID_READING_ADDRESS"} }
+  try {
+    const {kernelApi}=await ApiUtils.getSiyuanKernelApi(plugin)
+    const result=await withServiceTimeout(()=>kernelApi.forwardProxy(url, [], undefined, "GET", undefined, undefined, "text", timeoutMs),timeoutMs)
+    const status=Number(result?.status)
+    const headers=result?.headers || {}
+    const errorHeader=Object.keys(headers).find(key=>key.toLowerCase()==="x-error-code")
+    const value=headers[errorHeader]
+    const code=Array.isArray(value)?value[0]:value
+    const errorCode=["CONFIGURATION_REQUIRED","CONFIGURATION_CONFLICT"].includes(code)?code:"CLIENT_READING_UNREACHABLE"
+    return {ok:status>=200 && status<400,errorCode:status>=200 && status<400 ? "" : errorCode}
+  } catch(error) {return {ok:false,errorCode:error?.name==="ServiceTimeoutError"?"CLIENT_TIMEOUT":"CLIENT_READING_UNREACHABLE"}}
+}
+
+/** Checks the reader origin's CORS permission without forwarding credentials. */
+export const checkReaderApiCompatibility=async(plugin:ShareProPlugin,apiAddress:string,readingAddress:string,timeoutMs=8000)=>{
+  let api:string,reader:URL
+  try{api=normalizeServiceApiUrl(apiAddress);reader=new URL(normalizeServiceApiUrl(readingAddress))}catch{return {ok:false,errorCode:"CLIENT_INVALID_SERVICE_ADDRESS"}}
+  if(reader.protocol==='https:' && new URL(api).protocol==='http:')return {ok:false,errorCode:"CLIENT_MIXED_CONTENT"}
+  if(new URL(api).origin===reader.origin)return {ok:true,errorCode:""}
+  try{
+    const {kernelApi}=await ApiUtils.getSiyuanKernelApi(plugin)
+    const response=await withServiceTimeout(()=>kernelApi.forwardProxy(api+'/api/license/vipInfo',[{Origin:reader.origin},{'Access-Control-Request-Method':'POST'},{'Access-Control-Request-Headers':'content-type,authorization'}],undefined,'OPTIONS',undefined,undefined,'text',timeoutMs),timeoutMs)
+    const headers=response?.headers || {}
+    const header=(key:string)=>{const name=Object.keys(headers).find(k=>k.toLowerCase()===key);const value=headers[name];return Array.isArray(value)?value.join(','):String(value || '')}
+    const allowedOrigin=header('access-control-allow-origin')
+    const allowedMethods=header('access-control-allow-methods').toLowerCase()
+    const allowedHeaders=header('access-control-allow-headers').toLowerCase()
+    const ok=Number(response?.status)>=200 && Number(response?.status)<400 && [reader.origin,'*'].includes(allowedOrigin) && (allowedMethods.includes('post')||allowedMethods==='*') && (allowedHeaders==='*'||['authorization','content-type'].every(h=>allowedHeaders.includes(h)))
+    return {ok,errorCode:ok?'':'CLIENT_CORS_ERROR'}
+  }catch{return {ok:false,errorCode:'CLIENT_CORS_ERROR'}}
 }

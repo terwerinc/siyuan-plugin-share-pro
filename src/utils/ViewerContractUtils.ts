@@ -7,6 +7,7 @@
  *  of this license document, but changing it is not allowed.
  */
 
+import { SHARE_SERVICE_ENDPOINT_PROD } from "../Constants"
 import { AppConfig } from "../models/AppConfig"
 import { ShareProConfig } from "../models/ShareProConfig"
 
@@ -19,8 +20,11 @@ type ViewerContractAppConfig = Partial<AppConfig> & {
 }
 
 const normalizeAppConfigForViewerContract = (appConfig?: Partial<AppConfig> | null): ViewerContractAppConfig => {
+  const publicConfig=JSON.parse(JSON.stringify(appConfig ?? {}))
+  const strip=(item:any)=>{if(!item||typeof item!=="object")return;for(const key of Object.keys(item)){if(/token|secret|credential|authorization|siyuanConfig|serviceApiConfig|connectionProfiles|authCode|registrationKey/i.test(key)||["hostedMode","errorCode"].includes(key)||(/password/i.test(key)&&!["passwordEnabled","showPassword"].includes(key)))delete item[key];else strip(item[key])}}
+  strip(publicConfig)
   return {
-    ...(appConfig ?? {}),
+    ...publicConfig,
     aiAssistantEnabled: appConfig?.aiAssistantEnabled ?? DEFAULT_AI_ASSISTANT_ENABLED,
     postMetaEnabled: appConfig?.postMetaEnabled ?? DEFAULT_POST_META_ENABLED,
   }
@@ -28,6 +32,7 @@ const normalizeAppConfigForViewerContract = (appConfig?: Partial<AppConfig> | nu
 
 const normalizeShareProConfigForViewerContract = (config?: ShareProConfig | null): ShareProConfig => {
   const normalizedConfig = { ...(config ?? {}) } as ShareProConfig
+  if(normalizedConfig.serviceApiConfig?.connectionMode === "hosted") normalizedConfig.serviceApiConfig={...normalizedConfig.serviceApiConfig,apiUrl:SHARE_SERVICE_ENDPOINT_PROD}
   normalizedConfig.appConfig = normalizeAppConfigForViewerContract(normalizedConfig.appConfig)
   return normalizedConfig
 }

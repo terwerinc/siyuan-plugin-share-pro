@@ -25,6 +25,7 @@ import { normalizeShareProConfigForViewerContract } from "./ViewerContractUtils"
 type SettingsWorkspaceSectionId = "general" | "display" | "share" | "incremental"
 
 interface SettingsWorkspaceDraft {
+  requiresModeConfirmation?: boolean
   connectionMode: "hosted" | "self-hosted"
   serviceApiUrl: string
   serviceApiToken: string
@@ -71,8 +72,8 @@ interface PersistSettingsWorkspaceResult {
 }
 
 const DEFAULT_DOMAIN = isDev ? "http://localhost:4000" : "https://siyuannote.site"
-const DEFAULT_DOMAINS = isDev ? ["http://localhost:4000"] : ["https://siyuannote.site", "https://siyuannote.space"]
-const DEFAULT_DOC_PATH = "x"
+const DEFAULT_DOMAINS = ["https://siyuannote.site", "https://siyuannote.space"]
+const DEFAULT_DOC_PATH = "s"
 const DEFAULT_DOC_PATHS = ["x", "s", "p", "a", "static", "post", "link", "doc", "article"]
 const DEFAULT_THEME = "Zhihu"
 
@@ -110,7 +111,7 @@ const mergeAppConfigWithDefaults = (appConfig?: Partial<AppConfig> | null): AppC
 }
 
 const createNormalizedWorkspaceConfig = (config?: ShareProConfig | null): ShareProConfig => {
-  const latestServiceApiUrl = isDev ? SHARE_SERVICE_ENDPOINT_DEV : SHARE_SERVICE_ENDPOINT_PROD
+  const latestServiceApiUrl = SHARE_SERVICE_ENDPOINT_PROD
   const mergedPreferenceConfig = {
     fixTitle: false,
     ...(config?.siyuanConfig?.preferenceConfig ?? {}),
@@ -125,6 +126,7 @@ const createNormalizedWorkspaceConfig = (config?: ShareProConfig | null): ShareP
       preferenceConfig: mergedPreferenceConfig,
     },
     serviceApiConfig: {
+      connectionMode: config?.serviceApiConfig?.apiUrl ? config.serviceApiConfig.connectionMode : "hosted",
       apiUrl: latestServiceApiUrl,
       token: "",
       ...(config?.serviceApiConfig ?? {}),
@@ -132,9 +134,12 @@ const createNormalizedWorkspaceConfig = (config?: ShareProConfig | null): ShareP
     appConfig: mergeAppConfigWithDefaults(config?.appConfig),
     isCustomCssEnabled: config?.isCustomCssEnabled ?? true,
     isNewUIEnabled: config?.isNewUIEnabled !== false,
+    connectionProfiles: structuredClone(config?.connectionProfiles ?? {}),
     inited: config?.inited ?? false,
   } as ShareProConfig
 
+  if(mergedConfig.serviceApiConfig.connectionMode === "self-hosted" && config?.appConfig?.homePageId===undefined) mergedConfig.appConfig.homePageId=""
+  if(mergedConfig.serviceApiConfig.connectionMode === "hosted" && !config?.appConfig?.domain) mergedConfig.appConfig.domain=DEFAULT_DOMAINS[0]
   return normalizeShareProConfigForViewerContract(mergedConfig)
 }
 
@@ -174,8 +179,9 @@ const createSettingsWorkspaceDraft = (
   const mergedAppConfig = mergeRemoteAppConfig(normalizedConfig.appConfig, remoteAppConfig)
 
   return {
-    connectionMode: normalizedConfig.serviceApiConfig.connectionMode === "self-hosted" ? "self-hosted" : "hosted",
-    serviceApiUrl: normalizedConfig.serviceApiConfig.apiUrl,
+    requiresModeConfirmation: !normalizedConfig.serviceApiConfig.connectionMode && !!normalizedConfig.serviceApiConfig.apiUrl && normalizedConfig.serviceApiConfig.apiUrl !== SHARE_SERVICE_ENDPOINT_PROD,
+    connectionMode: normalizedConfig.serviceApiConfig.connectionMode === "self-hosted" || (!normalizedConfig.serviceApiConfig.connectionMode && normalizedConfig.serviceApiConfig.apiUrl !== SHARE_SERVICE_ENDPOINT_PROD) ? "self-hosted" : "hosted",
+    serviceApiUrl: normalizedConfig.serviceApiConfig.connectionMode === "hosted" ? SHARE_SERVICE_ENDPOINT_PROD : normalizedConfig.serviceApiConfig.apiUrl,
     serviceApiToken: normalizedConfig.serviceApiConfig?.token ?? "",
     newUIEnabled: normalizedConfig.isNewUIEnabled !== false,
     customCssEnabled: normalizedConfig.isCustomCssEnabled ?? true,
@@ -184,7 +190,7 @@ const createSettingsWorkspaceDraft = (
     theme: mergedAppConfig.theme?.lightTheme ?? DEFAULT_THEME,
     domains: cloneArray(mergedAppConfig.domains, DEFAULT_DOMAINS),
     domain: mergedAppConfig.domain ?? DEFAULT_DOMAIN,
-    docPaths: cloneArray((mergedAppConfig as any).docPaths, DEFAULT_DOC_PATHS),
+    docPaths: [...new Set([...cloneArray((mergedAppConfig as any).docPaths, DEFAULT_DOC_PATHS), ...cloneArray(mergedAppConfig.basePaths, [])])],
     docPath: mergedAppConfig.docPath ?? DEFAULT_DOC_PATH,
 
     siteTitle: mergedAppConfig.siteTitle ?? "",
@@ -221,7 +227,7 @@ const applySettingsWorkspaceDraft = (
   const normalizedConfig = createNormalizedWorkspaceConfig(sourceConfig)
 
   normalizedConfig.serviceApiConfig.connectionMode = draft.connectionMode ?? "hosted"
-  normalizedConfig.serviceApiConfig.apiUrl = normalizeServiceApiUrl(draft.serviceApiUrl)
+  normalizedConfig.serviceApiConfig.apiUrl = draft.connectionMode === "hosted" ? SHARE_SERVICE_ENDPOINT_PROD : normalizeServiceApiUrl(draft.serviceApiUrl)
   normalizedConfig.serviceApiConfig.token = draft.serviceApiToken.trim()
   normalizedConfig.isNewUIEnabled = draft.newUIEnabled
   normalizedConfig.isCustomCssEnabled = draft.customCssEnabled
@@ -230,6 +236,7 @@ const applySettingsWorkspaceDraft = (
   normalizedConfig.appConfig = mergeAppConfigWithDefaults({
     ...normalizedConfig.appConfig,
     lang: DEFAULT_SIYUAN_LANG,
+    publicApiUrl: normalizedConfig.serviceApiConfig.apiUrl,
     domains: cloneArray(draft.domains, DEFAULT_DOMAINS),
     domain: draft.domain,
     docPaths: cloneArray(draft.docPaths, DEFAULT_DOC_PATHS),
@@ -263,6 +270,8 @@ const applySettingsWorkspaceDraft = (
     },
   })
 
+  normalizedConfig.connectionProfiles ??= {}
+  normalizedConfig.connectionProfiles[draft.connectionMode] = structuredClone({serviceApiConfig:normalizedConfig.serviceApiConfig,appConfig:normalizedConfig.appConfig})
   return normalizeShareProConfigForViewerContract(normalizedConfig)
 }
 
