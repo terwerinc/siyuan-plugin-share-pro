@@ -198,15 +198,9 @@
         showMessage(pluginInstance.i18n["ui"]["shareSuccessError"] + e.toString(), 3000, "info")
       }
     } else {
-      // 状态检测
+      // 取消分享：不做状态拦截，未完成状态同样允许取消或清理。
       logger.info("get shared data =>", formData.shareData)
-      // 注意 undefined
-      if (formData?.shareData?.shareStatus && formData.shareData.shareStatus !== "COMPLETED") {
-        // 未完成状态只提示，不再拦截：取消/重新分享正是处理这种状态的入口。
-        showMessage(pluginInstance.i18n["ui"]["msgIngError"], 3000, "info")
-      }
 
-      // 取消分享
       try {
         formData.operationState.status = "canceling"
 
