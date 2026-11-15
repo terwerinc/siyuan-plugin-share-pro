@@ -76,7 +76,12 @@
     draft=createSettingsWorkspaceDraft({...fresh,connectionProfiles:localConfig.connectionProfiles,serviceApiConfig:saved?.serviceApiConfig ?? {connectionMode:mode,apiUrl:mode==="hosted"?SHARE_SERVICE_ENDPOINT_PROD:"",token:""},appConfig})
     if(saved?.draft)draft=structuredClone(saved.draft) as SettingsWorkspaceDraft
     draft.connectionMode=mode
-    if(mode==="hosted")draft.serviceApiUrl=SHARE_SERVICE_ENDPOINT_PROD
+    if(mode==="hosted"){
+      draft.serviceApiUrl=SHARE_SERVICE_ENDPOINT_PROD
+      // Drop only an address carried over from the self-hosted profile; saved custom domains stay.
+      const carriedFromSelfHosted=localConfig.connectionProfiles["self-hosted"]?.appConfig?.domain
+      if(draft.domain && draft.domain===carriedFromSelfHosted) draft.domain=DEFAULT_DOMAINS[0]
+    }
     showKey=false
     selectedMode=mode
     draft.requiresModeConfirmation=false
