@@ -492,6 +492,7 @@
     "hideKey": "Hide",
     "readingVerified": "Reading site reachable.",
     "readingPending": "Reading site responded; save to publish the configuration.",
+    "selfHostedCta": "Need stronger self-hosting capabilities or custom support? Contact",
     "readingAddressLabel": "Reading site",
     "confirmLegacy": "Confirm the connection mode for your existing address before saving.",
     "confirmMode": "Confirm mode",

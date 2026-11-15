@@ -530,6 +530,8 @@
             {/if}
           </div>
 
+          <p class="self-hosted-cta">{pluginInstance.i18n.serviceAccess.selfHostedCta} <a href="mailto:youweics@163.com">youweics@163.com</a></p>
+
         </div>
       {:else if activeSection === "display"}
         <div class="workspace-section">
@@ -893,8 +895,10 @@
     gap: 12px;
   }
 
-  .account-access-card {
-    padding: 14px 16px;
+  .self-hosted-cta { margin: 8px 2px 0; font-size: 12px; line-height: 1.6; color: var(--b3-theme-on-surface-light); text-align: center; }
+  .self-hosted-cta a { color: var(--b3-theme-primary); text-decoration: none; }
+
+  .account-access-card {    padding: 14px 16px;
   }
 
   .section-card {

@@ -497,6 +497,7 @@
     "hideKey": "隐藏",
     "readingVerified": "阅读站点可连接。",
     "readingPending": "阅读站点已响应，保存配置后才可访问。",
+    "selfHostedCta": "需要更强的自部署能力或定制支持？联系",
     "readingAddressLabel": "阅读站点",
     "confirmLegacy": "保存前，请确认现有服务地址使用的连接模式。",
     "confirmMode": "确认模式",
