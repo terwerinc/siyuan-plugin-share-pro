@@ -71,8 +71,8 @@ interface PersistSettingsWorkspaceResult {
   syncError?: unknown
 }
 
-const DEFAULT_DOMAIN = isDev ? "http://localhost:4000" : "https://siyuannote.site"
-const DEFAULT_DOMAINS = ["https://siyuannote.site", "https://siyuannote.space"]
+const DEFAULT_DOMAIN = isDev ? "http://localhost:4000" : "https://siyuan.wiki"
+const DEFAULT_DOMAINS = ["https://siyuan.wiki"]
 const DEFAULT_DOC_PATH = "s"
 const DEFAULT_DOC_PATHS = ["x", "s", "p", "a", "static", "post", "link", "doc", "article"]
 const DEFAULT_THEME = "Zhihu"

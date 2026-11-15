@@ -166,20 +166,32 @@ it('masks a long Key as one line and reveals it only on request',async()=>{
   show.click();await tick();expect(document.querySelector('#share-service-api-key').getAttribute('type')).toBe('text')
   expect((document.querySelector('#share-service-api-key') as HTMLInputElement).value).toBe('old-key')
 })
-it('keeps hosted service fixed and both built-in domains available in the full dropdown',async()=>{
-  mount({domain:'https://siyuannote.site',domains:['https://account.example.test']},'hosted')
+it('keeps hosted service fixed and offers only the official reading domain plus account domains',async()=>{
+  mount({domain:'https://siyuan.wiki',domains:['https://account.example.test']},'hosted')
   await vi.waitFor(()=>expect(document.querySelector('#share-reading-domain')).not.toBeNull())
   const address=document.querySelector('#share-service-api-url') as HTMLInputElement
   expect(address.readOnly).toBe(true);expect(address.value).toBe('https://api.terwergreen.com')
   const domain=document.querySelector('#share-reading-domain') as HTMLSelectElement
   expect(domain.tagName).toBe('SELECT')
-  expect([...domain.options].map(o=>o.value)).toEqual(expect.arrayContaining(['https://siyuannote.site','https://siyuannote.space','https://account.example.test']))
+  const values=[...domain.options].map(o=>o.value)
+  expect(values).toEqual(expect.arrayContaining(['https://siyuan.wiki','https://account.example.test']))
+  expect(values).not.toContain('https://siyuannote.space')
 })
-it('keeps all paths in a permanent select even after typing a custom path',async()=>{
+it('offers every path through the datalist without a second control',async()=>{
   mount({docPath:'doc'});await vi.waitFor(()=>expect(document.querySelector('#share-reading-path')).not.toBeNull())
   field('#share-reading-path','custom');await tick()
-  const select=[...document.querySelectorAll('.candidate-select')].find(e=>e.getAttribute('aria-label')===locale.cs.docPath) as HTMLSelectElement
-  expect([...select.options].map(o=>o.value)).toEqual(expect.arrayContaining(['s','x','doc','article','custom']))
+  const input=document.querySelector('#share-reading-path') as HTMLInputElement
+  expect(input.getAttribute('list')).toBe('share-reading-path-options')
+  const options=[...document.querySelectorAll('#share-reading-path-options option')].map(o=>(o as HTMLOptionElement).value)
+  expect(options).toEqual(expect.arrayContaining(['s','x','doc','article','custom']))
+  expect(document.querySelectorAll('.candidate-select')).toHaveLength(0)
+})
+it('never offers the official reading domain in self-hosted mode',async()=>{
+  mount({domain:'http://reader.test'},'self-hosted')
+  await vi.waitFor(()=>expect(document.querySelector('#share-reading-domain')).not.toBeNull())
+  const options=[...document.querySelectorAll('#share-reading-domain-options option')].map(o=>(o as HTMLOptionElement).value)
+  expect(options).toContain('http://reader.test')
+  expect(options).not.toContain('https://siyuan.wiki')
 })
 
 it('switches independent profiles without forwarding or discarding the other Key',async()=>{

@@ -101,7 +101,7 @@
     "domainClick": "Click Here",
     "domainApply": "Apply For Custom Domain",
     "docPath": "Custom Document Path",
-    "docPathTip": "Custom document path access, for example: https://siyuannote.site/x/[docId], where x can be d, s, p, a, doc, link, post, article, etc.",
+    "docPathTip": "Custom document path access, for example: https://siyuan.wiki/x/[docId], where x can be d, s, p, a, doc, link, post, article, etc.",
     "docTree": "Document Tree",
     "docTreeTip": "Enable document tree navigation to display the subdocument hierarchy structure on the shared page for easy browsing. Maximum depth is 6 levels; changes require re-sharing to take effect. For privacy protection, parent documents are not displayed.",
     "docTreeDepth": "Document Tree Depth",

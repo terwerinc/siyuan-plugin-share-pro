@@ -164,11 +164,12 @@
     { id: "incremental", label: pluginInstance.i18n.settingsWorkspace.incremental },
   ]
 
-  $: domainOptions = [...new Set([draft.domain, ...DEFAULT_DOMAINS, ...draft.domains])].filter(Boolean)
+  // Hosted keeps the fixed official entry; self-hosted never inherits it.
+  $: domainOptions = [...new Set([draft.domain, ...(draft.connectionMode==="hosted"?DEFAULT_DOMAINS:[]), ...(draft.connectionMode==="hosted"?draft.domains:draft.domains.filter(item=>!DEFAULT_DOMAINS.includes(item)))])].filter(Boolean)
   $: selfHostedAddresses=[localConfig.connectionProfiles?.["self-hosted"]?.appConfig?.domain,draft.connectionMode==="self-hosted"?draft.domain:undefined].filter(Boolean)
   $: authorizedDomainOptions=draft.connectionMode==="hosted"
     ? [...new Set([...DEFAULT_DOMAINS,...draft.domains])].filter(item=>!selfHostedAddresses.includes(item))
-    : [...new Set([...DEFAULT_DOMAINS,...draft.domains])]
+    : [...new Set([...draft.domains,...(draft.domain?[draft.domain]:[])])].filter(item=>!DEFAULT_DOMAINS.includes(item))
   $: readingNeedsConfirmation=draft.connectionMode==="hosted" && !authorizedDomainOptions.includes(draft.domain)
   $: docPathOptions = [...new Set([draft.docPath, ...DEFAULT_DOC_PATHS, ...draft.docPaths])].filter(Boolean)
   $: isDirty = !isLoading && JSON.stringify(draft) !== initialSnapshot
@@ -481,7 +482,7 @@
                 <label class="setting-label" for="share-reading-domain">{pluginInstance.i18n.cs.domain}</label>
                 <div class="setting-tip">{pluginInstance.i18n.serviceAccess.readingAddressHelp} {#if draft.connectionMode==="hosted"}<a class="setting-link" href={domainApplyUrl} target="_blank" rel="noopener noreferrer">{pluginInstance.i18n.cs.domainApply}</a>{/if}</div>
               </div>
-              <div class="reading-control">{#if draft.connectionMode==="hosted"}<select id="share-reading-domain" class="b3-select control-select" bind:value={draft.domain}>{#each domainOptions as item}<option value={item} disabled={!authorizedDomainOptions.includes(item)}>{item}</option>{/each}</select>{:else}<input id="share-reading-domain" class="b3-text-field control-select" type="url" list="share-reading-domain-options" bind:value={draft.domain} /><select aria-label={pluginInstance.i18n.cs.domain} class="b3-select candidate-select" on:change={(e)=>{if(e.currentTarget.value)draft.domain=e.currentTarget.value}}><option value="" disabled selected>▾</option>{#each domainOptions as item}<option value={item}>{item}</option>{/each}</select><datalist id="share-reading-domain-options">{#each domainOptions as item}<option value={item} />{/each}</datalist>{/if}</div>
+              <div class="reading-control">{#if draft.connectionMode==="hosted"}<select id="share-reading-domain" class="b3-select control-select" bind:value={draft.domain}>{#each domainOptions as item}<option value={item} disabled={!authorizedDomainOptions.includes(item)}>{item}</option>{/each}</select>{:else}<input id="share-reading-domain" class="b3-text-field control-select" type="url" list="share-reading-domain-options" bind:value={draft.domain} /><datalist id="share-reading-domain-options">{#each domainOptions as item}<option value={item} />{/each}</datalist>{/if}</div>
             </div>
 
             {#if readingNeedsConfirmation}<p class="check-error" role="status">{pluginInstance.i18n.serviceAccess.confirmReading}</p>{/if}
@@ -490,8 +491,7 @@
                 <label class="setting-label" for="share-reading-path">{pluginInstance.i18n.cs.docPath}</label>
                 <div class="setting-tip"><span title={pluginInstance.i18n.cs.docPathTip}>{draft.domain}/{draft.docPath}/…</span></div>
               </div>
-              <div class="reading-control"><input id="share-reading-path" class="b3-text-field control-select" list="share-reading-path-options" bind:value={draft.docPath} />
-              <select aria-label={pluginInstance.i18n.cs.docPath} class="b3-select candidate-select" on:change={(e)=>{if(e.currentTarget.value)draft.docPath=e.currentTarget.value}}><option value="" disabled selected>▾</option>{#each docPathOptions as item}<option value={item}>{item}</option>{/each}</select><datalist id="share-reading-path-options">{#each docPathOptions as item}<option value={item} />{/each}</datalist></div>
+              <div class="reading-control"><input id="share-reading-path" class="b3-text-field control-select" list="share-reading-path-options" bind:value={draft.docPath} /><datalist id="share-reading-path-options">{#each docPathOptions as item}<option value={item} />{/each}</datalist></div>
             </div>
             <div class="connection-checks" aria-live="polite">
               <p class:check-success={apiCheckState==="success"} class:check-error={apiCheckState==="error"} data-check="api" data-state={apiCheckState} role="status">{apiCheckState==="success"?"✓":apiCheckState==="error"?"✕":apiCheckState==="pending"?"…":"○"} API · {verificationMessage || pluginInstance.i18n.serviceAccess.notChecked}</p>
@@ -1187,7 +1187,7 @@
   }
   .key-field, .reading-control { display:flex; gap:6px; align-items:center; min-width:0; }
   .key-field input { min-width:0; flex:1; height:30px; }
-  .candidate-select { width:28px; flex-shrink:0; }
+
   .check-success { color:var(--b3-card-success-color, #238636); margin:4px 0; }
   .check-error { color:var(--b3-theme-error); margin:4px 0; }
   .connection-settings-card { padding:12px 14px; }
@@ -1205,6 +1205,7 @@
   .general-section { display:flex; flex-direction:column; gap:10px; }
   .api-field { display:flex; align-items:center; gap:8px; margin-top:6px; }
   .api-field input { min-width:0; flex:1; }
+.api-field input[readonly] { background:var(--b3-theme-surface); color:var(--b3-theme-on-surface-light); cursor:default; }
   .api-field button { flex-shrink:0; white-space:nowrap; }
   .connection-verification { margin:4px 0; }
   .connection-verification:empty { display:none; }
