@@ -165,7 +165,10 @@
   ]
 
   $: domainOptions = [...new Set([draft.domain, ...DEFAULT_DOMAINS, ...draft.domains])].filter(Boolean)
-  $: authorizedDomainOptions=[...new Set([...DEFAULT_DOMAINS,...draft.domains])]
+  $: selfHostedAddresses=[localConfig.connectionProfiles?.["self-hosted"]?.appConfig?.domain,draft.connectionMode==="self-hosted"?draft.domain:undefined].filter(Boolean)
+  $: authorizedDomainOptions=draft.connectionMode==="hosted"
+    ? [...new Set([...DEFAULT_DOMAINS,...draft.domains])].filter(item=>!selfHostedAddresses.includes(item))
+    : [...new Set([...DEFAULT_DOMAINS,...draft.domains])]
   $: readingNeedsConfirmation=draft.connectionMode==="hosted" && !authorizedDomainOptions.includes(draft.domain)
   $: docPathOptions = [...new Set([draft.docPath, ...DEFAULT_DOC_PATHS, ...draft.docPaths])].filter(Boolean)
   $: isDirty = !isLoading && JSON.stringify(draft) !== initialSnapshot
@@ -478,7 +481,7 @@
                 <label class="setting-label" for="share-reading-domain">{pluginInstance.i18n.cs.domain}</label>
                 <div class="setting-tip">{pluginInstance.i18n.serviceAccess.readingAddressHelp} {#if draft.connectionMode==="hosted"}<a class="setting-link" href={domainApplyUrl} target="_blank" rel="noopener noreferrer">{pluginInstance.i18n.cs.domainApply}</a>{/if}</div>
               </div>
-              <div class="reading-control">{#if draft.connectionMode==="hosted"}<select id="share-reading-domain" class="b3-select control-select" bind:value={draft.domain}>{#each domainOptions as item}<option value={item} disabled={!authorizedDomainOptions.includes(item)}>{item}</option>{/each}</select>{:else}<input id="share-reading-domain" class="b3-text-field control-select" type="url" list="share-reading-domain-options" bind:value={draft.domain} /><select aria-label={pluginInstance.i18n.cs.domain} class="b3-select candidate-select" on:change={(e)=>{if(e.currentTarget.value)draft.domain=e.currentTarget.value}}><option value="" disabled hidden></option>{#each domainOptions as item}<option value={item}>{item}</option>{/each}</select><datalist id="share-reading-domain-options">{#each domainOptions as item}<option value={item} />{/each}</datalist>{/if}</div>
+              <div class="reading-control">{#if draft.connectionMode==="hosted"}<select id="share-reading-domain" class="b3-select control-select" bind:value={draft.domain}>{#each domainOptions as item}<option value={item} disabled={!authorizedDomainOptions.includes(item)}>{item}</option>{/each}</select>{:else}<input id="share-reading-domain" class="b3-text-field control-select" type="url" list="share-reading-domain-options" bind:value={draft.domain} /><select aria-label={pluginInstance.i18n.cs.domain} class="b3-select candidate-select" on:change={(e)=>{if(e.currentTarget.value)draft.domain=e.currentTarget.value}}><option value="" disabled selected>▾</option>{#each domainOptions as item}<option value={item}>{item}</option>{/each}</select><datalist id="share-reading-domain-options">{#each domainOptions as item}<option value={item} />{/each}</datalist>{/if}</div>
             </div>
 
             {#if readingNeedsConfirmation}<p class="check-error" role="status">{pluginInstance.i18n.serviceAccess.confirmReading}</p>{/if}
@@ -488,7 +491,7 @@
                 <div class="setting-tip"><span title={pluginInstance.i18n.cs.docPathTip}>{draft.domain}/{draft.docPath}/…</span></div>
               </div>
               <div class="reading-control"><input id="share-reading-path" class="b3-text-field control-select" list="share-reading-path-options" bind:value={draft.docPath} />
-              <select aria-label={pluginInstance.i18n.cs.docPath} class="b3-select candidate-select" on:change={(e)=>{if(e.currentTarget.value)draft.docPath=e.currentTarget.value}}><option value="" disabled hidden></option>{#each docPathOptions as item}<option value={item}>{item}</option>{/each}</select><datalist id="share-reading-path-options">{#each docPathOptions as item}<option value={item} />{/each}</datalist></div>
+              <select aria-label={pluginInstance.i18n.cs.docPath} class="b3-select candidate-select" on:change={(e)=>{if(e.currentTarget.value)draft.docPath=e.currentTarget.value}}><option value="" disabled selected>▾</option>{#each docPathOptions as item}<option value={item}>{item}</option>{/each}</select><datalist id="share-reading-path-options">{#each docPathOptions as item}<option value={item} />{/each}</datalist></div>
             </div>
             <div class="connection-checks" aria-live="polite">
               <p class:check-success={apiCheckState==="success"} class:check-error={apiCheckState==="error"} data-check="api" data-state={apiCheckState} role="status">{apiCheckState==="success"?"✓":apiCheckState==="error"?"✕":apiCheckState==="pending"?"…":"○"} API · {verificationMessage || pluginInstance.i18n.serviceAccess.notChecked}</p>
@@ -1184,7 +1187,7 @@
   }
   .key-field, .reading-control { display:flex; gap:6px; align-items:center; min-width:0; }
   .key-field input { min-width:0; flex:1; height:30px; }
-  .candidate-select { width:38px; flex-shrink:0; }
+  .candidate-select { width:28px; flex-shrink:0; }
   .check-success { color:var(--b3-card-success-color, #238636); margin:4px 0; }
   .check-error { color:var(--b3-theme-error); margin:4px 0; }
   .connection-settings-card { padding:12px 14px; }
