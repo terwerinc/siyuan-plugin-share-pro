@@ -1,5 +1,4 @@
-import { DATA_VIEW_TYPES, normalizeDataViewEntry } from "../utils/DataViewContract"
-import * as cheerio from "cheerio"
+import { extractDataViewBlocks, isSupportedDataViewType, normalizeDataViewEntry } from "../utils/DataViewContract"
 import { ShareProConfig } from "../models/ShareProConfig"
 import { useSiyuanApi } from "./useSiyuanApi"
 import { simpleLogger } from "zhi-lib-base"
@@ -16,20 +15,7 @@ const useDataTable = (cfg: ShareProConfig) => {
   const { kernelApi } = useSiyuanApi(cfg)
 
   const getDataViews = async (editorDom: string) => {
-    const $ = cheerio.load(editorDom)
-    const dataTableIds: { dataTableId: string; defaultViewId?: string }[] = []
-    const seen = new Set<string>()
-
-    $("div[data-av-type]").each((_index, element) => {
-      const dataAvType = $(element).attr("data-av-type")
-      const dataTableId = $(element).attr("data-av-id")
-      const defaultViewId = $(element).attr("custom-sy-av-view")
-      if (!dataTableId || !dataAvType || !DATA_VIEW_TYPES.includes(dataAvType as any) || seen.has(dataTableId)) {
-        return
-      }
-      seen.add(dataTableId)
-      dataTableIds.push({ dataTableId, defaultViewId })
-    })
+    const dataTableIds = extractDataViewBlocks(editorDom)
 
     const results = await Promise.all(
       dataTableIds.map(async (item) => {
@@ -64,7 +50,7 @@ const useDataTable = (cfg: ShareProConfig) => {
 
         if (initialRes.views) {
           const otherViewPromises = initialRes.views
-            .filter((view: any) => view.id !== fallbackViewId && DATA_VIEW_TYPES.includes(view.type))
+            .filter((view: any) => view.id !== fallbackViewId && isSupportedDataViewType(view.type))
             .map(async (view: any) => {
               const response = await kernelApi.siyuanRequest("/api/av/renderAttributeView", {
                 id: item.dataTableId,
