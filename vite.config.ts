@@ -14,7 +14,6 @@ console.log("isWatch=>", isWatch)
 console.log("distDir=>", distDir)
 
 // @ts-ignore
-// @ts-ignore
 export default defineConfig({
   resolve: {
     conditions: ["svelte"],
