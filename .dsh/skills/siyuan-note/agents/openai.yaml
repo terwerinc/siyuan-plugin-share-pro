@@ -1,0 +1,4 @@
+interface:
+  display_name: "思源知识维护"
+  short_description: "通过 siyuan 内核 CLI 在思源中记录待办、整理日记、维护与归档知识页面"
+  default_prompt: "使用 $siyuan-note 通过 siyuan 内核 CLI 先定位我现有的思源页面；可将快速记录或待办写入日记，也可把新内容整合进项目页、主题页、周记页、索引页或承接页；如果是周记归档，请迁移全部未完成事项并整理归档页。"
