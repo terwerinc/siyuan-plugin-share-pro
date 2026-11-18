@@ -6,6 +6,9 @@ build
 cookie.txt
 token.txt
 scripts/__pycache__
+.omc
+.opencode
+.omo
 
 # ReCode local database
 .recode

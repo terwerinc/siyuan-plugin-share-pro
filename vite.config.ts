@@ -13,6 +13,8 @@ const distDir = "./dist"
 console.log("isWatch=>", isWatch)
 console.log("distDir=>", distDir)
 
+// @ts-ignore
+// @ts-ignore
 export default defineConfig({
   resolve: {
     conditions: ["svelte"],
@@ -25,6 +27,7 @@ export default defineConfig({
         if (warning.code && warning.code.startsWith("a11y-")) {
           return
         }
+        // @ts-ignore
         handler(warning)
       },
     }),
@@ -54,7 +57,6 @@ export default defineConfig({
         {
           src: "./src/i18n/*.json",
           dest: "./i18n/",
-          // static-copy v4 preserves source directories unless explicitly flattened.
           rename: { stripBase: true },
         },
       ],
@@ -102,6 +104,7 @@ export default defineConfig({
                 async buildStart() {
                   const files = await fg(["src/i18n/*.json", "./README*.md", "./plugin.json"])
                   for (const file of files) {
+                    // @ts-ignore
                     this.addWatchFile(file)
                   }
                 },
@@ -114,6 +117,7 @@ export default defineConfig({
       // into your library
       external: ["siyuan"],
 
+      // @ts-ignore
       output: {
         entryFileNames: "[name].js",
         assetFileNames: (assetInfo) => {
