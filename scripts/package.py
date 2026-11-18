@@ -3,6 +3,8 @@ import os
 import scriptutils
 
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+# 与思源集市 rules/images.go 的限制保持一致
+MAX_IMAGE_BYTES = {"icon.png": 64 * 1024, "preview.png": 512 * 1024}
 
 if __name__ == "__main__":
     # 切换工作空间
@@ -26,6 +28,10 @@ if __name__ == "__main__":
         with open(asset_path, "rb") as f:
             if f.read(8) != PNG_SIGNATURE:
                 raise SystemExit(f"打包错误: {asset_path} 扩展名是 .png，但内容不是 PNG")
+        limit = MAX_IMAGE_BYTES[asset]
+        size = os.path.getsize(asset_path)
+        if size > limit:
+            raise SystemExit(f"打包错误: {asset_path} 大小为 {size} 字节，超过 {limit} 字节上限")
 
     try:
         # 压缩dist为zip
