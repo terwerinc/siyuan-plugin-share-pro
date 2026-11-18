@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.19.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.18.2...share-pro-v1.19.0) (2026-11-18)
+
+
+### Features
+
+* collect all supported database view types ([20e55fe](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/20e55fe37d46187332f38039516d2826b3d619c8))
+
+
+### Bug Fixes
+
+* **client:** keep subdocument preview header from wrapping mid-label ([1eda4cb](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/1eda4cb2d24e1d1577b83bb19980695ecbab1e0b))
+* **release:** ship a real PNG icon for bazaar indexing ([#322](https://github.com/terwerinc/siyuan-plugin-share-pro/issues/322)) ([2aa12e3](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/2aa12e377a05db1f36eba634bfd7723e0e47c74b))
+
 ## [1.18.2](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.18.1...share-pro-v1.18.2) (2026-11-15)
 ### Bug Fixes
 * **share:** cancel without any share-status gate ([7063d34](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/7063d34710d6716107943f713a3f7a2bbb06e6c2))
