@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.19.1](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.19.0...share-pro-v1.19.1) (2026-11-27)
+
+
+### Bug Fixes
+
+* align plugin manifest with version 1.19.0 ([ecfd28e](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/ecfd28e5ea152752acfac79cf27fe4cb97d1c79f))
+* **release:** keep icon.png under bazaar's 64 KiB limit ([#323](https://github.com/terwerinc/siyuan-plugin-share-pro/issues/323)) ([30039ba](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/30039baa108e79cedc9c751e5a5d84d656d3ff44))
+* support legacy SiYuan runtimes in settings ([ce76f49](https://github.com/terwerinc/siyuan-plugin-share-pro/commit/ce76f49c8abd9a3989de86451d6e8faeedb73fa6))
+
 ## [1.19.0](https://github.com/terwerinc/siyuan-plugin-share-pro/compare/share-pro-v1.18.2...share-pro-v1.19.0) (2026-11-18)
 
 
