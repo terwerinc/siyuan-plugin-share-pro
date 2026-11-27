@@ -30,6 +30,7 @@ import { SettingService } from "./service/SettingService"
 import { ShareService } from "./service/ShareService"
 import { initStatusBar } from "./statusBar"
 import { normalizeShareProConfigForViewerContract } from "./utils/ViewerContractUtils"
+import { createUniqueDomId } from "./utils/IdUtils"
 
 export default class ShareProPlugin extends Plugin {
   private logger: ILogger
@@ -73,7 +74,7 @@ export default class ShareProPlugin extends Plugin {
 
   async openSetting() {
     try {
-      const settingId = `share-pro-setting-${crypto.randomUUID()}`
+      const settingId = createUniqueDomId("share-pro-setting")
       let component: ShareSetting | undefined
       const d = new Dialog({
         title: `${this.i18n?.shareSetting} - ${this.i18n?.sharePro} v${pkg.version}`,
