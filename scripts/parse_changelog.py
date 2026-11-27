@@ -1,6 +1,5 @@
 import re
 import shutil
-from collections import defaultdict
 
 
 def parse_changelog():
@@ -56,31 +55,43 @@ def parse_changelog():
     # save new file
     save_file = original_file
     with open(save_file, 'w', encoding='utf-8') as f:
-        f.write('\n'.join(unique_commits))
+        f.write('\n'.join(unique_commits) + '\n')
     print(f"comment parsed.saved to => {save_file}")
 
 
 def remove_same_commit(commit_list):
-    commit_map = defaultdict()
+    """
+    去掉重复的提交行，标题、空行等非提交行原样保留
+    """
+    result = []
+    seen = set()
     for line in commit_list:
-        if '#' not in line:
-            line = line.lower()
+        # 只对提交条目去重，标题、空行等原样保留
+        if not line.startswith('* '):
+            result.append(line)
+            continue
+
         # 先匹配常规的
         match = re.search(r'(?<=\*\s).*?(?=\()', line)
         if match:
             title = match.group(0).strip()
-            commit_map[title] = line
         else:
             # 接下来匹配有模块的
             match2 = re.search(r'[*] [**](.*)[**] ([^:]+): (.*) \((.*)\)', line)
             if match2:
-                message_title = match.group(3).strip()
-                commit_map[message_title] = line
+                title = match2.group(3).strip()
             else:
                 # 最后处理剩下的
-                commit_map[line] = line
+                title = line
 
-    return commit_map.values()
+        # 去重时忽略大小写，但保留原始行文本
+        key = title.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        result.append(line)
+
+    return result
 
 
 if __name__ == "__main__":
